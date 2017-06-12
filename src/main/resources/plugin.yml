@@ -1,0 +1,10 @@
+main: net.urbanmc.ezauctions.EzAuctions
+name: ezAuctions
+version: 1.0-SNAPSHOT
+authors: [Elian, Silverwolfg11]
+description: Auction plugin based off of floAuction
+
+commands:
+  ezauctions:
+    description: Auctions command
+    aliases: [ezauction, auctions, auction, auc]

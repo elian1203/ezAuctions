@@ -50,4 +50,8 @@ public class ConfigManager {
 		createFile();
 		loadConfiguration();
 	}
+
+	public Object get(String path) {
+		return data.get(path);
+	}
 }

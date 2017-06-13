@@ -1,6 +1,6 @@
 main: net.urbanmc.ezauctions.EzAuctions
 name: ezAuctions
-version: 1.0-SNAPSHOT
+version: 1.0
 authors: [Elian, Silverwolfg11]
 description: AuctionCommand plugin based off of floAuction
 softdepend: [Vault]

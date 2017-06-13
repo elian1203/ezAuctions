@@ -3,6 +3,7 @@ package net.urbanmc.ezauctions.command;
 import net.urbanmc.ezauctions.command.subs.StartSub;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.command.subs.SubCommand;
+import net.urbanmc.ezauctions.object.Permissions;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -25,7 +26,6 @@ public class AuctionCommand implements CommandExecutor {
 	}
 
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-
 		if (!hasPermission(sender))
 			return true;
 
@@ -35,7 +35,7 @@ public class AuctionCommand implements CommandExecutor {
 		SubCommand sub = findSub(args[0]);
 
 		if (sub == null) {
-			sendPropMessage(sender, "invalid_subcmd");
+			sendPropMessage(sender, "command.invalid_sub");
 			return true;
 		}
 
@@ -56,16 +56,15 @@ public class AuctionCommand implements CommandExecutor {
 
 
 	private boolean hasPermission(CommandSender sender) {
-		if (sender.hasPermission("ezauctions.auction"))
+		if (sender.hasPermission(Permissions.COMMAND_BASE.toString()))
 			return true;
 
-		sendMessage(sender, Messages.getString("no_perm"));
+		sendPropMessage(sender, "command.no_perm");
 
 		return false;
 	}
 
 	private boolean help(CommandSender sender) {
-
 		if (!sender.hasPermission("ezauctions.auction.end")) {
 			sendPropMessage(sender, "cmd_auc_help");
 			return true;
@@ -76,16 +75,11 @@ public class AuctionCommand implements CommandExecutor {
 	}
 
 	private SubCommand findSub(String arg) {
-
 		for (SubCommand sub : subs)
 			if (sub.matchSub(arg))
 				return sub;
 
 		return null;
-	}
-
-	private void sendMessage(CommandSender sender, String message) {
-		sender.sendMessage((sender instanceof Player) ? message : ChatColor.stripColor(message));
 	}
 
 	private void sendPropMessage(CommandSender sender, String property) {

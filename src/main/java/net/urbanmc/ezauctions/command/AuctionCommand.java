@@ -45,7 +45,7 @@ public class AuctionCommand implements CommandExecutor {
 		}
 
 		if (sub.isPlayerOnly() && !(sender instanceof Player)) {
-			// TODO: Player only message
+			sendPropMessage(sender, "command.player_only");
 			return true;
 		}
 

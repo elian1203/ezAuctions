@@ -23,6 +23,10 @@ public class ConfigManager {
 		return instance;
 	}
 
+	public static FileConfiguration getConfig() {
+		return instance.getData();
+	}
+
 	private void createFile() {
 		if (!FILE.getParentFile().isDirectory()) {
 			FILE.getParentFile().mkdir();
@@ -44,6 +48,10 @@ public class ConfigManager {
 
 	private void loadConfiguration() {
 		data = YamlConfiguration.loadConfiguration(FILE);
+	}
+
+	private FileConfiguration getData() {
+		return data;
 	}
 
 	public void reloadConfiguration() {

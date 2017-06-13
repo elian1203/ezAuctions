@@ -1,4 +1,4 @@
 package net.urbanmc.ezauctions.command;
 
-public class Bid {
+public class BidCommand {
 }

@@ -1,47 +1,56 @@
 package net.urbanmc.ezauctions.object;
 
 
-import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.UUID;
 
 public class Auction {
 
-    private ItemStack item;
-    private int amount;
-    private int starting;
-    private double increase;
-    private double lastBid;
-    private Player lastBidder;
+	private UUID auctioneer;
+	private ItemStack item;
+	private int amount;
+	private double starting, increment, autoBuy;
+	private Bid lastBid;
 
-    public Auction(ItemStack item, int amount, int starting, double increase) {
-        this.item = item;
-        this.amount = amount;
-        this.starting = starting;
-        this.increase = increase;
-        startAuction();
-    }
+	public Auction(UUID auctioneer, ItemStack item, int amount, double starting, double increment, double autoBuy) {
+		this.auctioneer = auctioneer;
+		this.item = item;
+		this.amount = amount;
+		this.starting = starting;
+		this.increment = increment;
+		this.autoBuy = autoBuy;
+	}
 
-    private void startAuction() {
+	public UUID getAuctioneer() {
+		return auctioneer;
+	}
 
-    }
+	public ItemStack getItem() {
+		return item;
+	}
 
+	public int getAmount() {
+		return amount;
+	}
 
-    public void setLastBid(double bid) {
-        lastBid = bid;
-    }
+	public double getStartingPrice() {
+		return starting;
+	}
 
-    public double getLastBid() {
-        return lastBid;
-    }
+	public double getIncrement() {
+		return increment;
+	}
 
-    public void setLastBidder(Player p) {
-        lastBidder = p;
-    }
+	public double getAutoBuy() {
+		return autoBuy;
+	}
 
-    public Player getLastBidder() {
-        return lastBidder;
-    }
+	public Bid getLastBid() {
+		return lastBid;
+	}
 
-
+	public void setLastBid(Bid lastBid) {
+		this.lastBid = lastBid;
+	}
 }

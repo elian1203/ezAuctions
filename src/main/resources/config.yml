@@ -1,2 +1,45 @@
 # ezAuctions Configuration File #
 #################################
+
+# Should only have "true" or false"
+toggles:
+  # Should we allow players to specify autobuys?
+  autobuy: true
+  # Should we allow decimals in these prices? Ex: $5.64
+  decimal:
+    starting-price: false
+    increment: false
+    autobuy: false
+  # Should we enable sealed auctions? (bids are hidden, command is /sauc or /sealedauc)
+  sealed-auctions: true
+
+lists:
+  # Worlds that you cannot start auctions in
+  blocked-worlds:
+  - 'example_world'
+  # When should we broadcast the time left in the auction?
+  broadcast-times: [60, 30, 15, 3, 2, 1]
+
+# Default uses for commands if players specify nothing
+default:
+  # In seconds
+  auction-time: 60
+  increment: 1
+  # 0 is disabled
+  autobuy: 0
+
+# If you want to disable player modification, set minimum & maximum to -1
+# If you want there to be no maximum set that specific key to 0
+
+minimum:
+  auction-time: -1
+  increment: 1
+  # The minimum here will be $0
+  autobuy: 0
+
+maximum:
+  auction-time: -1
+  increment: 0
+  autobuy: 1000
+  # How many times a player can bid in a sealed auction
+  sealed-auction-bids: 1

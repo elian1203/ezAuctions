@@ -1,10 +1,10 @@
 package net.urbanmc.ezauctions.command.subs;
 
 import net.urbanmc.ezauctions.manager.Messages;
+import net.urbanmc.ezauctions.object.Permission;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import sun.plugin2.message.Message;
 
 public abstract class SubCommand {
 
@@ -13,9 +13,9 @@ public abstract class SubCommand {
 	private boolean playerOnly;
 	private String[] aliases;
 
-	SubCommand(String sub, String permission, boolean playerOnly, String... aliases) {
+	SubCommand(String sub, Permission permission, boolean playerOnly, String... aliases) {
 		this.sub = sub;
-		this.permission = "ezauctions.auction." + permission;
+		this.permission = permission.toString();
 		this.playerOnly = playerOnly;
 		this.aliases = aliases;
 	}
@@ -44,12 +44,12 @@ public abstract class SubCommand {
 		return false;
 	}
 
-	public void sendPropMessage(Player p, String property) {
+	void sendPropMessage(Player p, String property) {
 		p.sendMessage(Messages.getString(property));
 	}
 
-	public void sendPropMessage(CommandSender sender, String property) {
-		sender.sendMessage(sender instanceof Player ? Messages.getString(property) : ChatColor.stripColor(Messages.getString(property)));
+	void sendPropMessage(CommandSender sender, String property) {
+		sender.sendMessage(sender instanceof Player ? Messages.getString(property) : ChatColor
+				.stripColor(Messages.getString(property)));
 	}
-
 }

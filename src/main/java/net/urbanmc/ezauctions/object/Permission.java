@@ -1,6 +1,6 @@
 package net.urbanmc.ezauctions.object;
 
-public enum Permissions {
+public enum Permission {
 
 	COMMAND_BASE("auction"),
 	COMMAND_START("auction.start"),
@@ -14,7 +14,7 @@ public enum Permissions {
 
 	private String permission;
 
-	Permissions(String permission) {
+	Permission(String permission) {
 		this.permission = "ezauctions." + permission;
 	}
 

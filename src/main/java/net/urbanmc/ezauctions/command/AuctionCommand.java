@@ -1,9 +1,10 @@
 package net.urbanmc.ezauctions.command;
 
+import net.urbanmc.ezauctions.command.subs.ReloadSub;
 import net.urbanmc.ezauctions.command.subs.StartSub;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.command.subs.SubCommand;
-import net.urbanmc.ezauctions.object.Permissions;
+import net.urbanmc.ezauctions.object.Permission;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -22,6 +23,7 @@ public class AuctionCommand implements CommandExecutor {
 	}
 
 	private void registerSubs() {
+		subs.add(new ReloadSub());
 		subs.add(new StartSub());
 	}
 
@@ -56,7 +58,7 @@ public class AuctionCommand implements CommandExecutor {
 
 
 	private boolean hasPermission(CommandSender sender) {
-		if (sender.hasPermission(Permissions.COMMAND_BASE.toString()))
+		if (sender.hasPermission(Permission.COMMAND_BASE.toString()))
 			return true;
 
 		sendPropMessage(sender, "command.no_perm");

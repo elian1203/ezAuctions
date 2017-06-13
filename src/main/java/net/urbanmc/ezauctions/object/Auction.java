@@ -1,6 +1,5 @@
 package net.urbanmc.ezauctions.object;
 
-
 import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;

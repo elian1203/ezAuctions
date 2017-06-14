@@ -16,7 +16,7 @@ import java.util.List;
 
 public class AuctionCommand implements CommandExecutor {
 
-	private List<SubCommand> subs = new ArrayList<SubCommand>();
+	private List<SubCommand> subs = new ArrayList<>();
 
 	public AuctionCommand() {
 		registerSubs();

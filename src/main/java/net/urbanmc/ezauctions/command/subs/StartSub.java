@@ -3,6 +3,7 @@ package net.urbanmc.ezauctions.command.subs;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
+import net.urbanmc.ezauctions.object.Permission;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -10,7 +11,7 @@ import org.bukkit.inventory.ItemStack;
 public class StartSub extends SubCommand {
 
 	public StartSub() {
-		super("start", null, true, "s");
+		super("start", Permission.COMMAND_START, true, "s");
 	}
 
 	public void run(CommandSender sender, String[] args) {
@@ -22,11 +23,15 @@ public class StartSub extends SubCommand {
 			return;
 		}
 
-		Auction auc = parseAuction(p, args[1], args[2],
-                args.length < 4 ? String.valueOf(ConfigManager.getInstance().get("default.increment")) : args[3],
-                args.length < 5 ? String.valueOf(ConfigManager.getInstance().get("default.autobuy")) : args[4]);
+		Auction auc = parseAuction(p,
+		                           args[1],
+		                           args[2],
+		                           args.length < 4 ? String
+				                           .valueOf(ConfigManager.getInstance().get("default.increment")) : args[3],
+		                           args.length < 5 ? String
+				                           .valueOf(ConfigManager.getInstance().get("default.autobuy")) : args[4]);
 
-        EzAuctions.getAuctionManager().addToQueue(auc);
+		EzAuctions.getAuctionManager().addToQueue(auc);
 
 	}
 
@@ -58,16 +63,16 @@ public class StartSub extends SubCommand {
 			return null;
 		}
 
-	double buyoutPrice = isPosDouble(buyout);
+		double buyoutPrice = isPosDouble(buyout);
 
-		if(buyoutPrice == -1) {
+		if (buyoutPrice == -1) {
 			sendPropMessage(p, "command.auc.start.invalid_buyout");
 			return null;
 		}
 
-
-		return new Auction(p.getUniqueId(), p.getInventory().getItemInMainHand(),amt, start, inc, buyoutPrice, false);
-}
+		// TODO: redo method, support config
+		return new Auction(p.getUniqueId(), p.getInventory().getItemInMainHand(), amt, 60, start, inc, buyoutPrice, false);
+	}
 
 
 	private int findAmtItems(Player p) {
@@ -75,10 +80,10 @@ public class StartSub extends SubCommand {
 
 		ItemStack it = p.getInventory().getItemInMainHand();
 
-		for(ItemStack item : p.getInventory().getContents()) {
-			if(!item.getType().equals(it.getType()))
+		for (ItemStack item : p.getInventory().getContents()) {
+			if (!item.getType().equals(it.getType()))
 				continue;
-			if(item.getItemMeta().equals(it.getItemMeta()))
+			if (item.getItemMeta().equals(it.getItemMeta()))
 				continue;
 			amt += item.getAmount();
 		}
@@ -90,8 +95,7 @@ public class StartSub extends SubCommand {
 	private int isPosInt(String num) {
 		try {
 			return Integer.valueOf(num);
-		}
-		catch (NumberFormatException e) {
+		} catch (NumberFormatException e) {
 			return -1;
 		}
 	}
@@ -99,8 +103,7 @@ public class StartSub extends SubCommand {
 	private double isPosDouble(String doub) {
 		try {
 			return Double.valueOf(doub);
-		}
-		catch (NumberFormatException e) {
+		} catch (NumberFormatException e) {
 			return -1;
 		}
 	}

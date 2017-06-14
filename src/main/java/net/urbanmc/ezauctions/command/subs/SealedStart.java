@@ -25,6 +25,11 @@ public class SealedStart extends SubCommand{
             return;
         }
 
+        if (EzAuctions.getAuctionManager().getQueueSize() == ConfigManager.getConfig().getInt("general.auction-queue-limit")) {
+            sendPropMessage(p, "command.auc.start.queue-limit");
+            return;
+        }
+
         Auction auc = AuctionUtil.getInstance().parseAuction(p,
                 args[1],
                 args[2],

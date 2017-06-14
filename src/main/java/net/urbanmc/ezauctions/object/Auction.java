@@ -174,4 +174,6 @@ public class Auction {
 
 		return fancy;
 	}
+
+
 }

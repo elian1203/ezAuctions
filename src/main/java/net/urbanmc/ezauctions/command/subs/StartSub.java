@@ -22,7 +22,12 @@ public class StartSub extends SubCommand {
 
         if (args.length < 3 || args.length > 5) {
             //TODO Add property message
-            sendPropMessage(p, "command.auc.");
+            sendPropMessage(p, "command.auc.start.help");
+            return;
+        }
+
+        if (EzAuctions.getAuctionManager().getQueueSize() == ConfigManager.getConfig().getInt("general.auction-queue-limit")) {
+            sendPropMessage(p, "command.auc.start.queue-limit");
             return;
         }
 

@@ -3,9 +3,14 @@ package net.urbanmc.ezauctions.util;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import sun.security.krb5.Config;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 
 public class AuctionUtil extends JavaPlugin {
 
@@ -31,7 +36,18 @@ public class AuctionUtil extends JavaPlugin {
         }
     }
 
+    //TODO Add property messages for all.
     public Auction parseAuction(Player p, String amount, String price, String bidInc, String buyout, boolean isSealed) {
+
+        if (((ArrayList<String>) configGet("auctions.blocked-worlds")).contains(p.getWorld().getName().toLowerCase())) {
+            sendPropMessage(p, "command.auc.start.blocked-world");
+            return null;
+        }
+
+        if(((ArrayList<String>) configGet("auctions.blocked-materials")).contains(ItemUtil.getMaterial(p.getInventory().getItemInMainHand().getType().name()))) {
+            sendPropMessage(p, "command.auc.start.blocked-material");
+            return null;
+        }
 
         int actualAmt = findAmtItems(p);
 
@@ -59,7 +75,7 @@ public class AuctionUtil extends JavaPlugin {
             return null;
         }
 
-        double buyoutPrice = getValueBasedOnConfig("autobuy",buyout);
+        double buyoutPrice = getValueBasedOnConfig("autobuy", buyout);
 
         if (buyoutPrice == -1) {
             sendPropMessage(p, "command.auc.start.invalid_buyout");
@@ -77,11 +93,8 @@ public class AuctionUtil extends JavaPlugin {
         ItemStack it = p.getInventory().getItemInMainHand();
 
         for (ItemStack item : p.getInventory().getContents()) {
-            if (!item.getType().equals(it.getType()))
-                continue;
-            if (item.getItemMeta().equals(it.getItemMeta()))
-                continue;
-            amt += item.getAmount();
+            if (item.isSimilar(it))
+                amt += item.getAmount();
         }
 
         return amt;
@@ -92,6 +105,10 @@ public class AuctionUtil extends JavaPlugin {
     }
 
     private double getValueBasedOnConfig(String config, String value) {
-        return (boolean) ConfigManager.getConfig().get("auctions.decimal." + config) ? isPosDouble(value) : isPosInt(value);
+        return (boolean) configGet("auctions.decimal." + config) ? isPosDouble(value) : isPosInt(value);
+    }
+
+    private Object configGet(String conf) {
+        return ConfigManager.getInstance().get(conf);
     }
 }

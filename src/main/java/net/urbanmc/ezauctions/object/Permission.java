@@ -8,6 +8,7 @@ public enum Permission {
 	COMMAND_CANCEL("auction.cancel"),
 	COMMAND_CANCEL_OTHERS("auction.cancel.others"),
 	COMMAND_INFO("auction.info"),
+	COMMAND_REMOVE("auction.remove"),
 	COMMAND_IMPOUND("auction.impound"),
 	COMMAND_RELOAD("auction.reload"),
 	COMMAND_BID("bid");

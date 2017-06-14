@@ -31,6 +31,12 @@ auctions:
 
   # Should only have "true" or false"
   toggles:
+    # Should we broadcast the owner of the head if it is a player head?
+    broadcast-head: true
+
+    # Should we broadcast how much xp it costs to repair an auctioned item?
+    broadcast-repair: true
+
     # Should we allow players to specify autobuys?
     autobuy: true
 

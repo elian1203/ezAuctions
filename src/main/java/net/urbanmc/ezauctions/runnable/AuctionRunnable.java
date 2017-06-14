@@ -1,12 +1,16 @@
 package net.urbanmc.ezauctions.runnable;
 
+import mkremins.fanciful.FancyMessage;
 import net.urbanmc.ezauctions.EzAuctions;
+import net.urbanmc.ezauctions.event.AuctionEndEvent;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AuctionRunnable extends BukkitRunnable {
@@ -19,8 +23,10 @@ public class AuctionRunnable extends BukkitRunnable {
 		this.auction = auction;
 		this.timeLeft = auction.getAuctionTime();
 
+		long delay = 20 * ConfigManager.getConfig().getLong("general.time-between");
+
 		broadcastStart();
-		runTaskTimer(plugin, 0, 20);
+		runTaskTimer(plugin, delay, 20);
 	}
 
 	@Override
@@ -31,6 +37,9 @@ public class AuctionRunnable extends BukkitRunnable {
 		}
 
 		if (timeLeft == 0) {
+			AuctionEndEvent event = new AuctionEndEvent(getAuction());
+			Bukkit.getPluginManager().callEvent(event);
+
 			// TODO: Manage money/items
 
 			EzAuctions.getAuctionManager().next();
@@ -40,40 +49,24 @@ public class AuctionRunnable extends BukkitRunnable {
 		}
 
 		timeLeft--;
+		getAuction().setAuctionTime(timeLeft);
 	}
 
 	private void broadcastStart() {
-		Bukkit.broadcastMessage(getStartingMessage());
-	}
+		List<CommandSender> recipients = new ArrayList<>(Bukkit.getOnlinePlayers());
+		recipients.add(Bukkit.getConsoleSender());
 
-	public String getStartingMessage() {
-		String auctioneerName = Bukkit.getOfflinePlayer(getAuction().getAuctioneer()).getName();
+		FancyMessage fancy = getAuction().getStartingMessage();
 
-		String message = Messages.getString(
-				"auction.starting",
-				auctioneerName,
-				getAuction().getAmount(),
-				getAuction().getFormattedItem(),
-				getAuction().getStartingPrice(),
-				getAuction().getIncrement(),
-				timeLeft);
-
-		if (getAuction().getAutoBuy() > 0) {
-			message += "\n" + Messages.getString("auction.autobuy", getAuction().getAutoBuy());
-		}
-
-		if (getAuction().isSealed()) {
-			message += "\n" + Messages.getString("auction.sealed");
-		}
-
-		return message;
+		fancy.send(recipients);
 	}
 
 	public Auction getAuction() {
 		return auction;
 	}
 
-	public int getTimeLeft() {
-		return timeLeft;
+	public void cancelAuction() {
+		cancel();
+		EzAuctions.getAuctionManager().next();
 	}
 }

@@ -1,5 +1,4 @@
 TODO:
-- item hover in chat
 - disable spammy messages
 - auction queue
 - logging offline support
@@ -8,7 +7,7 @@ TODO:
 - server restart - give player items back
 - sealed auctions
 - make more configurable
-- add reload for config
 - add temporarily disabling all auctions
 - allow players to remove their auction from the queue
 - players cannot cancel auctions after configurable amount of time
+- events for api

@@ -66,7 +66,7 @@ public class StartSub extends SubCommand {
 		}
 
 
-		return new Auction(p.getUniqueId(), p.getInventory().getItemInMainHand(),amt, start, inc, buyoutPrice);
+		return new Auction(p.getUniqueId(), p.getInventory().getItemInMainHand(),amt, start, inc, buyoutPrice, false);
 }
 
 

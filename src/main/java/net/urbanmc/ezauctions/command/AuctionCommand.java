@@ -1,9 +1,7 @@
 package net.urbanmc.ezauctions.command;
 
-import net.urbanmc.ezauctions.command.subs.ReloadSub;
-import net.urbanmc.ezauctions.command.subs.StartSub;
+import net.urbanmc.ezauctions.command.subs.*;
 import net.urbanmc.ezauctions.manager.Messages;
-import net.urbanmc.ezauctions.command.subs.SubCommand;
 import net.urbanmc.ezauctions.object.Permission;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -23,7 +21,11 @@ public class AuctionCommand implements CommandExecutor {
 	}
 
 	private void registerSubs() {
+		subs.add(new CancelSub());
+		subs.add(new ImpoundSub());
+		subs.add(new InfoSub());
 		subs.add(new ReloadSub());
+		subs.add(new RemoveSub());
 		subs.add(new StartSub());
 	}
 

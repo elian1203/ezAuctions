@@ -70,7 +70,7 @@ auctions:
 
 # They use the same settings as auctions
 sealed-auctions:
-  # Should we enable sealed auctions (bids don't show in chat, /sauc or /sealedauc)
+  # Should we enable sealed auctions (bids don't show in chat)
   enabled: true
   # How many times should a player be allowed to bid?
   max-bids: 1

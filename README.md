@@ -1,25 +1,26 @@
 # ezAuctions
-Auction plugin based off of floAuction & Auctions
+Auction plugin based off of floAuction & Auctions <br>
+Requires Vault & Uses the Fanciful library
 
-# Developers
+### Developers
 Elian, Silverwolfg11
 
-# Website / Server
+### Website / Server
 http://urbanmc.net/
 
-# API
-<b>Events:</b> <br>
+## API
+#### Events: <br>
 AuctionBidEvent : Cancellable <br>
 AuctionCancelEvent : Cancellable <br>
 AuctionEndEvent : Not cancellable <br>
 AuctionImpoundEvent : Cancellable <br>
 AuctionStartEvent : Cancellable <br> <br>
 
-<b>To get the current auction:</b> <br>
+#### To get the current auction: <br>
 EzAuctions.getAuctionManager().getCurrentAuction() <br>
 <br>
 
-<b>To cancel/impound the current auction</b> <br>
+#### To cancel/impound the current auction <br>
 EzAuctions.getAuctionManager().getCurrentRunnable().
 cancelAuction()
 or .impoundAuction() respectively.

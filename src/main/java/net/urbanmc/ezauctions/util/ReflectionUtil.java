@@ -58,6 +58,19 @@ public class ReflectionUtil {
 		}
 	}
 
+	static int getMaxStackSize(ItemStack is) {
+		try {
+			Object nmsStack = asNMSCopy(is);
+
+			return (int) nmsStack.getClass().getMethod("getMaxStackSize").invoke(nmsStack);
+		} catch (Exception ex) {
+			Bukkit.getLogger()
+					.log(Level.WARNING, "[ezAuctions] Error getting max stack size for " + is.getType().toString(),
+					     ex);
+			return 0;
+		}
+	}
+
 	public static void addItemHover(FancyMessage fancy, ItemStack is) {
 		try {
 			String json = getItemAsJson(is);

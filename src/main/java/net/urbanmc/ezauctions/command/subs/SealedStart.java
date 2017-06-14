@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 public class SealedStart extends SubCommand{
 
     SealedStart() {
-        super("s", Permission.COMMAND_START_SEALED, true, "s");
+        super("startsealed", Permission.COMMAND_START_SEALED, true, "ss", "ssealed", "starts");
     }
 
     @Override

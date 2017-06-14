@@ -2,13 +2,21 @@ package net.urbanmc.ezauctions.util;
 
 import net.milkbowl.vault.item.ItemInfo;
 import net.milkbowl.vault.item.Items;
+import net.urbanmc.ezauctions.manager.Messages;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class ItemUtil {
 
 	@SuppressWarnings("deprecation")
 	public static Material getMaterial(String type) {
-		Material material = Material.getMaterial(type);
+		Material material = Material.getMaterial(type.toUpperCase());
 
 		if (material != null)
 			return material;
@@ -27,6 +35,40 @@ public class ItemUtil {
 			return item.getType();
 
 		return null;
+	}
+
+	public static void addItemsToInventory(OfflinePlayer op, ItemStack is, int amount) {
+		List<ItemStack> items = new ArrayList<>();
+
+		int maxStackSize = ReflectionUtil.getMaxStackSize(is);
+
+		while (amount > maxStackSize) {
+			ItemStack cloned = is.clone();
+			cloned.setAmount(maxStackSize);
+
+			items.add(cloned);
+			amount -= maxStackSize;
+		}
+
+		if (amount != 0) {
+			ItemStack cloned = is.clone();
+			cloned.setAmount(amount);
+
+			items.add(cloned);
+		}
+
+		ItemStack[] array = new ItemStack[items.size()];
+		array = items.toArray(array);
+
+		// TODO: ADD SUPPORT FOR OFFLINE PLAYERS
+		Player p = (Player) op;
+
+		Map<Integer, ItemStack> leftover = p.getInventory().addItem(array);
+
+		if (!leftover.isEmpty()) {
+			leftover.values().forEach(item -> p.getWorld().dropItemNaturally(p.getLocation(), item));
+			p.sendMessage(Messages.getString("reward.full_inventory"));
+		}
 	}
 
 	@SuppressWarnings("ResultOfMethodCallIgnored")

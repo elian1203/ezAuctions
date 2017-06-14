@@ -1,22 +1,19 @@
 package net.urbanmc.ezauctions.event;
 
 import net.urbanmc.ezauctions.object.Auction;
+import org.bukkit.command.CommandSender;
 import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-import java.util.UUID;
-
-public class AuctionCancelEvent extends Event implements Cancellable {
+public class AuctionCancelEvent extends AuctionEndEvent implements Cancellable {
 
 	private static final HandlerList handlers = new HandlerList();
 	private boolean cancelled = false;
 
-	private Auction auction;
-	private UUID canceller;
+	private CommandSender canceller;
 
-	public AuctionCancelEvent(Auction auction, UUID canceller) {
-		this.auction = auction;
+	public AuctionCancelEvent(Auction auction, CommandSender canceller) {
+		super(auction);
 		this.canceller = canceller;
 	}
 
@@ -24,11 +21,7 @@ public class AuctionCancelEvent extends Event implements Cancellable {
 		return handlers;
 	}
 
-	public Auction getAuction() {
-		return auction;
-	}
-
-	public UUID getCanceller() {
+	public CommandSender getCanceller() {
 		return canceller;
 	}
 

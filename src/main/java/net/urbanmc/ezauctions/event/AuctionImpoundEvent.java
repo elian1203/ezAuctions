@@ -1,30 +1,27 @@
 package net.urbanmc.ezauctions.event;
 
 import net.urbanmc.ezauctions.object.Auction;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-import java.util.UUID;
-
-public class AuctionImpoundEvent extends Event implements Cancellable {
+public class AuctionImpoundEvent extends AuctionEndEvent implements Cancellable {
 
 	private static final HandlerList handlers = new HandlerList();
 	private boolean cancelled = false;
 
-	private Auction auction;
-	private UUID impounder;
+	private Player impounder;
 
-	public AuctionImpoundEvent(Auction auction, UUID impounder) {
-		this.auction = auction;
+	public AuctionImpoundEvent(Auction auction, Player impounder) {
+		super(auction);
 		this.impounder = impounder;
 	}
 
-	public Auction getAuction() {
-		return auction;
+	public static HandlerList getHandlerList() {
+		return handlers;
 	}
 
-	public UUID getImpounder() {
+	public Player getImpounder() {
 		return impounder;
 	}
 
@@ -40,10 +37,6 @@ public class AuctionImpoundEvent extends Event implements Cancellable {
 
 	@Override
 	public HandlerList getHandlers() {
-		return handlers;
-	}
-
-	public static HandlerList getHandlerList() {
 		return handlers;
 	}
 }

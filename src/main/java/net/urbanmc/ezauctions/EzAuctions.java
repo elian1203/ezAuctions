@@ -45,6 +45,10 @@ public class EzAuctions extends JavaPlugin {
 		auctionManager = new AuctionManager(this);
 	}
 
+	public Economy getEcon() {
+		return econ;
+	}
+
 	public static AuctionManager getAuctionManager() {
 		return auctionManager;
 	}

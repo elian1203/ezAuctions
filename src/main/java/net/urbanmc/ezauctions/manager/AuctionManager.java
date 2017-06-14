@@ -3,6 +3,8 @@ package net.urbanmc.ezauctions.manager;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.runnable.AuctionRunnable;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,4 +60,7 @@ public class AuctionManager {
 	public void setAuctionsEnabled(boolean auctionsEnabled) {
 		this.auctionsEnabled = auctionsEnabled;
 	}
+
+
+
 }

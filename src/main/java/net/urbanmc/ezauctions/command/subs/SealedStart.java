@@ -1,21 +1,20 @@
 package net.urbanmc.ezauctions.command.subs;
 
 import net.urbanmc.ezauctions.EzAuctions;
-import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.Permission;
 import net.urbanmc.ezauctions.util.AuctionUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
-public class StartSub extends SubCommand {
+public class SealedStart extends SubCommand{
 
-    public StartSub() {
-        super("start", Permission.COMMAND_START, true, "s");
+    SealedStart() {
+        super("s", Permission.COMMAND_START_SEALED, true, "s");
     }
 
+    @Override
     public void run(CommandSender sender, String[] args) {
 
         Player p = (Player) sender;
@@ -31,11 +30,9 @@ public class StartSub extends SubCommand {
                 args[2],
                 args.length < 4 ? String.valueOf(ConfigManager.getInstance().get("default.increment")) : args[3],
                 args.length < 5 ? String.valueOf(ConfigManager.getInstance().get("default.autobuy")) : args[4],
-                false);
+                true);
 
         EzAuctions.getAuctionManager().addToQueue(auc);
-
     }
-
 
 }

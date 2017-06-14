@@ -6,20 +6,34 @@ general:
   time-between: 5
   # Players cannot do /auc cancel when the auction time is under this
   must-cancel-before: 20
-  # What is the maximum amount of auctions that can be in the limit
+  # What is the maximum amount of auctions that can be in the queue
   auction-queue-limit: 3
 
 auctions:
   # Worlds that you cannot start auctions in
   blocked-worlds:
   - 'example_world'
+
+  # Materials that cannot be auctions
+  # List of valid materials: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
+  blocked-materials:
+  - 'bedrock'
+
   # When should we broadcast the time left in the auction?
   broadcast-times: [60, 30, 15, 3, 2, 1]
+
+  fees:
+    # The price it costs to start an auction (set to 0 for no price)
+    start-price: 10
+    # The amount of money that is removed from the final bid
+    # Ex: Final bid is $500, tax is 20%; the auction starter only receives $400 (set to 0 for no tax)
+    tax-percent: 2.5
 
   # Should only have "true" or false"
   toggles:
     # Should we allow players to specify autobuys?
     autobuy: true
+
     # Should we allow decimals in these prices? Ex: $5.64
     decimal:
       starting-price: false
@@ -60,7 +74,7 @@ antisnipe:
   enabled: true
   # The last X seconds which should be considered a snipe and have anti-snipe run
   seconds-for-start: 3
-  # How many times can the anti-snipe can run without
+  # How many times can the anti-snipe run before cancelling?
   run-times: 3
   # How much time should be added when anti-snipe is run?
   time: 5

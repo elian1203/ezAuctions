@@ -3,6 +3,7 @@ package net.urbanmc.ezauctions.command;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionBidEvent;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
+import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
@@ -21,44 +22,59 @@ public class BidCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        if(!(sender instanceof Player)) {
+        if (!(sender instanceof Player)) {
             sendPropMessage(sender, "command.player_only");
             return true;
         }
 
-        if(!sender.hasPermission(Permission.COMMAND_BID.toString())) {
-            sendPropMessage(sender,"command.no-perm");
+        if (!sender.hasPermission(Permission.COMMAND_BID.toString())) {
+            sendPropMessage(sender, "command.no-perm");
             return true;
         }
 
-        if(args.length > 1) {
+        if (args.length > 1) {
             sendPropMessage(sender, "command.bid.help");
             return true;
         }
 
         Auction auc = EzAuctions.getAuctionManager().getCurrentAuction();
 
-        if(auc == null) {
-            sendPropMessage(sender,"command.bid.no-auc");
+        if (auc == null) {
+            sendPropMessage(sender, "command.bid.no-auc");
             return true;
         }
 
         double amount = AuctionUtil.getInstance().getValueBasedOnConfig("bid", args.length == 0 ? "0" : args[0]);
 
-        if(args.length == 0) {
+        if (args.length == 0) {
             if (auc.getLastBid() == null) amount = auc.getStartingPrice();
             else amount = auc.getLastBid().getAmount() + auc.getIncrement();
         }
 
-        if(amount <= 0) {
-            sendPropMessage(sender, "command.bid.invalid-amount");
+        if (amount <= 0) {
+            sendPropMessage(sender, "command.bid.invalid_amount");
             return true;
         }
 
-        //TODO Incorperate # of bids for sealed auctions.
+        if(auc.getLastBid() != null)
+            if(amount < auc.getLastBid().getAmount() + auc.getIncrement()) {
+            sendPropMessage(sender, "command.bid.too_low");
+            }
 
         Player p = (Player) sender;
+
+        if (!hasAmount(p, amount)) {
+            sendPropMessage(sender, "command.bid.lacking_money");
+            return true;
+        }
+
         AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
+
+        if (auc.isSealed() && auc.getTimesBid(ap) == ConfigManager.getConfig().getInt("sealed-auctions.max-bids")) {
+            sendPropMessage(sender, "command.bid.max-bids");
+            return true;
+        }
+
 
         Bid bid = new Bid(ap, amount);
 
@@ -68,8 +84,13 @@ public class BidCommand implements CommandExecutor {
         if (event.isCancelled())
             return true;
 
-        removeMoney(p);
-        auc.setLastBid(bid);
+        removeMoney(p, amount);
+        auc.addBid(bid);
+
+        if (!auc.isSealed())
+            Bukkit.broadcastMessage(Messages.getString("auction.bid-placed"));
+
+        else sendPropMessage(sender, "command.bid.placed");
 
         return true;
     }
@@ -83,8 +104,15 @@ public class BidCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.stripColor(message));
     }
 
-    private void removeMoney(Player p) {
-        //TODO This method.
+    private void removeMoney(Player p, double amt) {
+        EzAuctions.getEcon().withdrawPlayer(p, amt);
+    }
+
+    private boolean hasAmount(Player p, Double amt) {
+        if (EzAuctions.getEcon().getBalance(p) >= amt)
+            return true;
+
+        return false;
     }
 
 

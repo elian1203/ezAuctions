@@ -11,7 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class EzAuctions extends JavaPlugin {
 
 	private static AuctionManager auctionManager;
-	private Economy econ;
+	private static Economy econ;
 
 	public static AuctionManager getAuctionManager() {
 		return auctionManager;
@@ -55,7 +55,7 @@ public class EzAuctions extends JavaPlugin {
 		auctionManager = new AuctionManager(this);
 	}
 
-	public Economy getEcon() {
+	public static Economy getEcon() {
 		return econ;
 	}
 }

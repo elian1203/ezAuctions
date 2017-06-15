@@ -16,9 +16,8 @@ public class Auction {
 	private ItemStack item;
 	private int amount, auctionTime;
 	private double starting, increment, autoBuy;
-	private Bid lastBid;
 	private boolean isSealed;
-	private Map<AuctionsPlayer, Integer> bidders;
+	private List<Bid> bidders;
 
 	public Auction(AuctionsPlayer auctioneer, ItemStack item, int amount, int auctionTime, double starting,
 	               double increment, double autoBuy, boolean isSealed) {
@@ -30,9 +29,7 @@ public class Auction {
 		this.increment = increment;
 		this.autoBuy = autoBuy;
 		this.isSealed = isSealed;
-
-		if (isSealed)
-			bidders = new HashMap<>();
+		bidders = new ArrayList<>();
 
 	}
 
@@ -72,12 +69,27 @@ public class Auction {
 		return isSealed;
 	}
 
-	public Bid getLastBid() {
-		return lastBid;
+	public void addBid(Bid b) {
+		bidders.add(b);
 	}
 
-	public void setLastBid(Bid lastBid) {
-		this.lastBid = lastBid;
+	public Bid getLastBid() {
+
+		if(!bidders.isEmpty())
+		return bidders.get(bidders.size() - 1);
+
+		return null;
+	}
+
+	public int getTimesBid(AuctionsPlayer p) {
+		int amt = 0;
+
+		for(Bid b : bidders) {
+			if(b.getBidder().getUniqueId().equals(p.getUniqueId()))
+				amt += 1;
+		}
+
+		return amt;
 	}
 
 	public FancyMessage getStartingMessage() {

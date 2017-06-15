@@ -45,6 +45,7 @@ auctions:
       starting-price: false
       increment: false
       autobuy: false
+      bid: false
 
   # Default uses for commands if players specify nothing
   default:

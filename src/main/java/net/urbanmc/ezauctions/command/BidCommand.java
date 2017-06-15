@@ -1,6 +1,13 @@
 package net.urbanmc.ezauctions.command;
 
+import net.urbanmc.ezauctions.EzAuctions;
+import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.Messages;
+import net.urbanmc.ezauctions.object.Auction;
+import net.urbanmc.ezauctions.object.Bid;
+import net.urbanmc.ezauctions.object.Permission;
+import net.urbanmc.ezauctions.util.AuctionUtil;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -10,17 +17,63 @@ public class BidCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if(!isPlayer(sender)) return true;
 
+        if(!(sender instanceof Player)) {
+            sendPropMessage(sender, "command.player_only");
+            return true;
+        }
 
+        if(!sender.hasPermission(Permission.COMMAND_BID.toString())) {
+            sendPropMessage(sender,"command.no-perm");
+            return true;
+        }
+
+        if(args.length > 1) {
+            sendPropMessage(sender, "command.bid.help");
+            return true;
+        }
+
+        Auction auc = EzAuctions.getAuctionManager().getCurrentAuction();
+
+        if(auc == null) {
+            sendPropMessage(sender,"command.bid.no-auc");
+            return true;
+        }
+
+        double bid = AuctionUtil.getInstance().getValueBasedOnConfig("bid", args.length == 0 ? "0" : args[0]);
+
+        if(args.length == 0) {
+            if (auc.getLastBid() == null) bid = auc.getStartingPrice();
+            else bid = auc.getLastBid().getAmount() + auc.getIncrement();
+        }
+
+        if(bid <= 0) {
+            sendPropMessage(sender, "command.bid.invalid-amount");
+            return true;
+        }
+
+        //TODO Incorperate # of bids for sealed auctions.
+
+        Player p = (Player) sender;
+
+        removeMoney(p);
+        auc.setLastBid(new Bid(p.getUniqueId(), bid));
 
         return true;
     }
 
-    private boolean isPlayer(CommandSender sender) {
-        if(sender instanceof Player) return true;
+    private void sendPropMessage(CommandSender sender, String property) {
+        String message = Messages.getString(property);
 
-        sender.sendMessage(Messages.getString("command.player_only"));
-        return false;
+        if (sender instanceof Player)
+            sender.sendMessage(message);
+        else
+            sender.sendMessage(ChatColor.stripColor(message));
     }
+
+    private void removeMoney(Player p) {
+        //TODO This method.
+    }
+
+
 }

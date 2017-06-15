@@ -44,7 +44,7 @@ public class AuctionUtil extends JavaPlugin {
             return null;
         }
 
-        if(((ArrayList<String>) configGet("auctions.blocked-materials")).contains(ItemUtil.getMaterial(p.getInventory().getItemInMainHand().getType().name()))) {
+        if(((ArrayList<String>) configGet("auctions.blocked-materials")).contains(ItemUtil.getMaterial(p.getInventory().getItemInMainHand().getType().name().toLowerCase()))) {
             sendPropMessage(p, "command.auc.start.blocked-material");
             return null;
         }
@@ -104,7 +104,7 @@ public class AuctionUtil extends JavaPlugin {
         p.sendMessage(Messages.getString(property));
     }
 
-    private double getValueBasedOnConfig(String config, String value) {
+    public double getValueBasedOnConfig(String config, String value) {
         return (boolean) configGet("auctions.decimal." + config) ? isPosDouble(value) : isPosInt(value);
     }
 

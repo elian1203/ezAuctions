@@ -1,13 +1,7 @@
 TODO:
-- disable spammy messages
-- auction queue
-- logging offline support
-- full inventory support
+- messageutil for ignoring spammy/all messages
+- money return for bidders who lost
 - anti-snipe support
 - server restart - give player items back
 - sealed auctions
-- make more configurable
-- add temporarily disabling all auctions
-- allow players to remove their auction from the queue
-- players cannot cancel auctions after configurable amount of time
-- events for api
+- check start command to make sure que esta bien

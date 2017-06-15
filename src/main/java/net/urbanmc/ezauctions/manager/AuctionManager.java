@@ -1,8 +1,10 @@
 package net.urbanmc.ezauctions.manager;
 
 import net.urbanmc.ezauctions.EzAuctions;
+import net.urbanmc.ezauctions.event.AuctionStartEvent;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.runnable.AuctionRunnable;
+import org.bukkit.Bukkit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +30,12 @@ public class AuctionManager {
 
 	public void addToQueue(Auction auction) {
 		if (getCurrentRunnable() == null) {
-			currentRunnable = new AuctionRunnable(auction, plugin);
+			AuctionStartEvent event = new AuctionStartEvent(auction);
+			Bukkit.getPluginManager().callEvent(event);
+
+			if (!event.isCancelled()) {
+				currentRunnable = new AuctionRunnable(auction, plugin);
+			}
 		} else {
 			queue.add(auction);
 		}
@@ -64,7 +71,12 @@ public class AuctionManager {
 
 		queue.remove(0);
 
-		currentRunnable = new AuctionRunnable(auction, plugin);
+		AuctionStartEvent event = new AuctionStartEvent(auction);
+		Bukkit.getPluginManager().callEvent(event);
+
+		if (!event.isCancelled()) {
+			currentRunnable = new AuctionRunnable(auction, plugin);
+		}
 	}
 
 	public AuctionRunnable getCurrentRunnable() {

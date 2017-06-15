@@ -1,6 +1,7 @@
 package net.urbanmc.ezauctions.command;
 
 import net.urbanmc.ezauctions.EzAuctions;
+import net.urbanmc.ezauctions.event.AuctionBidEvent;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
@@ -8,6 +9,7 @@ import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.object.Bid;
 import net.urbanmc.ezauctions.object.Permission;
 import net.urbanmc.ezauctions.util.AuctionUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -41,14 +43,14 @@ public class BidCommand implements CommandExecutor {
             return true;
         }
 
-        double bid = AuctionUtil.getInstance().getValueBasedOnConfig("bid", args.length == 0 ? "0" : args[0]);
+        double amount = AuctionUtil.getInstance().getValueBasedOnConfig("bid", args.length == 0 ? "0" : args[0]);
 
         if(args.length == 0) {
-            if (auc.getLastBid() == null) bid = auc.getStartingPrice();
-            else bid = auc.getLastBid().getAmount() + auc.getIncrement();
+            if (auc.getLastBid() == null) amount = auc.getStartingPrice();
+            else amount = auc.getLastBid().getAmount() + auc.getIncrement();
         }
 
-        if(bid <= 0) {
+        if(amount <= 0) {
             sendPropMessage(sender, "command.bid.invalid-amount");
             return true;
         }
@@ -58,8 +60,16 @@ public class BidCommand implements CommandExecutor {
         Player p = (Player) sender;
         AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
 
+        Bid bid = new Bid(ap, amount);
+
+        AuctionBidEvent event = new AuctionBidEvent(auc, bid);
+        Bukkit.getPluginManager().callEvent(event);
+
+        if (event.isCancelled())
+            return true;
+
         removeMoney(p);
-        auc.setLastBid(new Bid(ap, bid));
+        auc.setLastBid(bid);
 
         return true;
     }

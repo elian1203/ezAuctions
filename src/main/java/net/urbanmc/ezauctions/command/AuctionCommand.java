@@ -22,10 +22,15 @@ public class AuctionCommand implements CommandExecutor {
 
 	private void registerSubs() {
 		subs.add(new CancelSub());
+		subs.add(new DisableSub());
+		subs.add(new EnableSub());
+		subs.add(new IgnoreSub());
 		subs.add(new ImpoundSub());
 		subs.add(new InfoSub());
 		subs.add(new ReloadSub());
 		subs.add(new RemoveSub());
+		subs.add(new SpamSub());
+		subs.add(new StartSealedSub());
 		subs.add(new StartSub());
 	}
 

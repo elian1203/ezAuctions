@@ -96,6 +96,7 @@ public class AuctionsPlayerManager {
 
 		if (ap == null) {
 			players.add(new AuctionsPlayer(id, false, false, new ArrayList<>()));
+			saveGson();
 		}
 	}
 }

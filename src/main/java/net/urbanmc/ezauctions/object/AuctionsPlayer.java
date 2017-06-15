@@ -29,8 +29,16 @@ public class AuctionsPlayer {
 		return ignoringSpammy;
 	}
 
+	public void setIgnoringSpammy(boolean ignoringSpammy) {
+		this.ignoringSpammy = ignoringSpammy;
+	}
+
 	public boolean isIgnoringAll() {
 		return ignoringAll;
+	}
+
+	public void setIgnoringAll(boolean ignoringAll) {
+		this.ignoringAll = ignoringAll;
 	}
 
 	public List<ItemStack> getOfflineItems() {

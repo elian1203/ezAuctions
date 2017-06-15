@@ -1,14 +1,14 @@
 package net.urbanmc.ezauctions.command.subs;
 
 import net.urbanmc.ezauctions.EzAuctions;
-import net.urbanmc.ezauctions.manager.AuctionManager;
+import net.urbanmc.ezauctions.event.AuctionQueueEvent;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.Permission;
 import net.urbanmc.ezauctions.util.AuctionUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 public class StartSub extends SubCommand {
 
@@ -22,13 +22,18 @@ public class StartSub extends SubCommand {
 
         if (args.length < 3 || args.length > 5) {
             //TODO Add property message
-            sendPropMessage(p, "command.auc.start.help");
+            sendPropMessage(p, "command.auction.start.help");
             return;
         }
 
         if (EzAuctions.getAuctionManager().getQueueSize() == ConfigManager.getConfig().getInt("general.auction-queue-limit")) {
-            sendPropMessage(p, "command.auc.start.queue-limit");
+            sendPropMessage(p, "command.auction.start.queue_full");
             return;
+        }
+
+        if (!EzAuctions.getAuctionManager().isAuctionsEnabled()) {
+        	sendPropMessage(p, "command.auction.start.disabled");
+        	return;
         }
 
         Auction auc = AuctionUtil.getInstance().parseAuction(p,
@@ -38,9 +43,12 @@ public class StartSub extends SubCommand {
                 args.length < 5 ? String.valueOf(ConfigManager.getInstance().get("default.autobuy")) : args[4],
                 false);
 
-        EzAuctions.getAuctionManager().addToQueue(auc);
+        AuctionQueueEvent event = new AuctionQueueEvent(auc);
+	    Bukkit.getPluginManager().callEvent(event);
 
+	    if (event.isCancelled())
+	    	return;
+
+	    EzAuctions.getAuctionManager().addToQueue(auc);
     }
-
-
 }

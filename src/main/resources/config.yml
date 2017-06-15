@@ -5,7 +5,7 @@ general:
   # Time between auctions (in seconds)
   time-between: 5
   # Players cannot do /auc cancel when the auction time is under this
-  must-cancel-before: 20
+  minimum-cancel-time: 20
   # What is the maximum amount of auctions that can be in the queue
   auction-queue-limit: 3
 

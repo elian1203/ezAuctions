@@ -33,7 +33,7 @@ public class CancelSub extends SubCommand {
 				return;
 			}
 
-			int minTime = ConfigManager.getConfig().getInt("general.must-cancel-before");
+			int minTime = ConfigManager.getConfig().getInt("general.minimum-cancel-time");
 
 			if (current.getAuctionTime() < minTime) {
 				sendPropMessage(p, "command.auction.cancel.too_late");

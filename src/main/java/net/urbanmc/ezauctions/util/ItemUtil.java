@@ -4,7 +4,6 @@ import net.milkbowl.vault.item.ItemInfo;
 import net.milkbowl.vault.item.Items;
 import net.urbanmc.ezauctions.manager.Messages;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -37,7 +36,10 @@ public class ItemUtil {
 		return null;
 	}
 
-	public static void addItemsToInventory(OfflinePlayer op, ItemStack is, int amount) {
+	/**
+	 * @return true if there is overflow, false if not
+	 */
+	static boolean addItemToInventory(Player p, ItemStack is, int amount, boolean message) {
 		List<ItemStack> items = new ArrayList<>();
 
 		int maxStackSize = ReflectionUtil.getMaxStackSize(is);
@@ -60,15 +62,17 @@ public class ItemUtil {
 		ItemStack[] array = new ItemStack[items.size()];
 		array = items.toArray(array);
 
-		// TODO: ADD SUPPORT FOR OFFLINE PLAYERS
-		Player p = (Player) op;
-
 		Map<Integer, ItemStack> leftover = p.getInventory().addItem(array);
 
 		if (!leftover.isEmpty()) {
 			leftover.values().forEach(item -> p.getWorld().dropItemNaturally(p.getLocation(), item));
-			p.sendMessage(Messages.getString("reward.full_inventory"));
+
+			if (message) {
+				p.sendMessage(Messages.getString("reward.full_inventory"));
+			}
 		}
+
+		return !leftover.isEmpty();
 	}
 
 	@SuppressWarnings("ResultOfMethodCallIgnored")

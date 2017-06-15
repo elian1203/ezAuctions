@@ -14,6 +14,7 @@ AuctionBidEvent : Cancellable <br>
 AuctionCancelEvent : Cancellable <br>
 AuctionEndEvent : Not cancellable <br>
 AuctionImpoundEvent : Cancellable <br>
+AuctionQueueEvent : Cancellable <br>
 AuctionStartEvent : Cancellable <br> <br>
 
 #### To get the current auction: <br>

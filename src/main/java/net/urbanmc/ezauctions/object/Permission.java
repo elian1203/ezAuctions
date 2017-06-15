@@ -9,7 +9,11 @@ public enum Permission {
 	COMMAND_CANCEL_OTHERS("auction.cancel.others"),
 	COMMAND_INFO("auction.info"),
 	COMMAND_REMOVE("auction.remove"),
+	COMMAND_SPAM("auction.spam"),
+	COMMAND_IGNORE("auction.ignore"),
 	COMMAND_IMPOUND("auction.impound"),
+	COMMAND_ENABLE("auction.enable"),
+	COMMAND_DISABLE("auction.disable"),
 	COMMAND_RELOAD("auction.reload"),
 	COMMAND_BID("bid");
 

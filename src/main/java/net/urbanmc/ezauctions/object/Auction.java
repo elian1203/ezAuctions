@@ -12,16 +12,16 @@ import java.util.*;
 
 public class Auction {
 
-	private UUID auctioneer;
+	private AuctionsPlayer auctioneer;
 	private ItemStack item;
 	private int amount, auctionTime;
 	private double starting, increment, autoBuy;
 	private Bid lastBid;
 	private boolean isSealed;
-	private Map<UUID, Integer> bidders;
+	private Map<AuctionsPlayer, Integer> bidders;
 
-	public Auction(UUID auctioneer, ItemStack item, int amount, int auctionTime, double starting, double increment,
-	               double autoBuy, boolean isSealed) {
+	public Auction(AuctionsPlayer auctioneer, ItemStack item, int amount, int auctionTime, double starting,
+	               double increment, double autoBuy, boolean isSealed) {
 		this.auctioneer = auctioneer;
 		this.item = item;
 		this.amount = amount;
@@ -36,7 +36,7 @@ public class Auction {
 
 	}
 
-	public UUID getAuctioneer() {
+	public AuctionsPlayer getAuctioneer() {
 		return auctioneer;
 	}
 

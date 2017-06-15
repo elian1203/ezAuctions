@@ -4,7 +4,6 @@ import net.milkbowl.vault.economy.Economy;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.Bid;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
@@ -18,8 +17,8 @@ public class RewardUtil {
 
 		double moneyYield = lastBid.getAmount() * percentYield;
 
-		OfflinePlayer auctioneer = Bukkit.getOfflinePlayer(auction.getAuctioneer());
-		OfflinePlayer bidder = Bukkit.getOfflinePlayer(lastBid.getBidder());
+		OfflinePlayer auctioneer = auction.getAuctioneer().getOfflinePlayer();
+		OfflinePlayer bidder = lastBid.getBidder().getOfflinePlayer();
 
 		econ.depositPlayer(auctioneer, moneyYield);
 		econ.withdrawPlayer(bidder, lastBid.getAmount());
@@ -28,7 +27,7 @@ public class RewardUtil {
 	}
 
 	public static void rewardCancel(Auction auction) {
-		OfflinePlayer auctioneer = Bukkit.getOfflinePlayer(auction.getAuctioneer());
+		OfflinePlayer auctioneer = auction.getAuctioneer().getOfflinePlayer();
 
 		ItemUtil.addItemsToInventory(auctioneer, auction.getItem(), auction.getAmount());
 	}

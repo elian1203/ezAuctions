@@ -1,9 +1,10 @@
 package net.urbanmc.ezauctions.command;
 
 import net.urbanmc.ezauctions.EzAuctions;
-import net.urbanmc.ezauctions.manager.AuctionManager;
+import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
+import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.object.Bid;
 import net.urbanmc.ezauctions.object.Permission;
 import net.urbanmc.ezauctions.util.AuctionUtil;
@@ -55,9 +56,10 @@ public class BidCommand implements CommandExecutor {
         //TODO Incorperate # of bids for sealed auctions.
 
         Player p = (Player) sender;
+        AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
 
         removeMoney(p);
-        auc.setLastBid(new Bid(p.getUniqueId(), bid));
+        auc.setLastBid(new Bid(ap, bid));
 
         return true;
     }

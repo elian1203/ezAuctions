@@ -38,7 +38,7 @@ public class AuctionManager {
 		Auction auction = null;
 
 		for (Auction auc : queue) {
-			if (auc.getAuctioneer().equals(auctioneer)) {
+			if (auc.getAuctioneer().getUniqueId().equals(auctioneer)) {
 				auction = auc;
 				break;
 			}

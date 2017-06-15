@@ -1,18 +1,16 @@
 package net.urbanmc.ezauctions.object;
 
-import java.util.UUID;
-
 public class Bid {
 
-	private UUID bidder;
+	private AuctionsPlayer bidder;
 	private double amount;
 
-	public Bid(UUID bidder, double amount) {
+	public Bid(AuctionsPlayer bidder, double amount) {
 		this.bidder = bidder;
 		this.amount = amount;
 	}
 
-	public UUID getBidder() {
+	public AuctionsPlayer getBidder() {
 		return bidder;
 	}
 

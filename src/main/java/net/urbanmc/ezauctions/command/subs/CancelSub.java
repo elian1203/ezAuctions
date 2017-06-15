@@ -28,7 +28,7 @@ public class CancelSub extends SubCommand {
 		if (!sender.hasPermission(Permission.COMMAND_CANCEL_OTHERS.toString())) {
 			Player p = (Player) sender;
 
-			if (!p.getUniqueId().equals(current.getAuctioneer())) {
+			if (!p.getUniqueId().equals(current.getAuctioneer().getUniqueId())) {
 				sendPropMessage(p, "command.auction.cancel.not_yours");
 				return;
 			}

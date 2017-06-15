@@ -7,6 +7,7 @@ import net.urbanmc.ezauctions.event.AuctionEndEvent;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
+import net.urbanmc.ezauctions.object.Bid;
 import net.urbanmc.ezauctions.util.RewardUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -19,13 +20,11 @@ import java.util.List;
 public class AuctionRunnable extends BukkitRunnable {
 
 	private Auction auction;
-	private Economy econ;
 	private int timeLeft;
 	private List<Integer> broadcastTimes = ConfigManager.getConfig().getIntegerList("auctions.broadcast-times");
 
 	public AuctionRunnable(Auction auction, EzAuctions plugin) {
 		this.auction = auction;
-		this.econ = plugin.getEcon();
 		this.timeLeft = auction.getAuctionTime();
 
 		long delay = 20 * ConfigManager.getConfig().getLong("general.time-between");
@@ -47,11 +46,20 @@ public class AuctionRunnable extends BukkitRunnable {
 			AuctionEndEvent event = new AuctionEndEvent(getAuction());
 			Bukkit.getPluginManager().callEvent(event);
 
+			Bid lastBid = getAuction().getLastBid();
+
+			String lastBidderName = lastBid.getBidder().getOfflinePlayer().getName();
+			double lastBidAmount = lastBid.getAmount();
+
+			Bukkit.broadcastMessage(Messages.getString("auction.finish", lastBidderName, lastBidAmount));
+
 			EzAuctions.getAuctionManager().next();
 
-			RewardUtil.rewardAuction(getAuction(), econ);
+			Auction current = getAuction();
+			Economy econ = EzAuctions.getEcon();
 
-			// TODO: GIVE PLAYERS WHO BID THEIR MONEY BACK
+			RewardUtil.rewardAuction(current, econ);
+			RewardUtil.returnLosingBidders(current, econ);
 
 			return;
 		}
@@ -89,9 +97,5 @@ public class AuctionRunnable extends BukkitRunnable {
 		EzAuctions.getAuctionManager().next();
 
 		RewardUtil.rewardImpound(getAuction(), impounder);
-	}
-
-	private void endEvent() {
-
 	}
 }

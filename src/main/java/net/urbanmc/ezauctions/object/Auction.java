@@ -1,5 +1,6 @@
 package net.urbanmc.ezauctions.object;
 
+import com.google.common.collect.Lists;
 import mkremins.fanciful.FancyMessage;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
@@ -17,7 +18,7 @@ public class Auction {
 	private int amount, auctionTime;
 	private double starting, increment, autoBuy;
 	private boolean isSealed;
-	private List<Bid> bidders;
+	private List<Bid> bids;
 
 	public Auction(AuctionsPlayer auctioneer, ItemStack item, int amount, int auctionTime, double starting,
 	               double increment, double autoBuy, boolean isSealed) {
@@ -29,8 +30,7 @@ public class Auction {
 		this.increment = increment;
 		this.autoBuy = autoBuy;
 		this.isSealed = isSealed;
-		bidders = new ArrayList<>();
-
+		bids = new ArrayList<>();
 	}
 
 	public AuctionsPlayer getAuctioneer() {
@@ -70,13 +70,17 @@ public class Auction {
 	}
 
 	public void addBid(Bid b) {
-		bidders.add(b);
+		bids.add(b);
+
+		if (!isSealed()) {
+			// TODO: add bid message
+		}
 	}
 
 	public Bid getLastBid() {
 
-		if(!bidders.isEmpty())
-		return bidders.get(bidders.size() - 1);
+		if (!bids.isEmpty())
+			return bids.get(bids.size() - 1);
 
 		return null;
 	}
@@ -84,12 +88,39 @@ public class Auction {
 	public int getTimesBid(AuctionsPlayer p) {
 		int amt = 0;
 
-		for(Bid b : bidders) {
-			if(b.getBidder().getUniqueId().equals(p.getUniqueId()))
+		for (Bid b : bids) {
+			if (b.getBidder().getUniqueId().equals(p.getUniqueId()))
 				amt += 1;
 		}
 
 		return amt;
+	}
+
+	public Map<AuctionsPlayer, Double> getLosingBids() {
+		if (bids.size() < 2)
+			return new HashMap<>();
+
+		List<Bid> bidsReversed = Lists.reverse(bids).subList(0, bids.size() - 2);
+		Map<AuctionsPlayer, Double> losing = new HashMap<>();
+
+		for (Bid bid : bidsReversed) {
+			if (!losing.containsKey(bid.getBidder())) {
+				losing.put(bid.getBidder(), bid.getAmount());
+			}
+		}
+
+		return losing;
+	}
+
+	public Bid getLastBidFrom(AuctionsPlayer ap) {
+		List<Bid> bidsReversed = Lists.reverse(bids);
+
+		for (Bid bid : bidsReversed) {
+			if (bid.getBidder().equals(ap))
+				return bid;
+		}
+
+		return null;
 	}
 
 	public FancyMessage getStartingMessage() {
@@ -97,7 +128,7 @@ public class Auction {
 
 		StringBuilder message = new StringBuilder(Messages.getString(
 				"auction.info",
-				getAuctioneer(),
+				getAuctioneer().getOfflinePlayer().getName(),
 				getAmount(),
 				"%item%",
 				getStartingPrice(),

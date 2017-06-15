@@ -11,6 +11,9 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
 public class RewardUtil {
 
 	public static void rewardAuction(Auction auction, Economy econ) {
@@ -37,6 +40,14 @@ public class RewardUtil {
 
 			lastBid.getBidder().getOfflineItems().add(item);
 			AuctionsPlayerManager.getInstance().saveGson();
+		}
+	}
+
+	public static void returnLosingBidders(Auction auction, Economy econ) {
+		Map<AuctionsPlayer, Double> map = auction.getLosingBids();
+
+		for (Entry<AuctionsPlayer, Double> entry : map.entrySet()) {
+			econ.depositPlayer(entry.getKey().getOfflinePlayer(), entry.getValue());
 		}
 	}
 

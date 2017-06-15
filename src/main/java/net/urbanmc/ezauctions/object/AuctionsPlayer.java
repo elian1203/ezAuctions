@@ -1,5 +1,6 @@
 package net.urbanmc.ezauctions.object;
 
+import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -31,6 +32,7 @@ public class AuctionsPlayer {
 
 	public void setIgnoringSpammy(boolean ignoringSpammy) {
 		this.ignoringSpammy = ignoringSpammy;
+		AuctionsPlayerManager.getInstance().saveGson();
 	}
 
 	public boolean isIgnoringAll() {
@@ -39,6 +41,7 @@ public class AuctionsPlayer {
 
 	public void setIgnoringAll(boolean ignoringAll) {
 		this.ignoringAll = ignoringAll;
+		AuctionsPlayerManager.getInstance().saveGson();
 	}
 
 	public List<ItemStack> getOfflineItems() {

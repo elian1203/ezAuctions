@@ -19,101 +19,104 @@ import org.bukkit.entity.Player;
 
 public class BidCommand implements CommandExecutor {
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+	@Override
+	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        if (!(sender instanceof Player)) {
-            sendPropMessage(sender, "command.player_only");
-            return true;
-        }
+		if (!(sender instanceof Player)) {
+			sendPropMessage(sender, "command.player_only");
+			return true;
+		}
 
-        if (!sender.hasPermission(Permission.COMMAND_BID.toString())) {
-            sendPropMessage(sender, "command.no-perm");
-            return true;
-        }
+		if (!sender.hasPermission(Permission.COMMAND_BID.toString())) {
+			sendPropMessage(sender, "command.no-perm");
+			return true;
+		}
 
-        if (args.length > 1) {
-            sendPropMessage(sender, "command.bid.help");
-            return true;
-        }
+		if (args.length > 1) {
+			sendPropMessage(sender, "command.bid.help");
+			return true;
+		}
 
-        Auction auc = EzAuctions.getAuctionManager().getCurrentAuction();
+		Auction auc = EzAuctions.getAuctionManager().getCurrentAuction();
 
-        if (auc == null) {
-            sendPropMessage(sender, "command.bid.no-auc");
-            return true;
-        }
+		if (auc == null) {
+			sendPropMessage(sender, "command.bid.no-auc");
+			return true;
+		}
 
-        double amount = AuctionUtil.getInstance().getValueBasedOnConfig("bid", args.length == 0 ? "0" : args[0]);
+		double amount = AuctionUtil.getInstance().getValueBasedOnConfig("bid", args.length == 0 ? "0" : args[0]);
 
-        if (args.length == 0) {
-            if (auc.getLastBid() == null) amount = auc.getStartingPrice();
-            else amount = auc.getLastBid().getAmount() + auc.getIncrement();
-        }
+		if (args.length == 0) {
+			if (auc.getLastBid() == null)
+				amount = auc.getStartingPrice();
+			else
+				amount = auc.getLastBid().getAmount() + auc.getIncrement();
+		}
 
-        if (amount <= 0) {
-            sendPropMessage(sender, "command.bid.invalid_amount");
-            return true;
-        }
+		if (amount <= 0) {
+			sendPropMessage(sender, "command.bid.invalid_amount");
+			return true;
+		}
 
-        if(auc.getLastBid() != null)
-            if(amount < auc.getLastBid().getAmount() + auc.getIncrement()) {
-            sendPropMessage(sender, "command.bid.too_low");
-            }
+		if (auc.getLastBid() != null)
+			if (amount < auc.getLastBid().getAmount() + auc.getIncrement()) {
+				sendPropMessage(sender, "command.bid.too_low");
+			}
 
-        Player p = (Player) sender;
+		double amountToRemove = amount;
 
-        if (!hasAmount(p, amount)) {
-            sendPropMessage(sender, "command.bid.lacking_money");
-            return true;
-        }
+		Player p = (Player) sender;
+		AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
 
-        AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
+		Bid lastBid = auc.getLastBidFrom(ap);
 
-        if (auc.isSealed() && auc.getTimesBid(ap) == ConfigManager.getConfig().getInt("sealed-auctions.max-bids")) {
-            sendPropMessage(sender, "command.bid.max-bids");
-            return true;
-        }
+		if (lastBid != null) {
+			amountToRemove -= lastBid.getAmount();
+		}
 
+		if (!hasAmount(p, amountToRemove)) {
+			sendPropMessage(sender, "command.bid.lacking_money");
+			return true;
+		}
 
-        Bid bid = new Bid(ap, amount);
-
-        AuctionBidEvent event = new AuctionBidEvent(auc, bid);
-        Bukkit.getPluginManager().callEvent(event);
-
-        if (event.isCancelled())
-            return true;
-
-        removeMoney(p, amount);
-        auc.addBid(bid);
-
-        if (!auc.isSealed())
-            Bukkit.broadcastMessage(Messages.getString("auction.bid-placed"));
-
-        else sendPropMessage(sender, "command.bid.placed");
-
-        return true;
-    }
-
-    private void sendPropMessage(CommandSender sender, String property) {
-        String message = Messages.getString(property);
-
-        if (sender instanceof Player)
-            sender.sendMessage(message);
-        else
-            sender.sendMessage(ChatColor.stripColor(message));
-    }
-
-    private void removeMoney(Player p, double amt) {
-        EzAuctions.getEcon().withdrawPlayer(p, amt);
-    }
-
-    private boolean hasAmount(Player p, Double amt) {
-        if (EzAuctions.getEcon().getBalance(p) >= amt)
-            return true;
-
-        return false;
-    }
+		if (auc.isSealed() && auc.getTimesBid(ap) == ConfigManager.getConfig().getInt("sealed-auctions.max-bids")) {
+			sendPropMessage(sender, "command.bid.max-bids");
+			return true;
+		}
 
 
+		Bid bid = new Bid(ap, amount);
+
+		AuctionBidEvent event = new AuctionBidEvent(auc, bid);
+		Bukkit.getPluginManager().callEvent(event);
+
+		if (event.isCancelled())
+			return true;
+
+		removeMoney(ap, amountToRemove);
+		auc.addBid(bid);
+
+		if (auc.isSealed()) {
+			sendPropMessage(sender, "command.bid.placed");
+		}
+
+		return true;
+	}
+
+	private void sendPropMessage(CommandSender sender, String property) {
+		String message = Messages.getString(property);
+
+		if (sender instanceof Player)
+			sender.sendMessage(message);
+		else
+			sender.sendMessage(ChatColor.stripColor(message));
+	}
+
+	private void removeMoney(AuctionsPlayer ap, double amt) {
+		EzAuctions.getEcon().withdrawPlayer(ap.getOfflinePlayer(), amt);
+	}
+
+	private boolean hasAmount(Player p, double amt) {
+		return EzAuctions.getEcon().getBalance(p) >= amt;
+	}
 }

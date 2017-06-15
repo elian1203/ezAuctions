@@ -22,6 +22,6 @@ public class IgnoreSub extends SubCommand {
 		String prop = "command.auction.ignroe" + (ignoringAll ? "disabled" : "enabled");
 
 		sendPropMessage(p, prop);
-		ap.setIgnoringSpammy(!ignoringAll);
+		ap.setIgnoringAll(!ignoringAll);
 	}
 }

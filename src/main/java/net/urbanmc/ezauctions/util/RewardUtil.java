@@ -10,6 +10,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -27,6 +29,15 @@ public class RewardUtil {
 		OfflinePlayer bidder = lastBid.getBidder().getOfflinePlayer();
 
 		econ.depositPlayer(auctioneer, moneyYield);
+
+		if (auctioneer.isOnline()) {
+			DecimalFormat df = new DecimalFormat("#.##");
+			df.setRoundingMode(RoundingMode.DOWN);
+
+			MessageUtil.privateMessage(auction.getAuctioneer().getOnlinePlayer(),
+			                           "reward.money_given",
+			                           df.format(moneyYield));
+		}
 
 		if (bidder.isOnline()) {
 			Player p = lastBid.getBidder().getOnlinePlayer();

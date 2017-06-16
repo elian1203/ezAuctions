@@ -21,7 +21,7 @@ public class AuctionRunnable extends BukkitRunnable {
 	private Auction auction;
 	private int timeLeft;
 	private List<Integer> broadcastTimes = ConfigManager.getConfig().getIntegerList("auctions.broadcast-times");
-	private int antisnipeTimesRun = 0;
+	private int antiSnipeTimesRun = 0;
 
 	public AuctionRunnable(Auction auction, EzAuctions plugin) {
 		this.auction = auction;
@@ -45,20 +45,25 @@ public class AuctionRunnable extends BukkitRunnable {
 			AuctionEndEvent event = new AuctionEndEvent(getAuction());
 			Bukkit.getPluginManager().callEvent(event);
 
-			Bid lastBid = getAuction().getLastBid();
-
-			String lastBidderName = lastBid.getBidder().getOfflinePlayer().getName();
-			double lastBidAmount = lastBid.getAmount();
-
-			MessageUtil.broadcastRegular("auction.finish", lastBidderName, lastBidAmount);
-
 			EzAuctions.getAuctionManager().next();
 
-			Auction current = getAuction();
-			Economy econ = EzAuctions.getEcon();
+			if (getAuction().anyBids()) {
+				Auction current = getAuction();
+				Economy econ = EzAuctions.getEcon();
 
-			RewardUtil.rewardAuction(current, econ);
-			RewardUtil.returnLosingBidders(current, econ);
+				Bid lastBid = getAuction().getLastBid();
+
+				String lastBidderName = lastBid.getBidder().getOfflinePlayer().getName();
+				double lastBidAmount = lastBid.getAmount();
+
+				MessageUtil.broadcastRegular("auction.finish", lastBidderName, lastBidAmount);
+
+				RewardUtil.rewardAuction(current, econ);
+				RewardUtil.returnLosingBidders(current, econ);
+			} else {
+				MessageUtil.broadcastRegular("auction.finish.no_bids");
+				RewardUtil.rewardCancel(getAuction());
+			}
 
 			return;
 		}
@@ -78,7 +83,7 @@ public class AuctionRunnable extends BukkitRunnable {
 	}
 
 	public int getAntiSnipeTimesRun() {
-		return antisnipeTimesRun;
+		return antiSnipeTimesRun;
 	}
 
 	public void antiSnipe() {
@@ -91,6 +96,8 @@ public class AuctionRunnable extends BukkitRunnable {
 
 		MessageUtil.broadcastSpammy("auction.antisnipe", addTime);
 		timeLeft += addTime;
+
+		antiSnipeTimesRun++;
 	}
 
 	public void cancelAuction() {

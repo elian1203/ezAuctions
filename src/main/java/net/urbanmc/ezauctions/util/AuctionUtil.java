@@ -1,5 +1,6 @@
 package net.urbanmc.ezauctions.util;
 
+import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
@@ -59,35 +60,42 @@ public class AuctionUtil extends JavaPlugin {
             amt = actualAmt;
 
         if (amt <= 0) {
-            sendPropMessage(p, "command.auc.start.invalid_amt");
+            sendPropMessage(p, "command.auction.start.invalid-amt");
             return null;
         }
 
         double start = getValueBasedOnConfig("starting-price", price);
 
         if (start <= 0) {
-            sendPropMessage(p, "command.auc.start.invalid_start_price");
+            sendPropMessage(p, "command.auction.start.invalid_start_price");
             return null;
         }
 
         double inc = getValueBasedOnConfig("increment", bidInc);
 
         if (inc <= 0) {
-            sendPropMessage(p, "command.auc.start.invalid_inc");
+            sendPropMessage(p, "command.auction.start.invalid-inc");
             return null;
         }
 
         double buyoutPrice = getValueBasedOnConfig("autobuy", buyout);
 
         if (buyoutPrice == -1) {
-            sendPropMessage(p, "command.auc.start.invalid_buyout");
+            sendPropMessage(p, "command.auction.start.invalid-buyout");
+            return null;
+        }
+
+
+        int aucTime = isPosInt(time);
+
+        if (aucTime <= 0) {
+            sendPropMessage(p, "command.auction.start.invalid-time");
             return null;
         }
 
         AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
 
-        //TODO Incorperate auction time as one of the arguments and check if valid.
-        return new Auction(ap, p.getInventory().getItemInMainHand(), amt, 60, start, inc, buyoutPrice, isSealed);
+        return new Auction(ap, p.getInventory().getItemInMainHand(), amt, aucTime, start, inc, buyoutPrice, isSealed);
     }
 
 
@@ -114,5 +122,17 @@ public class AuctionUtil extends JavaPlugin {
 
     private FileConfiguration getConfig(String conf) {
         return ConfigManager.getConfig();
+    }
+
+    public boolean checkStartFee(Player p) {
+        if (EzAuctions.getEcon().getBalance(p) < ConfigManager.getConfig().getDouble("auctions.start-price")) {
+
+            sendPropMessage(p, "command.auction.start.invalid-fee");
+
+            return false;
+        }
+        else EzAuctions.getEcon().withdrawPlayer(p, ConfigManager.getConfig().getDouble("auctions.start-price"));
+
+        return true;
     }
 }

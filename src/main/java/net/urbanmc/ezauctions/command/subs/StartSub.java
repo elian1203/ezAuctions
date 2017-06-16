@@ -36,6 +36,8 @@ public class StartSub extends SubCommand {
         	return;
         }
 
+        if(!AuctionUtil.getInstance().checkStartFee(p)) return;
+
         Auction auc = AuctionUtil.getInstance().parseAuction(p,
                 args[1],
                 args[2],
@@ -52,4 +54,5 @@ public class StartSub extends SubCommand {
 
 	    EzAuctions.getAuctionManager().addToQueue(auc);
     }
+
 }

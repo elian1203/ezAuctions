@@ -1,3 +1,2 @@
 TODO:
-- start command start fee
 - check start command to make sure que esta bien

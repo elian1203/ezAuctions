@@ -27,7 +27,7 @@ public class StartSealedSub extends SubCommand{
 
         if (args.length < 3 || args.length > 6) {
             //TODO Add property message
-            sendPropMessage(p, "command.auction.start.help");
+            sendPropMessage(p, "command.auction.sealed-start.help");
             return;
         }
 
@@ -40,6 +40,8 @@ public class StartSealedSub extends SubCommand{
             sendPropMessage(p, "command.auction.start.disabled");
             return;
         }
+
+        if(!AuctionUtil.getInstance().checkStartFee(p)) return;
 
         Auction auc = AuctionUtil.getInstance().parseAuction(p,
                 args[1],

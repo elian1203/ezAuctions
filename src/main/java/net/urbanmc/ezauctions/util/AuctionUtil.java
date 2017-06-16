@@ -2,7 +2,6 @@ package net.urbanmc.ezauctions.util;
 
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
-import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import org.bukkit.entity.Player;
@@ -105,7 +104,7 @@ public class AuctionUtil extends JavaPlugin {
 	}
 
 	private void sendPropMessage(Player p, String property) {
-		p.sendMessage(Messages.getString(property));
+		MessageUtil.privateMessage(p, property);
 	}
 
 	public double getValueBasedOnConfig(String config, String value) {

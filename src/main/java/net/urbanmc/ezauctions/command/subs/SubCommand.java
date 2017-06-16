@@ -1,8 +1,7 @@
 package net.urbanmc.ezauctions.command.subs;
 
-import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Permission;
-import org.bukkit.ChatColor;
+import net.urbanmc.ezauctions.util.MessageUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -45,11 +44,10 @@ public abstract class SubCommand {
 	}
 
 	void sendPropMessage(Player p, String property) {
-		p.sendMessage(Messages.getString(property));
+		MessageUtil.privateMessage(p, property);
 	}
 
 	void sendPropMessage(CommandSender sender, String property) {
-		sender.sendMessage(sender instanceof Player ? Messages.getString(property) : ChatColor
-				.stripColor(Messages.getString(property)));
+		MessageUtil.privateMessage(sender, property);
 	}
 }

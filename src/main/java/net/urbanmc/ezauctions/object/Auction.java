@@ -2,10 +2,13 @@ package net.urbanmc.ezauctions.object;
 
 import com.google.common.collect.Lists;
 import mkremins.fanciful.FancyMessage;
+import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
+import net.urbanmc.ezauctions.util.MessageUtil;
 import net.urbanmc.ezauctions.util.ReflectionUtil;
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
@@ -73,7 +76,16 @@ public class Auction {
 		bids.add(b);
 
 		if (!isSealed()) {
-			// TODO: add bid message
+			String bidder = b.getBidder().getOnlinePlayer().getName();
+			double amount = b.getAmount();
+
+			MessageUtil.broadcastSpammy("auction.bid", bidder, amount);
+		}
+
+		FileConfiguration data = ConfigManager.getConfig();
+
+		if (data.getBoolean("antisnipe.enabled") && getAuctionTime() <= data.getInt("antisnipe.seconds-for-start")) {
+			EzAuctions.getAuctionManager().getCurrentRunnable().antiSnipe();
 		}
 	}
 

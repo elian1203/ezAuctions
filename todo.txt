@@ -1,7 +1,3 @@
 TODO:
-- messageutil for ignoring spammy/all messages
-- money return for bidders who lost
-- anti-snipe support
 - server restart - give player items back
-- sealed auctions
 - check start command to make sure que esta bien

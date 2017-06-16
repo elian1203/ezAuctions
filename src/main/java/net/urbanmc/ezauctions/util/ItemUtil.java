@@ -2,7 +2,6 @@ package net.urbanmc.ezauctions.util;
 
 import net.milkbowl.vault.item.ItemInfo;
 import net.milkbowl.vault.item.Items;
-import net.urbanmc.ezauctions.manager.Messages;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -11,10 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class ItemUtil {
+class ItemUtil {
 
 	@SuppressWarnings("deprecation")
-	public static Material getMaterial(String type) {
+	static Material getMaterial(String type) {
 		Material material = Material.getMaterial(type.toUpperCase());
 
 		if (material != null)
@@ -68,7 +67,7 @@ public class ItemUtil {
 			leftover.values().forEach(item -> p.getWorld().dropItemNaturally(p.getLocation(), item));
 
 			if (message) {
-				p.sendMessage(Messages.getString("reward.full_inventory"));
+				MessageUtil.privateMessage(p, "reward.full_inventory");
 			}
 		}
 

@@ -5,16 +5,15 @@ import net.milkbowl.vault.economy.Economy;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionEndEvent;
 import net.urbanmc.ezauctions.manager.ConfigManager;
-import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.Bid;
+import net.urbanmc.ezauctions.util.MessageUtil;
 import net.urbanmc.ezauctions.util.RewardUtil;
 import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class AuctionRunnable extends BukkitRunnable {
@@ -22,6 +21,7 @@ public class AuctionRunnable extends BukkitRunnable {
 	private Auction auction;
 	private int timeLeft;
 	private List<Integer> broadcastTimes = ConfigManager.getConfig().getIntegerList("auctions.broadcast-times");
+	private int antisnipeTimesRun = 0;
 
 	public AuctionRunnable(Auction auction, EzAuctions plugin) {
 		this.auction = auction;
@@ -36,8 +36,7 @@ public class AuctionRunnable extends BukkitRunnable {
 	@Override
 	public void run() {
 		if (broadcastTimes.contains(timeLeft)) {
-			String message = Messages.getString("auction.time_left", timeLeft);
-			Bukkit.broadcastMessage(message);
+			MessageUtil.broadcastRegular("auction.time_left", timeLeft);
 		}
 
 		if (timeLeft == 0) {
@@ -51,7 +50,7 @@ public class AuctionRunnable extends BukkitRunnable {
 			String lastBidderName = lastBid.getBidder().getOfflinePlayer().getName();
 			double lastBidAmount = lastBid.getAmount();
 
-			Bukkit.broadcastMessage(Messages.getString("auction.finish", lastBidderName, lastBidAmount));
+			MessageUtil.broadcastRegular("auction.finish", lastBidderName, lastBidAmount);
 
 			EzAuctions.getAuctionManager().next();
 
@@ -69,22 +68,35 @@ public class AuctionRunnable extends BukkitRunnable {
 	}
 
 	private void broadcastStart() {
-		List<CommandSender> recipients = new ArrayList<>(Bukkit.getOnlinePlayers());
-		recipients.add(Bukkit.getConsoleSender());
-
 		FancyMessage fancy = getAuction().getStartingMessage();
 
-		fancy.send(recipients);
+		MessageUtil.broadcastRegular(fancy);
 	}
 
 	public Auction getAuction() {
 		return auction;
 	}
 
+	public int getAntiSnipeTimesRun() {
+		return antisnipeTimesRun;
+	}
+
+	public void antiSnipe() {
+		FileConfiguration data = ConfigManager.getConfig();
+
+		if (!(getAntiSnipeTimesRun() < data.getInt("antisnipe.run-times")))
+			return;
+
+		int addTime = data.getInt("antisnipe.time");
+
+		MessageUtil.broadcastSpammy("auction.antisnipe", addTime);
+		timeLeft += addTime;
+	}
+
 	public void cancelAuction() {
 		cancel();
 
-		Bukkit.broadcastMessage(Messages.getString("auction.cancelled"));
+		MessageUtil.broadcastRegular("auction.cancelled");
 		EzAuctions.getAuctionManager().next();
 
 		RewardUtil.rewardCancel(getAuction());
@@ -93,7 +105,7 @@ public class AuctionRunnable extends BukkitRunnable {
 	public void impoundAuction(Player impounder) {
 		cancel();
 
-		Bukkit.broadcastMessage(Messages.getString("auction.impounded"));
+		MessageUtil.broadcastRegular("auction.impounded");
 		EzAuctions.getAuctionManager().next();
 
 		RewardUtil.rewardImpound(getAuction(), impounder);

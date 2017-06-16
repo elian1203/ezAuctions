@@ -3,7 +3,6 @@ package net.urbanmc.ezauctions.util;
 import net.milkbowl.vault.economy.Economy;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
-import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.object.Bid;
@@ -32,7 +31,7 @@ public class RewardUtil {
 		if (bidder.isOnline()) {
 			Player p = lastBid.getBidder().getOnlinePlayer();
 
-			p.sendMessage(Messages.getString("reward.received"));
+			MessageUtil.privateMessage(p, "reward.received");
 			ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
 		} else {
 			ItemStack item = auction.getItem().clone();
@@ -57,7 +56,7 @@ public class RewardUtil {
 		if (auctioneer.isOnline()) {
 			Player p = auction.getAuctioneer().getOnlinePlayer();
 
-			p.sendMessage(Messages.getString("reward.returned"));
+			MessageUtil.privateMessage(p, "reward.returned");
 			ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
 		} else {
 			ItemStack item = auction.getItem().clone();
@@ -77,7 +76,7 @@ public class RewardUtil {
 
 		Player p = ap.getOnlinePlayer();
 
-		p.sendMessage(Messages.getString("reward.relogged"));
+		MessageUtil.privateMessage(p, "reward.relogged");
 
 		for (ItemStack is : ap.getOfflineItems()) {
 			boolean b = ItemUtil.addItemToInventory(p, is, is.getAmount(), false);
@@ -91,7 +90,7 @@ public class RewardUtil {
 		AuctionsPlayerManager.getInstance().saveGson();
 
 		if (overflow) {
-			p.sendMessage(Messages.getString("reward.full_inventory"));
+			MessageUtil.privateMessage(p, "reward.full_inventory");
 		}
 	}
 }

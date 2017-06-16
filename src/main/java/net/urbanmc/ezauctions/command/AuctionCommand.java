@@ -3,6 +3,7 @@ package net.urbanmc.ezauctions.command;
 import net.urbanmc.ezauctions.command.subs.*;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Permission;
+import net.urbanmc.ezauctions.util.MessageUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -74,12 +75,23 @@ public class AuctionCommand implements CommandExecutor {
 	}
 
 	private boolean help(CommandSender sender) {
-		if (!sender.hasPermission("ezauctions.auction.end")) {
-			sendPropMessage(sender, "cmd_auc_help");
-			return true;
+		boolean player = sender instanceof Player;
+
+		MessageUtil.privateMessage(sender, "command.help");
+
+		for (SubCommand sub : subs) {
+			boolean canUse =
+					player && sub.isPlayerOnly() || player && !sub.isPlayerOnly() || !(!player && sub.isPlayerOnly());
+
+			if (sender.hasPermission(sub.getPermission()) && canUse) {
+				MessageUtil.privateMessage(sender, sub.getHelpProperty());
+			}
 		}
 
-		sendPropMessage(sender, "cmd_auc_adminhelp");
+		if (sender.hasPermission(Permission.COMMAND_BID.toString())) {
+			MessageUtil.privateMessage(sender, "command.bid.help");
+		}
+
 		return true;
 	}
 

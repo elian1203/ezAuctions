@@ -28,6 +28,10 @@ public abstract class SubCommand {
 		return playerOnly;
 	}
 
+	public String getHelpProperty() {
+		return "command.auction." + sub + ".help";
+	}
+
 	public boolean matchSub(String arg) {
 		if (sub.equalsIgnoreCase(arg))
 			return true;

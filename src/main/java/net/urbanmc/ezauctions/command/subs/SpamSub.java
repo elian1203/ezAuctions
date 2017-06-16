@@ -19,7 +19,7 @@ public class SpamSub extends SubCommand {
 
 		boolean ignoringSpammy = ap.isIgnoringSpammy();
 
-		String prop = "command.auction.spam" + (ignoringSpammy ? "disabled" : "enabled");
+		String prop = "command.auction.spam." + (ignoringSpammy ? "disabled" : "enabled");
 
 		sendPropMessage(p, prop);
 		ap.setIgnoringSpammy(!ignoringSpammy);

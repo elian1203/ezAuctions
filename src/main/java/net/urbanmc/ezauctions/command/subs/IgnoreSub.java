@@ -19,7 +19,7 @@ public class IgnoreSub extends SubCommand {
 
 		boolean ignoringAll = ap.isIgnoringAll();
 
-		String prop = "command.auction.ignroe" + (ignoringAll ? "disabled" : "enabled");
+		String prop = "command.auction.ignore." + (ignoringAll ? "disabled" : "enabled");
 
 		sendPropMessage(p, prop);
 		ap.setIgnoringAll(!ignoringAll);

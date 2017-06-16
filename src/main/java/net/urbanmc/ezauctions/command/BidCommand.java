@@ -40,7 +40,7 @@ public class BidCommand implements CommandExecutor {
 		Auction auc = EzAuctions.getAuctionManager().getCurrentAuction();
 
 		if (auc == null) {
-			sendPropMessage(sender, "command.bid.no-auc");
+			sendPropMessage(sender, "command.no_current_auction");
 			return true;
 		}
 

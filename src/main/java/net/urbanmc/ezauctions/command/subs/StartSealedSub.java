@@ -2,6 +2,7 @@ package net.urbanmc.ezauctions.command.subs;
 
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionQueueEvent;
+import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.Permission;
@@ -21,23 +22,29 @@ public class StartSealedSub extends SubCommand{
         Player p = (Player) sender;
 
         if (!ConfigManager.getConfig().getBoolean("sealed-auctions.enabled")) {
-            sendPropMessage(p, "command.auction.start_sealed.disabled");
+            sendPropMessage(p, "command.auction.startsealed.disabled");
             return;
         }
 
         if (args.length < 3 || args.length > 6) {
-            //TODO Add property message
-            sendPropMessage(p, "command.auction.start_sealed.help");
+            sendPropMessage(p, "command.auction.startsealed.help");
             return;
         }
 
-        if (EzAuctions.getAuctionManager().getQueueSize() == ConfigManager.getConfig().getInt("general.auction-queue-limit")) {
+        AuctionManager manager = EzAuctions.getAuctionManager();
+
+        if (!manager.isAuctionsEnabled()) {
+            sendPropMessage(p, "command.auction.start.disabled");
+            return;
+        }
+
+        if (manager.getQueueSize() == ConfigManager.getConfig().getInt("general.auction-queue-limit")) {
             sendPropMessage(p, "command.auction.start.queue_full");
             return;
         }
 
-        if (!EzAuctions.getAuctionManager().isAuctionsEnabled()) {
-            sendPropMessage(p, "command.auction.start.disabled");
+        if (manager.inQueueOrCurrent(p.getUniqueId())) {
+            sendPropMessage(p, "command.auction.start.in_queue");
             return;
         }
 
@@ -50,6 +57,9 @@ public class StartSealedSub extends SubCommand{
                 args.length < 5 ? String.valueOf(ConfigManager.getInstance().get("default.autobuy")) : args[4],
                 args.length < 6 ? String.valueOf(ConfigManager.getConfig().getInt("default.auction-time")) : args[5],
                 true);
+
+        if (auc == null)
+            return;
 
         AuctionQueueEvent event = new AuctionQueueEvent(auc);
         Bukkit.getPluginManager().callEvent(event);

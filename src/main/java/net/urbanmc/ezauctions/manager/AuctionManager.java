@@ -41,6 +41,18 @@ public class AuctionManager {
 		}
 	}
 
+	public boolean inQueueOrCurrent(UUID auctioneer) {
+		for (Auction auc : queue) {
+			if (auc.getAuctioneer().getUniqueId().equals(auctioneer))
+				return true;
+		}
+
+		if (getCurrentAuction() != null && getCurrentAuction().getAuctioneer().getUniqueId().equals(auctioneer))
+			return true;
+
+		return false;
+	}
+
 	public Auction removeFromQueue(UUID auctioneer) {
 		Auction auction = null;
 

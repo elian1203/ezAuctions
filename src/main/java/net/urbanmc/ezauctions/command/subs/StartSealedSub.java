@@ -27,7 +27,7 @@ public class StartSealedSub extends SubCommand{
 
         if (args.length < 3 || args.length > 6) {
             //TODO Add property message
-            sendPropMessage(p, "command.auction.sealed-start.help");
+            sendPropMessage(p, "command.auction.start_sealed.help");
             return;
         }
 

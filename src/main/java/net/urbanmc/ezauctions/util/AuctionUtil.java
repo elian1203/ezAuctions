@@ -10,8 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-
 public class AuctionUtil extends JavaPlugin {
 
     private static AuctionUtil instance = new AuctionUtil();
@@ -127,7 +125,7 @@ public class AuctionUtil extends JavaPlugin {
     public boolean checkStartFee(Player p) {
         if (EzAuctions.getEcon().getBalance(p) < ConfigManager.getConfig().getDouble("auctions.start-price")) {
 
-            sendPropMessage(p, "command.auction.start.invalid-fee");
+            sendPropMessage(p, "command.auction.start.lacking_fee");
 
             return false;
         }

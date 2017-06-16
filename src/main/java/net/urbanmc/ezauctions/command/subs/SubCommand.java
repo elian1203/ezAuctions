@@ -3,7 +3,6 @@ package net.urbanmc.ezauctions.command.subs;
 import net.urbanmc.ezauctions.object.Permission;
 import net.urbanmc.ezauctions.util.MessageUtil;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 public abstract class SubCommand {
 
@@ -41,10 +40,6 @@ public abstract class SubCommand {
 				return true;
 
 		return false;
-	}
-
-	void sendPropMessage(Player p, String property) {
-		MessageUtil.privateMessage(p, property);
 	}
 
 	void sendPropMessage(CommandSender sender, String property) {

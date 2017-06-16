@@ -36,15 +36,13 @@ public class MessageUtil {
 		Bukkit.getConsoleSender().sendMessage(ChatColor.stripColor(message));
 	}
 
-	public static void privateMessage(Player p, String prop) {
-		p.sendMessage(Messages.getString(prop));
-	}
+	public static void privateMessage(CommandSender sender, String prop, Object... args) {
+		String message = Messages.getString(prop, args);
 
-	public static void privateMessage(CommandSender sender, String prop) {
 		if (sender instanceof Player) {
-			privateMessage((Player) sender, prop);
+			sender.sendMessage(message);
 		} else {
-			String message = ChatColor.stripColor(Messages.getString(prop));
+			message = ChatColor.stripColor(message);
 			sender.sendMessage(message);
 		}
 	}

@@ -89,8 +89,11 @@ public class Auction {
 		}
 	}
 
-	public Bid getLastBid() {
+	public boolean anyBids() {
+		return !bids.isEmpty();
+	}
 
+	public Bid getLastBid() {
 		if (!bids.isEmpty())
 			return bids.get(bids.size() - 1);
 

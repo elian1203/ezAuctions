@@ -17,10 +17,15 @@ public class EzAuctions extends JavaPlugin {
 		return auctionManager;
 	}
 
+	public static Economy getEcon() {
+		return econ;
+	}
+
 	@Override
 	public void onEnable() {
 		if (!setupEconomy()) {
-			getLogger().severe("Vault not detected! Is Vault installed along with a supported economy provider?");
+			getLogger().severe("Vault not detected! Is Vault installed along with a supported economy provider? " +
+					                   "Disabling plugin...");
 			setEnabled(false);
 
 			return;
@@ -29,6 +34,11 @@ public class EzAuctions extends JavaPlugin {
 		registerListener();
 		registerCommands();
 		registerAuctionManger();
+	}
+
+	@Override
+	public void onDisable() {
+		getAuctionManager().disabling();
 	}
 
 	private boolean setupEconomy() {
@@ -53,9 +63,5 @@ public class EzAuctions extends JavaPlugin {
 
 	private void registerAuctionManger() {
 		auctionManager = new AuctionManager(this);
-	}
-
-	public static Economy getEcon() {
-		return econ;
 	}
 }

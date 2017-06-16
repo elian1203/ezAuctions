@@ -97,4 +97,10 @@ public class AuctionManager {
 	public void setAuctionsEnabled(boolean auctionsEnabled) {
 		this.auctionsEnabled = auctionsEnabled;
 	}
+
+	public void disabling() {
+		if (getCurrentRunnable() != null) {
+			getCurrentRunnable().cancelAuction();
+		}
+	}
 }

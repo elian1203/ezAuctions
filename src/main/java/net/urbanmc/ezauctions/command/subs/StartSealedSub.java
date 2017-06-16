@@ -25,7 +25,7 @@ public class StartSealedSub extends SubCommand{
             return;
         }
 
-        if (args.length < 3 || args.length > 5) {
+        if (args.length < 3 || args.length > 6) {
             //TODO Add property message
             sendPropMessage(p, "command.auction.start.help");
             return;
@@ -46,6 +46,7 @@ public class StartSealedSub extends SubCommand{
                 args[2],
                 args.length < 4 ? String.valueOf(ConfigManager.getInstance().get("default.increment")) : args[3],
                 args.length < 5 ? String.valueOf(ConfigManager.getInstance().get("default.autobuy")) : args[4],
+                args.length < 6 ? String.valueOf(ConfigManager.getConfig().getInt("default.auction-time")) : args[5],
                 true);
 
         AuctionQueueEvent event = new AuctionQueueEvent(auc);

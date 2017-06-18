@@ -1,6 +1,6 @@
 package net.urbanmc.ezauctions.util;
 
-import mkremins.fanciful.FancyMessage;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import org.bukkit.Bukkit;
@@ -19,11 +19,11 @@ public class MessageUtil {
 		Bukkit.getConsoleSender().sendMessage(ChatColor.stripColor(message));
 	}
 
-	public static void broadcastRegular(FancyMessage fancy) {
+	public static void broadcastRegular(BaseComponent comp) {
 		Bukkit.getOnlinePlayers().stream().map(p -> AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId()))
-				.filter(ap -> !ap.isIgnoringAll()).forEach(ap -> fancy.send(ap.getOnlinePlayer()));
+				.filter(ap -> !ap.isIgnoringAll()).forEach(ap -> ap.getOnlinePlayer().spigot().sendMessage(comp));
 
-		fancy.send(Bukkit.getConsoleSender());
+		Bukkit.getConsoleSender().spigot().sendMessage(comp);
 	}
 
 	public static void broadcastSpammy(String prop, Object... args) {
@@ -45,5 +45,9 @@ public class MessageUtil {
 			message = ChatColor.stripColor(message);
 			sender.sendMessage(message);
 		}
+	}
+
+	public static void privateMessage(CommandSender sender, BaseComponent comp) {
+		sender.spigot().sendMessage(comp);
 	}
 }

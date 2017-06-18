@@ -1,6 +1,6 @@
 package net.urbanmc.ezauctions.runnable;
 
-import mkremins.fanciful.FancyMessage;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.milkbowl.vault.economy.Economy;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionEndEvent;
@@ -73,9 +73,9 @@ public class AuctionRunnable extends BukkitRunnable {
 	}
 
 	private void broadcastStart() {
-		FancyMessage fancy = getAuction().getStartingMessage();
+		BaseComponent comp = getAuction().getStartingMessage();
 
-		MessageUtil.broadcastRegular(fancy);
+		MessageUtil.broadcastRegular(comp);
 	}
 
 	public Auction getAuction() {

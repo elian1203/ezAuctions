@@ -20,7 +20,7 @@ auctions:
   - 'bedrock'
 
   # When should we broadcast the time left in the auction?
-  broadcast-times: [60, 30, 15, 3, 2, 1]
+  broadcast-times: [45, 30, 15, 3, 2, 1]
 
   fees:
     # The price it costs to start an auction (set to 0 for no price)
@@ -67,7 +67,7 @@ auctions:
   maximum:
     auction-time: -1
     increment: 0
-    autobuy: 1000
+    autobuy: 10000000
 
 # They use the same settings as auctions
 sealed-auctions:

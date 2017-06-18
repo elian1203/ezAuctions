@@ -1,18 +1,24 @@
 package net.urbanmc.ezauctions.object;
 
 import com.google.common.collect.Lists;
-import mkremins.fanciful.FancyMessage;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.HoverEvent.Action;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.util.MessageUtil;
 import net.urbanmc.ezauctions.util.ReflectionUtil;
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Auction {
 
@@ -138,10 +144,8 @@ public class Auction {
 		return null;
 	}
 
-	public FancyMessage getStartingMessage() {
-		FancyMessage fancy = new FancyMessage();
-
-		StringBuilder message = new StringBuilder(Messages.getString(
+	public BaseComponent getStartingMessage() {
+		StringBuilder message = new StringBuilder(Messages.getInstance().getStringWithoutColoring(
 				"auction.info",
 				getAuctioneer().getOfflinePlayer().getName(),
 				getAmount(),
@@ -167,7 +171,7 @@ public class Auction {
 
 		extra.forEach(message::append);
 
-		return formatStartingMessage(fancy, message.toString());
+		return formatStartingMessage(message.toString());
 	}
 
 	private void addAutoBuyBroadcast(List<String> extra) {
@@ -205,33 +209,49 @@ public class Auction {
 		}
 	}
 
-	private FancyMessage formatStartingMessage(FancyMessage fancy, String message) {
-		String[] split = message.split("(?=§)");
+	private BaseComponent formatStartingMessage(String message) {
+		BaseComponent main = new TextComponent();
+		String[] split = message.split("(= )");
 
-		for (String arg : split) {
-			ChatColor color;
+		for (String split2 : split) {
+			for (String arg : split2.split("(?=&)")) {
+				TextComponent extra = new TextComponent();
+				ChatColor color = null;
 
-			if (arg.startsWith("§")) {
-				color = ChatColor.getByChar(arg.charAt(1));
-				arg = arg.substring(2);
-			} else {
-				color = ChatColor.WHITE;
+				if (arg.startsWith("&")) {
+					color = ChatColor.getByChar(arg.charAt(1));
+					arg = arg.substring(2);
+				} else {
+					List<BaseComponent> extraList = main.getExtra();
+
+					if (extraList == null) {
+						System.out.println("null");
+						color = ChatColor.WHITE;
+					}
+				}
+
+				if (color != null) {
+					extra.setColor(color);
+				}
+
+				System.out.println("color = " + extra.getColor().name());
+
+				if (arg.contains("%item%")) {
+					arg = arg.replace("%item%", ReflectionUtil.getFriendlyName(getItem()));
+
+					BaseComponent[] comp = {new TextComponent(ReflectionUtil.getItemAsJson(getItem()))};
+
+					extra.setHoverEvent(new HoverEvent(Action.SHOW_ITEM, comp));
+				}
+
+				extra.setText(arg);
+
+				main.addExtra(extra);
 			}
-
-			fancy.color(color);
-
-			if (arg.equals("%item%")) {
-				fancy.text(ReflectionUtil.getFriendlyName(getItem()));
-				ReflectionUtil.addItemHover(fancy, getItem());
-			} else {
-				fancy.text(arg);
-			}
-
-			fancy.then();
 		}
 
-		return fancy;
+		System.out.println("main comp = " + main.toLegacyText());
+
+		return main;
 	}
-
-
 }

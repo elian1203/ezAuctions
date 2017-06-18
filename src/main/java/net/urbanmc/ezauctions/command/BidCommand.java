@@ -21,7 +21,6 @@ public class BidCommand implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-
 		if (!(sender instanceof Player)) {
 			sendPropMessage(sender, "command.player_only");
 			return true;
@@ -44,7 +43,7 @@ public class BidCommand implements CommandExecutor {
 			return true;
 		}
 
-		double amount = AuctionUtil.getInstance().getValueBasedOnConfig("bid", args.length == 0 ? "0" : args[0]);
+		double amount = AuctionUtil.parseNumberFromConfig(args.length == 0 ? "0" : args[0], "bid");
 
 		if (args.length == 0) {
 			if (auc.getLastBid() == null)
@@ -83,7 +82,6 @@ public class BidCommand implements CommandExecutor {
 			sendPropMessage(sender, "command.bid.max-bids");
 			return true;
 		}
-
 
 		Bid bid = new Bid(ap, amount);
 

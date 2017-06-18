@@ -76,10 +76,10 @@ public class AuctionManager {
 		if (!isAuctionsEnabled())
 			return;
 
-		Auction auction = queue.get(0);
-
-		if (auction == null)
+		if (queue.isEmpty())
 			return;
+
+		Auction auction = queue.get(0);
 
 		queue.remove(0);
 

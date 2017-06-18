@@ -58,17 +58,23 @@ public class Messages {
 	}
 
 	private String getStringFromBundle(String key, Object... args) {
-		return format(bundle.getString(key), args);
+		return format(bundle.getString(key), true, args);
 	}
 
-	private String format(String message, Object... args) {
+	public String getStringWithoutColoring(String key, Object... args) {
+		return format(bundle.getString(key), false, args);
+	}
+
+	private String format(String message, boolean color, Object... args) {
 		message = message.replace("{prefix}", bundle.getString("prefix"));
 
 		if (args != null) {
 			message = MessageFormat.format(message, args);
 		}
 
-		message = ChatColor.translateAlternateColorCodes('&', message);
+		if (color) {
+			message = ChatColor.translateAlternateColorCodes('&', message);
+		}
 
 		return message;
 	}

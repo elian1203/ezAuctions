@@ -1,10 +1,8 @@
 package net.urbanmc.ezauctions.util;
 
-import mkremins.fanciful.FancyMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.logging.Level;
 
@@ -71,27 +69,7 @@ public class ReflectionUtil {
 		}
 	}
 
-	public static void addItemHover(FancyMessage fancy, ItemStack is) {
-		try {
-			String json = getItemAsJson(is);
-
-			Class<?> jsonStringClazz = Class.forName("mkremins.fanciful.JsonString");
-			Constructor<?> constructor = jsonStringClazz.getConstructor(String.class);
-
-			Object jsonStringInstance = constructor.newInstance(json);
-
-			Method latestMethod = fancy.getClass().getMethod("latest");
-			Object latest = latestMethod.invoke(fancy);
-
-			latest.getClass().getDeclaredField("hoverActionName").set(latest, jsonStringInstance);
-		} catch (Exception ex) {
-			Bukkit.getLogger().log(Level.WARNING,
-			                       "[ezAuctions] Error adding hover to item. Item: " + is.getType().toString(),
-			                       ex);
-		}
-	}
-
-	private static String getItemAsJson(ItemStack is) {
+	public static String getItemAsJson(ItemStack is) {
 		try {
 			Object nmsStack = asNMSCopy(is);
 

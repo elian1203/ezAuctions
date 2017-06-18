@@ -1,7 +1,5 @@
 package net.urbanmc.ezauctions.util;
 
-import net.urbanmc.ezauctions.EzAuctions;
-import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
@@ -15,136 +13,160 @@ import java.util.stream.Collectors;
 
 public class AuctionUtil {
 
-	private static AuctionUtil instance = new AuctionUtil();
+	public static Auction parseAuction(AuctionsPlayer ap, String amount, String startingPrice, String increment,
+	                                   String autoBuy, String time, boolean sealed) {
+		Player p = ap.getOnlinePlayer();
 
-	public static AuctionUtil getInstance() {
-		return instance;
+		if (blockedWorld(p)) {
+			message(p, "command.auction.start.blocked-worlds");
+			return null;
+		}
+
+		ItemStack item = p.getInventory().getItemInMainHand().clone();
+
+		if (item == null || item.getType() == Material.AIR) {
+			message(p, "command.auction.start.cannot_auction_air");
+			return null;
+		}
+
+		if (blockedMaterial(item)) {
+			message(p, "command.auction.start.blocked-materials");
+			return null;
+		}
+
+		int finalAmount = parseAmount(amount, p, item);
+
+		if (finalAmount == -1) {
+			message(p, "command.auction.start.invalid-amt");
+			return null;
+		}
+
+		if (!isPositiveDouble(startingPrice)) {
+			message(p, "command.auction.start.invalid_start_price");
+			return null;
+		}
+
+		double finalStartingPrice = parseNumberFromConfig(startingPrice, "starting-price");
+
+		if (!isPositiveDouble(increment)) {
+			message(p, "command.auction.start.invalid-inc");
+			return null;
+		}
+
+		double finalIncrement = getValueBasedOnConfig(increment, "increment");
+
+		if (!isPositiveDouble(autoBuy)) {
+			message(p, "command.auction.start.invalid-buyout");
+			return null;
+		}
+
+		double finalAutoBuy = getValueBasedOnConfig(autoBuy, "autobuy");
+
+		if (!isPositiveDouble(time)) {
+			message(p, "command.auction.start.invalid-time");
+			return null;
+		}
+
+		int finalTime = getValueBasedOnConfig(time, "auction-time").intValue();
+
+		return new Auction(ap, item, finalAmount, finalTime, finalStartingPrice, finalIncrement, finalAutoBuy, sealed);
 	}
 
-	private int isPosInt(String num) {
+	private static int parseAmount(String amount, Player p, ItemStack item) {
+		int finalAmount = -1;
+
+		if (isPositiveDouble(amount)) {
+			finalAmount = Integer.parseInt(amount);
+
+			if (!p.getInventory().contains(item, finalAmount))
+				return -1;
+		} else if (amount.equalsIgnoreCase("hand")) {
+			finalAmount = item.getAmount();
+		} else if (amount.equalsIgnoreCase("all")) {
+			finalAmount = getTotalItems(p, item);
+		}
+
+		return finalAmount;
+	}
+
+	private static int getTotalItems(Player p, ItemStack item) {
+		int amount = 0;
+
+		for (ItemStack is : p.getInventory().getContents()) {
+			if (is != null && is.isSimilar(item)) {
+				amount += is.getAmount();
+			}
+		}
+
+		return amount;
+	}
+
+	private static Double getValueBasedOnConfig(String number, String config) {
+		double d = parseNumberFromConfig(number, config);
+
+		if (!betweenLimits(d, config)) {
+			d = getDefault(config);
+		}
+
+		return d;
+	}
+
+	private static boolean betweenLimits(double number, String config) {
+		double configMin = getConfig().getDouble("auctions.minimum." + config), configMax =
+				getConfig().getDouble("auctions.maximum." + config);
+
+		if (configMin == -1 && configMax == -1)
+			return number == getDefault(config);
+		else if (configMax == 0)
+			return number >= configMin;
+		else
+			return number >= configMin && number <= configMax;
+	}
+
+	public static Double parseNumberFromConfig(String number, String config) {
+		double d = Double.parseDouble(number);
+
+		if (!getConfig().getBoolean("auctions.toggles.decimal." + config)) {
+			d = (int) d;
+		}
+
+		return d;
+	}
+
+	private static boolean isPositiveDouble(String input) {
 		try {
-			return Integer.valueOf(num);
+			double d = Double.parseDouble(input);
+			return d > 0;
 		} catch (NumberFormatException e) {
-			return -1;
+			return false;
 		}
 	}
 
-	private double isPosDouble(String doub) {
-		try {
-			return Double.valueOf(doub);
-		} catch (NumberFormatException e) {
-			return -1;
-		}
+	private static Double getDefault(String config) {
+		return getConfig().getDouble("auctions.default." + config);
 	}
 
-	//TODO Add property messages for all.
-	public Auction parseAuction(Player p, String amount, String price, String bidInc, String buyout, String time,
-	                            boolean isSealed) {
+	private static boolean blockedWorld(Player p) {
+		List<String> blockedWorlds =
+				getConfig().getStringList("auctions.blocked-worlds").stream().map(String::toLowerCase)
+						.collect(Collectors.toList());
 
-		if ((ConfigManager.getConfig().getStringList("auctions.blocked-worlds"))
-				.contains(p.getWorld().getName().toLowerCase())) {
-			sendPropMessage(p, "command.auction.start.blocked-worlds");
-			return null;
-		}
-
-		ItemStack is = p.getInventory().getItemInMainHand();
-
-		if (is == null || is.getType() == Material.AIR) {
-			sendPropMessage(p, "command.auction.start.cannot_auction_air");
-			return null;
-		}
-
-		List<Material> blockedMaterials = ConfigManager.getConfig().getStringList("auctions.blocked-materials")
-				.stream()
-				.map(ItemUtil::getMaterial).collect(Collectors.toList());
-
-		if (blockedMaterials.contains(is.getType())) {
-			sendPropMessage(p, "command.auction.start.blocked-materials");
-			return null;
-		}
-
-		int actualAmt = findAmtItems(p);
-
-		int amt = isPosInt(amount);
-
-		if (amount.equalsIgnoreCase("hand") || amount.equalsIgnoreCase("all"))
-			amt = actualAmt;
-
-		if (amt <= 0) {
-			sendPropMessage(p, "command.auction.start.invalid-amt");
-			return null;
-		}
-
-		double start = getValueBasedOnConfig("starting-price", price);
-
-		if (start <= 0) {
-			sendPropMessage(p, "command.auction.start.invalid_start_price");
-			return null;
-		}
-
-		double inc = getValueBasedOnConfig("increment", bidInc);
-
-		if (inc <= 0) {
-			sendPropMessage(p, "command.auction.start.invalid-inc");
-			return null;
-		}
-
-		double buyoutPrice = getValueBasedOnConfig("autobuy", buyout);
-
-		if (buyoutPrice == -1) {
-			sendPropMessage(p, "command.auction.start.invalid-buyout");
-			return null;
-		}
-
-
-		int aucTime = isPosInt(time);
-
-		if (aucTime <= 0) {
-			sendPropMessage(p, "command.auction.start.invalid-time");
-			return null;
-		}
-
-		AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
-
-		return new Auction(ap, p.getInventory().getItemInMainHand(), amt, aucTime, start, inc, buyoutPrice, isSealed);
+		return blockedWorlds.contains(p.getWorld().getName().toLowerCase());
 	}
 
+	private static boolean blockedMaterial(ItemStack is) {
+		List<Material> blockedMaterials =
+				getConfig().getStringList("auctions.blocked-materials").stream().map(ItemUtil::getMaterial)
+						.collect(Collectors.toList());
 
-	private int findAmtItems(Player p) {
-		int amt = 0;
-
-		ItemStack it = p.getInventory().getItemInMainHand();
-
-		for (ItemStack item : p.getInventory().getContents()) {
-			if (item.isSimilar(it))
-				amt += item.getAmount();
-		}
-
-		return amt;
+		return blockedMaterials.contains(is.getType());
 	}
 
-	private void sendPropMessage(Player p, String property) {
-		MessageUtil.privateMessage(p, property);
-	}
-
-	public double getValueBasedOnConfig(String config, String value) {
-		return ConfigManager.getConfig()
-				.getBoolean("auctions.decimal." + config) ? isPosDouble(value) : isPosInt(value);
-	}
-
-	private FileConfiguration getConfig(String conf) {
+	private static FileConfiguration getConfig() {
 		return ConfigManager.getConfig();
 	}
 
-	public boolean checkStartFee(Player p) {
-		if (EzAuctions.getEcon().getBalance(p) < ConfigManager.getConfig().getDouble("auctions.start-price")) {
-
-			sendPropMessage(p, "command.auction.start.lacking_fee");
-
-			return false;
-		} else
-			EzAuctions.getEcon().withdrawPlayer(p, ConfigManager.getConfig().getDouble("auctions.start-price"));
-
-		return true;
+	private static void message(Player p, String prop) {
+		MessageUtil.privateMessage(p, prop);
 	}
 }

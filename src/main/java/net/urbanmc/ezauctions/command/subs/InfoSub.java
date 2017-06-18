@@ -1,9 +1,10 @@
 package net.urbanmc.ezauctions.command.subs;
 
-import mkremins.fanciful.FancyMessage;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.Permission;
+import net.urbanmc.ezauctions.util.MessageUtil;
 import org.bukkit.command.CommandSender;
 
 public class InfoSub extends SubCommand {
@@ -21,7 +22,7 @@ public class InfoSub extends SubCommand {
 			return;
 		}
 
-		FancyMessage fancy = current.getStartingMessage();
-		fancy.send(sender);
+		BaseComponent comp = current.getStartingMessage();
+		MessageUtil.privateMessage(sender, comp);
 	}
 }

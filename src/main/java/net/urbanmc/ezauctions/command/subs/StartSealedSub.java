@@ -78,11 +78,7 @@ public class StartSealedSub extends SubCommand {
 
 		removeFee(p);
 
-		ItemStack is = auction.getItem().clone();
-
-		is.setAmount(auction.getAmount());
-
-		p.getInventory().remove(is);
+		AuctionUtil.removeItemsFromInv(auction, p);
 
 		EzAuctions.getAuctionManager().addToQueue(auction);
 	}

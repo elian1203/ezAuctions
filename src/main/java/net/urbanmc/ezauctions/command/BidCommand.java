@@ -43,6 +43,14 @@ public class BidCommand implements CommandExecutor {
 			return true;
 		}
 
+		Player p = (Player) sender;
+		AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
+
+		if(auc.getAuctioneer().getUniqueId().equals(p.getUniqueId())) {
+			sendPropMessage(sender, "command.bid.self-bid");
+			return true;
+		}
+
 		double amount = AuctionUtil.parseNumberFromConfig(args.length == 0 ? "0" : args[0], "bid");
 
 		if (args.length == 0) {
@@ -64,8 +72,6 @@ public class BidCommand implements CommandExecutor {
 
 		double amountToRemove = amount;
 
-		Player p = (Player) sender;
-		AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
 
 		Bid lastBid = auc.getLastBidFrom(ap);
 

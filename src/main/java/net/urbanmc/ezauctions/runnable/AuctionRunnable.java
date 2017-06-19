@@ -41,7 +41,6 @@ public class AuctionRunnable extends BukkitRunnable {
 
 		if (timeLeft == 0) {
 			endAuction();
-
 			return;
 		}
 

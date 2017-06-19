@@ -78,7 +78,10 @@ public class StartSub extends SubCommand {
 
 		ItemUtil.removeItemsFromInv(auction, p);
 
-		EzAuctions.getAuctionManager().addToQueue(auction);
+		if (EzAuctions.getAuctionManager().addToQueue(auction)) {
+			int position = EzAuctions.getAuctionManager().getPositionInQueue(ap);
+			sendPropMessage(p, "command.auction.start.added_to_queue", position);
+		}
 	}
 
 	private boolean hasFee(Player p) {

@@ -62,9 +62,12 @@ public class StartSealedSub extends SubCommand {
 				ap,
 				args[1],
 				args[2],
-				args.length < 4 ? String.valueOf(ConfigManager.getInstance().get("auctions.default.increment")) : args[3],
-				args.length < 5 ? String.valueOf(ConfigManager.getInstance().get("auctions.default.autobuy")) : args[4],
-				args.length < 6 ? String.valueOf(ConfigManager.getConfig().getInt("auctions.default.auction-time")) : args[5],
+				args.length < 4 ? String
+						.valueOf(ConfigManager.getInstance().get("auctions.default.increment")) : args[3],
+				args.length < 5 ? String.valueOf(ConfigManager.getInstance().get("auctions.default.autobuy")) :
+						args[4],
+				args.length < 6 ? String
+						.valueOf(ConfigManager.getConfig().getInt("auctions.default.auction-time")) : args[5],
 				true);
 
 		if (auction == null)
@@ -80,7 +83,10 @@ public class StartSealedSub extends SubCommand {
 
 		ItemUtil.removeItemsFromInv(auction, p);
 
-		EzAuctions.getAuctionManager().addToQueue(auction);
+		if (EzAuctions.getAuctionManager().addToQueue(auction)) {
+			int position = EzAuctions.getAuctionManager().getPositionInQueue(ap);
+			sendPropMessage(p, "command.auction.start.added_to_queue", position);
+		}
 	}
 
 	private boolean hasFee(Player p) {

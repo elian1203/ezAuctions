@@ -12,3 +12,59 @@ commands:
   bid:
     description: Bid on an auction
     aliases: [b]
+
+permissions:
+  ezauctions.*:
+    default: op
+    description: All commands
+    children:
+      ezauctions.admin: true
+      ezauctions.player: true
+  ezauctions.admin:
+    default: false
+    children:
+      ezauctions.auction.cancel.others: true
+      ezauctions.auction.impound: true
+      ezauctions.auction.enable: true
+      ezauctions.auction.disable: true
+      ezauctions.auction.reload: true
+  ezauctions.player:
+    default: true
+    children:
+      ezauctions.auction: true
+      ezauctions.auction.start: true
+      ezauctions.auction.start.sealed: true
+      ezauctions.auction.cancel: true
+      ezauctions.auction.info: true
+      ezauctions.auction.remove: true
+      ezauctions.auction.spam: true
+      ezauctions.auction.ignore: true
+      ezauctions.bid: true
+  ezauctions.auction:
+    default: false
+  ezauctions.auction.start:
+    default: false
+  ezauctions.auction.start.sealed:
+    default: false
+  ezauctions.auction.cancel:
+    default: false
+  ezauctions.auction.cancel.others:
+    default: false
+  ezauctions.auction.info:
+    default: false
+  ezauctions.auction.remove:
+    default: false
+  ezauctions.auction.spam:
+    default: false
+  ezauctions.auction.ignore:
+    default: false
+  ezauctions.auction.impound:
+    default: false
+  ezauctions.auction.enable:
+    default: false
+  ezauctions.auction.disable:
+    default: false
+  ezauctions.auction.reload:
+    default: false
+  ezauctions.bid:
+    default: false

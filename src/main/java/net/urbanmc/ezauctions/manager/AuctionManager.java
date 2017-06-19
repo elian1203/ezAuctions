@@ -3,6 +3,7 @@ package net.urbanmc.ezauctions.manager;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionStartEvent;
 import net.urbanmc.ezauctions.object.Auction;
+import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.runnable.AuctionRunnable;
 import org.bukkit.Bukkit;
 
@@ -17,7 +18,7 @@ public class AuctionManager {
 	private AuctionRunnable currentRunnable;
 	private List<Auction> queue;
 
-	private boolean auctionsEnabled = true;
+	private boolean auctionsEnabled = true, inDelayedTask = false;
 
 	public AuctionManager(EzAuctions plugin) {
 		this.plugin = plugin;
@@ -28,16 +29,19 @@ public class AuctionManager {
 		return queue.size();
 	}
 
-	public void addToQueue(Auction auction) {
-		if (getCurrentRunnable() == null) {
+	public boolean addToQueue(Auction auction) {
+		if (getCurrentRunnable() == null && !inDelayedTask) {
 			AuctionStartEvent event = new AuctionStartEvent(auction);
 			Bukkit.getPluginManager().callEvent(event);
 
 			if (!event.isCancelled()) {
 				currentRunnable = new AuctionRunnable(auction, plugin);
 			}
+
+			return false;
 		} else {
 			queue.add(auction);
+			return true;
 		}
 	}
 
@@ -47,10 +51,21 @@ public class AuctionManager {
 				return true;
 		}
 
-		if (getCurrentAuction() != null && getCurrentAuction().getAuctioneer().getUniqueId().equals(auctioneer))
-			return true;
+		return getCurrentAuction() != null && getCurrentAuction().getAuctioneer().getUniqueId().equals(auctioneer);
+	}
 
-		return false;
+	public int getPositionInQueue(AuctionsPlayer ap) {
+		if (queue.isEmpty())
+			return -1;
+
+		for (int i = 0; i < queue.size(); i++) {
+			Auction auc = queue.get(i);
+
+			if (auc.getAuctioneer().getUniqueId().equals(ap.getUniqueId()))
+				return i + 1;
+		}
+
+		return -1;
 	}
 
 	public Auction removeFromQueue(UUID auctioneer) {
@@ -87,7 +102,14 @@ public class AuctionManager {
 		Bukkit.getPluginManager().callEvent(event);
 
 		if (!event.isCancelled()) {
-			currentRunnable = new AuctionRunnable(auction, plugin);
+			long delay = 20 * ConfigManager.getConfig().getLong("general.time-between");
+
+			inDelayedTask = true;
+
+			Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+				currentRunnable = new AuctionRunnable(auction, plugin);
+				inDelayedTask = false;
+			}, delay);
 		}
 	}
 

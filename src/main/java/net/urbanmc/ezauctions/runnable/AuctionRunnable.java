@@ -27,10 +27,8 @@ public class AuctionRunnable extends BukkitRunnable {
 		this.auction = auction;
 		this.timeLeft = auction.getAuctionTime();
 
-		long delay = 20 * ConfigManager.getConfig().getLong("general.time-between");
-
 		broadcastStart();
-		runTaskTimer(plugin, delay, 20);
+		runTaskTimer(plugin, 0, 20);
 	}
 
 	@Override

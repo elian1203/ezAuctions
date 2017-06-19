@@ -46,7 +46,7 @@ public abstract class SubCommand {
 		return false;
 	}
 
-	void sendPropMessage(CommandSender sender, String property) {
-		MessageUtil.privateMessage(sender, property);
+	void sendPropMessage(CommandSender sender, String property, Object... args) {
+		MessageUtil.privateMessage(sender, property, args);
 	}
 }

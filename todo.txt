@@ -1,4 +1,2 @@
 TODO:
-- redo start commands
-- redo auctionutil
-- figure out the base components
+- test more

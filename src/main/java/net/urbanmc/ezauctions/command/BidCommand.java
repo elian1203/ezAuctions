@@ -46,8 +46,8 @@ public class BidCommand implements CommandExecutor {
 		Player p = (Player) sender;
 		AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
 
-		if(auc.getAuctioneer().getUniqueId().equals(p.getUniqueId())) {
-			sendPropMessage(sender, "command.bid.self-bid");
+		if (auc.getAuctioneer().getUniqueId().equals(p.getUniqueId())) {
+			sendPropMessage(sender, "command.bid.self_bid");
 			return true;
 		}
 

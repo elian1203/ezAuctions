@@ -111,30 +111,6 @@ public class AuctionUtil {
 		return d;
 	}
 
-
-	public static void removeItemsFromInv(Auction auc, Player p) {
-		int amount = auc.getAmount();
-		ItemStack it, aucItem = auc.getItem();
-
-		for(int i = 0; i < p.getInventory().getSize(); i++) {
-
-			if(p.getInventory().getItem(i) == null) continue;
-
-			it = p.getInventory().getItem(i);
-
-			if(!aucItem.isSimilar(it)) continue;
-
-			if(it.getAmount() > amount) {
-				it.setAmount(it.getAmount() - amount);
-				p.getInventory().setItem(i, it);
-				break;
-			}
-
-			amount =- it.getAmount();
-			p.getInventory().setItem(i, null);
-		}
-	}
-
 	private static boolean betweenLimits(double number, String config) {
 		double configMin = getConfig().getDouble("auctions.minimum." + config), configMax =
 				getConfig().getDouble("auctions.maximum." + config);

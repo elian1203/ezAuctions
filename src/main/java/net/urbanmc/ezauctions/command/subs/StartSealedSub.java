@@ -9,10 +9,10 @@ import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.object.Permission;
 import net.urbanmc.ezauctions.util.AuctionUtil;
+import net.urbanmc.ezauctions.util.ItemUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 public class StartSealedSub extends SubCommand {
 
@@ -78,7 +78,7 @@ public class StartSealedSub extends SubCommand {
 
 		removeFee(p);
 
-		AuctionUtil.removeItemsFromInv(auction, p);
+		ItemUtil.removeItemsFromInv(auction, p);
 
 		EzAuctions.getAuctionManager().addToQueue(auction);
 	}

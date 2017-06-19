@@ -2,6 +2,7 @@ package net.urbanmc.ezauctions.util;
 
 import net.milkbowl.vault.item.ItemInfo;
 import net.milkbowl.vault.item.Items;
+import net.urbanmc.ezauctions.object.Auction;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -10,7 +11,35 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-class ItemUtil {
+public class ItemUtil {
+
+	public static void removeItemsFromInv(Auction auc, Player p) {
+		int amount = auc.getAmount();
+		ItemStack auctionItem = auc.getItem();
+
+		for (int i = 0; i < p.getInventory().getSize(); i++) {
+			if (p.getInventory().getItem(i) == null)
+				continue;
+
+			ItemStack is = p.getInventory().getItem(i);
+
+			if (!auctionItem.isSimilar(is))
+				continue;
+
+			if (is.getAmount() > amount) {
+				is.setAmount(is.getAmount() - amount);
+				p.getInventory().setItem(i, is);
+
+				break;
+			}
+
+			amount -= is.getAmount();
+			p.getInventory().setItem(i, null);
+
+			if (amount == 0)
+				break;
+		}
+	}
 
 	@SuppressWarnings("deprecation")
 	static Material getMaterial(String type) {

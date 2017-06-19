@@ -7,7 +7,6 @@ import net.urbanmc.ezauctions.event.AuctionEndEvent;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.Bid;
-import net.urbanmc.ezauctions.util.AuctionUtil;
 import net.urbanmc.ezauctions.util.MessageUtil;
 import net.urbanmc.ezauctions.util.RewardUtil;
 import org.bukkit.Bukkit;
@@ -41,7 +40,7 @@ public class AuctionRunnable extends BukkitRunnable {
 		}
 
 		if (timeLeft == 0) {
-
+			endAuction();
 
 			return;
 		}
@@ -78,7 +77,7 @@ public class AuctionRunnable extends BukkitRunnable {
 		antiSnipeTimesRun++;
 	}
 
-	public void winAuction() {
+	public void endAuction() {
 		cancel();
 
 		AuctionEndEvent event = new AuctionEndEvent(getAuction());

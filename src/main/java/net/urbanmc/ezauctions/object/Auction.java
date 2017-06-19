@@ -7,10 +7,8 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.HoverEvent.Action;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.urbanmc.ezauctions.EzAuctions;
-import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
-import net.urbanmc.ezauctions.util.AuctionUtil;
 import net.urbanmc.ezauctions.util.MessageUtil;
 import net.urbanmc.ezauctions.util.ReflectionUtil;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -84,7 +82,7 @@ public class Auction {
 		bids.add(b);
 
 		if(getAutoBuy() != 0 && b.getAmount() == getAutoBuy()) {
-			EzAuctions.getAuctionManager().getCurrentRunnable().winAuction();
+			EzAuctions.getAuctionManager().getCurrentRunnable().endAuction();
 			return;
 		}
 

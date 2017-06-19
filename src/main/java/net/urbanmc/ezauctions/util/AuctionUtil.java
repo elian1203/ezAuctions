@@ -99,11 +99,9 @@ public class AuctionUtil {
 	private static int getTotalItems(Player p, ItemStack item) {
 		int amount = 0;
 
-		for (ItemStack is : p.getInventory().getContents()) {
-			if (is != null && is.isSimilar(item)) {
+		for (ItemStack is : p.getInventory().getContents())
+			if (is != null && is.isSimilar(item))
 				amount += is.getAmount();
-			}
-		}
 
 		return amount;
 	}

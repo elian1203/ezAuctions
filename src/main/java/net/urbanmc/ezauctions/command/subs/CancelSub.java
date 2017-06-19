@@ -3,7 +3,6 @@ package net.urbanmc.ezauctions.command.subs;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionCancelEvent;
 import net.urbanmc.ezauctions.manager.ConfigManager;
-import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.Permission;
 import org.bukkit.Bukkit;
@@ -48,7 +47,5 @@ public class CancelSub extends SubCommand {
 			return;
 
 		EzAuctions.getAuctionManager().getCurrentRunnable().cancelAuction();
-
-		Bukkit.broadcastMessage(Messages.getString("auction.cancelled"));
 	}
 }

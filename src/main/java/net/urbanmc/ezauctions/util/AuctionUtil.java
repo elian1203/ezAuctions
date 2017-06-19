@@ -1,11 +1,8 @@
 package net.urbanmc.ezauctions.util;
 
-import net.milkbowl.vault.economy.Economy;
-import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
-import net.urbanmc.ezauctions.object.Bid;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -18,10 +15,6 @@ public class AuctionUtil {
 
 	public static Auction parseAuction(AuctionsPlayer ap, String amount, String startingPrice, String increment,
 	                                   String autoBuy, String time, boolean sealed) {
-
-
-		System.out.println("Increment: " + increment + "; Buyout: " + autoBuy + "; Time:" + time);
-
 		Player p = ap.getOnlinePlayer();
 
 		if (blockedWorld(p)) {
@@ -82,15 +75,17 @@ public class AuctionUtil {
 	private static int parseAmount(String amount, Player p, ItemStack item) {
 		int finalAmount = -1;
 
+		int total = getTotalItems(p, item);
+
 		if (isPositiveDouble(amount)) {
 			finalAmount = Integer.parseInt(amount);
 
-			if (!p.getInventory().contains(item, finalAmount))
+			if (finalAmount > total)
 				return -1;
 		} else if (amount.equalsIgnoreCase("hand")) {
 			finalAmount = item.getAmount();
 		} else if (amount.equalsIgnoreCase("all")) {
-			finalAmount = getTotalItems(p, item);
+			finalAmount = total;
 		}
 
 		return finalAmount;

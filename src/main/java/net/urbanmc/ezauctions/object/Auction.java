@@ -81,7 +81,7 @@ public class Auction {
 	public void addBid(Bid b) {
 		bids.add(b);
 
-		if(getAutoBuy() != 0 && b.getAmount() == getAutoBuy()) {
+		if (getAutoBuy() != 0 && b.getAmount() == getAutoBuy()) {
 			EzAuctions.getAuctionManager().getCurrentRunnable().endAuction();
 			return;
 		}
@@ -111,15 +111,29 @@ public class Auction {
 		return null;
 	}
 
-	public int getTimesBid(AuctionsPlayer p) {
+	public int getTimesBid(AuctionsPlayer ap) {
 		int amt = 0;
 
 		for (Bid b : bids) {
-			if (b.getBidder().getUniqueId().equals(p.getUniqueId()))
+			if (b.getBidder().getUniqueId().equals(ap.getUniqueId()))
 				amt += 1;
 		}
 
 		return amt;
+	}
+
+	public int getConsecutiveBids(AuctionsPlayer ap) {
+		List<Bid> bidsReversed = Lists.reverse(bids);
+		int bids = 0;
+
+		for (Bid bid : bidsReversed) {
+			if (bid.getBidder().getUniqueId().equals(ap.getUniqueId())) {
+				bids++;
+			} else
+				break;
+		}
+
+		return bids;
 	}
 
 	public Map<AuctionsPlayer, Double> getLosingBids() {
@@ -230,7 +244,6 @@ public class Auction {
 					List<BaseComponent> extraList = main.getExtra();
 
 					if (extraList == null) {
-						System.out.println("null");
 						color = ChatColor.WHITE;
 					}
 				}
@@ -238,8 +251,6 @@ public class Auction {
 				if (color != null) {
 					extra.setColor(color);
 				}
-
-				System.out.println("color = " + extra.getColor().name());
 
 				if (arg.contains("%item%")) {
 					arg = arg.replace("%item%", ReflectionUtil.getFriendlyName(getItem()));
@@ -254,8 +265,6 @@ public class Auction {
 				main.addExtra(extra);
 			}
 		}
-
-		System.out.println("main comp = " + main.toLegacyText());
 
 		return main;
 	}

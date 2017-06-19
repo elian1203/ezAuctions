@@ -94,5 +94,4 @@ public class StartSub extends SubCommand {
 			EzAuctions.getEcon().withdrawPlayer(p, fee);
 		}
 	}
-
 }

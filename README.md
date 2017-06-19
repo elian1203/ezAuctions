@@ -1,6 +1,6 @@
 # ezAuctions
 A simple, text-based auction plugin <br> <br>
-Auction plugin based off of floAuction & Auctions <br>
+Based off of floAuction & Auctions <br>
 Requires Vault & Uses the Fanciful library
 
 ### Developers

@@ -36,7 +36,7 @@ public class AuctionRunnable extends BukkitRunnable {
 	@Override
 	public void run() {
 		if (broadcastTimes.contains(timeLeft)) {
-			MessageUtil.broadcastRegular("auction.time_left", timeLeft);
+			MessageUtil.broadcastSpammy("auction.time_left", timeLeft);
 		}
 
 		if (timeLeft == 0) {
@@ -97,8 +97,7 @@ public class AuctionRunnable extends BukkitRunnable {
 
 			RewardUtil.rewardAuction(auc, econ);
 			RewardUtil.returnLosingBidders(auc, econ);
-		}
-		else {
+		} else {
 			MessageUtil.broadcastRegular("auction.finish.no_bids");
 			RewardUtil.rewardCancel(getAuction());
 		}

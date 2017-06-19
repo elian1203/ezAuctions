@@ -65,7 +65,12 @@ public class BidCommand implements CommandExecutor {
 			return true;
 		}
 
-		if (auc.getLastBid() != null) {
+		if (auc.getLastBid() == null) {
+			if (amount < auc.getStartingPrice()) {
+				sendPropMessage(sender, "command.bid.too_low");
+				return true;
+			}
+		} else {
 			if (amount < auc.getLastBid().getAmount() + auc.getIncrement()) {
 				sendPropMessage(sender, "command.bid.too_low");
 				return true;
@@ -73,7 +78,6 @@ public class BidCommand implements CommandExecutor {
 		}
 
 		double amountToRemove = amount;
-
 
 		Bid lastBid = auc.getLastBidFrom(ap);
 
@@ -91,9 +95,10 @@ public class BidCommand implements CommandExecutor {
 			return true;
 		}
 
-		int consecutiveBids = auc.getConsecutiveBids(ap);
+		int consecutiveBids = auc.getConsecutiveBids(ap), maxConsecutiveBids =
+				ConfigManager.getConfig().getInt("auctions.maximum.consecutive-bids");
 
-		if (consecutiveBids == ConfigManager.getConfig().getInt("auctions.maximum.consecutive-bids")) {
+		if (maxConsecutiveBids != 0 && consecutiveBids == maxConsecutiveBids) {
 			sendPropMessage(sender, "command.bid.consecutive_limit");
 			return true;
 		}

@@ -69,7 +69,7 @@ auctions:
     increment: 0
     autobuy: 10000000
     # How many times can a player bid in a row before someone else bids?
-    consecutive-bids: 3
+    consecutive-bids: 2
 
 # They use the same settings as auctions
 sealed-auctions:

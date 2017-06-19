@@ -82,7 +82,7 @@ public class Auction {
 	public void addBid(Bid b) {
 		bids.add(b);
 
-		if (getAutoBuy() != 0 && b.getAmount() == getAutoBuy()) {
+		if(getAutoBuy() != 0 && b.getAmount() == getAutoBuy()) {
 			AuctionUtil.wonAuction(this);
 			return;
 		}
@@ -231,6 +231,7 @@ public class Auction {
 					List<BaseComponent> extraList = main.getExtra();
 
 					if (extraList == null) {
+						System.out.println("null");
 						color = ChatColor.WHITE;
 					}
 				}
@@ -238,6 +239,8 @@ public class Auction {
 				if (color != null) {
 					extra.setColor(color);
 				}
+
+				System.out.println("color = " + extra.getColor().name());
 
 				if (arg.contains("%item%")) {
 					arg = arg.replace("%item%", ReflectionUtil.getFriendlyName(getItem()));
@@ -252,6 +255,8 @@ public class Auction {
 				main.addExtra(extra);
 			}
 		}
+
+		System.out.println("main comp = " + main.toLegacyText());
 
 		return main;
 	}

@@ -99,11 +99,9 @@ public class AuctionUtil {
 	private static int getTotalItems(Player p, ItemStack item) {
 		int amount = 0;
 
-		for (ItemStack is : p.getInventory().getContents()) {
-			if (is != null && is.isSimilar(item)) {
+		for (ItemStack is : p.getInventory().getContents())
+			if (is != null && is.isSimilar(item))
 				amount += is.getAmount();
-			}
-		}
 
 		return amount;
 	}
@@ -187,17 +185,4 @@ public class AuctionUtil {
 		MessageUtil.privateMessage(p, prop);
 	}
 
-	public static void wonAuction(Auction auc) {
-		Economy econ = EzAuctions.getEcon();
-
-		Bid lastBid = auc.getLastBid();
-
-		String lastBidderName = lastBid.getBidder().getOfflinePlayer().getName();
-		double lastBidAmount = lastBid.getAmount();
-
-		MessageUtil.broadcastRegular("auction.finish", lastBidderName, lastBidAmount);
-
-		RewardUtil.rewardAuction(auc, econ);
-		RewardUtil.returnLosingBidders(auc, econ);
-	}
 }

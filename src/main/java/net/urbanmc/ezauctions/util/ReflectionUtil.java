@@ -13,7 +13,9 @@ public class ReflectionUtil {
 		try {
 			Object nmsStack = asNMSCopy(is);
 
-			return nmsStack.getClass().getMethod("getName").invoke(nmsStack).toString();
+			Object item = nmsStack.getClass().getMethod("getItem").invoke(nmsStack);
+
+			return item.getClass().getMethod("b", nmsStack.getClass()).invoke(item, nmsStack).toString();
 		} catch (Exception ex) {
 			Bukkit.getLogger()
 					.log(Level.WARNING, "[ezAuctions] Error getting friendly name for " + is.getType().toString(), ex);

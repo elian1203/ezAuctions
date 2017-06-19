@@ -1,6 +1,7 @@
 package net.urbanmc.ezauctions.util;
 
 import net.milkbowl.vault.economy.Economy;
+import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
@@ -51,13 +52,15 @@ public class RewardUtil {
 			lastBid.getBidder().getOfflineItems().add(item);
 			AuctionsPlayerManager.getInstance().saveGson();
 		}
-	}
 
-	public static void returnLosingBidders(Auction auction, Economy econ) {
 		Map<AuctionsPlayer, Double> map = auction.getLosingBids();
 
+		returnBidderMoney(map);
+	}
+
+	private static void returnBidderMoney(Map<AuctionsPlayer, Double> map) {
 		for (Entry<AuctionsPlayer, Double> entry : map.entrySet()) {
-			econ.depositPlayer(entry.getKey().getOfflinePlayer(), entry.getValue());
+			EzAuctions.getEcon().depositPlayer(entry.getKey().getOfflinePlayer(), entry.getValue());
 		}
 	}
 
@@ -76,10 +79,18 @@ public class RewardUtil {
 			auction.getAuctioneer().getOfflineItems().add(item);
 			AuctionsPlayerManager.getInstance().saveGson();
 		}
+
+		Map<AuctionsPlayer, Double> map = auction.getAllBids();
+
+		returnBidderMoney(map);
 	}
 
 	public static void rewardImpound(Auction auction, Player impounder) {
 		ItemUtil.addItemToInventory(impounder, auction.getItem(), auction.getAmount(), true);
+
+		Map<AuctionsPlayer, Double> map = auction.getAllBids();
+
+		returnBidderMoney(map);
 	}
 
 	public static void rewardOffline(AuctionsPlayer ap) {

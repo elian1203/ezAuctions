@@ -94,7 +94,6 @@ public class AuctionRunnable extends BukkitRunnable {
 			MessageUtil.broadcastRegular("auction.finish", lastBidderName, lastBidAmount);
 
 			RewardUtil.rewardAuction(auc, econ);
-			RewardUtil.returnLosingBidders(auc, econ);
 		} else {
 			MessageUtil.broadcastRegular("auction.finish.no_bids");
 			RewardUtil.rewardCancel(getAuction());

@@ -15,10 +15,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Auction {
 
@@ -136,6 +133,22 @@ public class Auction {
 		return bids;
 	}
 
+	public Map<AuctionsPlayer, Double> getAllBids() {
+		if (bids.isEmpty())
+			return new HashMap<>();
+
+		List<Bid> bidsReversed = Lists.reverse(bids);
+		Map<AuctionsPlayer, Double> bidMap = new HashMap<>();
+
+		for (Bid bid : bidsReversed) {
+			if (!bidMap.containsKey(bid.getBidder())) {
+				bidMap.put(bid.getBidder(), bid.getAmount());
+			}
+		}
+
+		return bidMap;
+	}
+
 	public Map<AuctionsPlayer, Double> getLosingBids() {
 		if (bids.size() < 2)
 			return new HashMap<>();
@@ -143,7 +156,12 @@ public class Auction {
 		List<Bid> bidsReversed = Lists.reverse(bids).subList(0, bids.size() - 2);
 		Map<AuctionsPlayer, Double> losing = new HashMap<>();
 
+		UUID winnerId = getLastBid().getBidder().getUniqueId();
+
 		for (Bid bid : bidsReversed) {
+			if (bid.getBidder().getUniqueId().equals(winnerId))
+				continue;
+
 			if (!losing.containsKey(bid.getBidder())) {
 				losing.put(bid.getBidder(), bid.getAmount());
 			}

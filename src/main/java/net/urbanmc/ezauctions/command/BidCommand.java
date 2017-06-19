@@ -51,6 +51,11 @@ public class BidCommand implements CommandExecutor {
 			return true;
 		}
 
+		if (args.length > 0 && !isPositiveDouble(args[0])) {
+			sendPropMessage(sender, "command.bid.invalid_amount");
+			return true;
+		}
+
 		double amount = AuctionUtil.parseNumberFromConfig(args.length == 0 ? "0" : args[0], "bid");
 
 		if (args.length == 0) {
@@ -136,5 +141,14 @@ public class BidCommand implements CommandExecutor {
 
 	private boolean hasAmount(Player p, double amt) {
 		return EzAuctions.getEcon().getBalance(p) >= amt;
+	}
+
+	private boolean isPositiveDouble(String number) {
+		try {
+			double d = Double.parseDouble(number);
+			return d > 0;
+		} catch (NumberFormatException e) {
+			return false;
+		}
 	}
 }

@@ -48,7 +48,7 @@ public class CancelSub extends SubCommand {
 			return;
 
 		EzAuctions.getAuctionManager().getCurrentRunnable().cancelAuction();
-		sendPropMessage(sender, "command.auction.cancel.success");
+
 		Bukkit.broadcastMessage(Messages.getString("auction.cancelled"));
 	}
 }

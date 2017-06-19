@@ -41,19 +41,7 @@ public class AuctionRunnable extends BukkitRunnable {
 		}
 
 		if (timeLeft == 0) {
-			cancel();
 
-			AuctionEndEvent event = new AuctionEndEvent(getAuction());
-			Bukkit.getPluginManager().callEvent(event);
-
-			EzAuctions.getAuctionManager().next();
-
-			if (getAuction().anyBids()) 
-				AuctionUtil.wonAuction(getAuction());
-			 else {
-				MessageUtil.broadcastRegular("auction.finish.no_bids");
-				RewardUtil.rewardCancel(getAuction());
-			}
 
 			return;
 		}
@@ -88,6 +76,34 @@ public class AuctionRunnable extends BukkitRunnable {
 		timeLeft += addTime;
 
 		antiSnipeTimesRun++;
+	}
+
+	public void winAuction() {
+		cancel();
+
+		AuctionEndEvent event = new AuctionEndEvent(getAuction());
+		Bukkit.getPluginManager().callEvent(event);
+
+		EzAuctions.getAuctionManager().next();
+
+		if (getAuction().anyBids()) {
+			Auction auc = getAuction();
+			Economy econ = EzAuctions.getEcon();
+
+			Bid lastBid = auc.getLastBid();
+
+			String lastBidderName = lastBid.getBidder().getOfflinePlayer().getName();
+			double lastBidAmount = lastBid.getAmount();
+
+			MessageUtil.broadcastRegular("auction.finish", lastBidderName, lastBidAmount);
+
+			RewardUtil.rewardAuction(auc, econ);
+			RewardUtil.returnLosingBidders(auc, econ);
+		}
+		else {
+			MessageUtil.broadcastRegular("auction.finish.no_bids");
+			RewardUtil.rewardCancel(getAuction());
+		}
 	}
 
 	public void cancelAuction() {

@@ -7,6 +7,7 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.HoverEvent.Action;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.urbanmc.ezauctions.EzAuctions;
+import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.util.AuctionUtil;
@@ -83,7 +84,7 @@ public class Auction {
 		bids.add(b);
 
 		if(getAutoBuy() != 0 && b.getAmount() == getAutoBuy()) {
-			AuctionUtil.wonAuction(this);
+			EzAuctions.getAuctionManager().getCurrentRunnable().winAuction();
 			return;
 		}
 

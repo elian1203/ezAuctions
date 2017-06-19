@@ -187,17 +187,4 @@ public class AuctionUtil {
 		MessageUtil.privateMessage(p, prop);
 	}
 
-	public static void wonAuction(Auction auc) {
-		Economy econ = EzAuctions.getEcon();
-
-		Bid lastBid = auc.getLastBid();
-
-		String lastBidderName = lastBid.getBidder().getOfflinePlayer().getName();
-		double lastBidAmount = lastBid.getAmount();
-
-		MessageUtil.broadcastRegular("auction.finish", lastBidderName, lastBidAmount);
-
-		RewardUtil.rewardAuction(auc, econ);
-		RewardUtil.returnLosingBidders(auc, econ);
-	}
 }

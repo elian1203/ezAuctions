@@ -62,9 +62,9 @@ public class StartSealedSub extends SubCommand {
 				ap,
 				args[1],
 				args[2],
-				args.length < 4 ? String.valueOf(ConfigManager.getInstance().get("default.increment")) : args[3],
-				args.length < 5 ? String.valueOf(ConfigManager.getInstance().get("default.autobuy")) : args[4],
-				args.length < 6 ? String.valueOf(ConfigManager.getConfig().getInt("default.auction-time")) : args[5],
+				args.length < 4 ? String.valueOf(ConfigManager.getInstance().get("auctions.default.increment")) : args[3],
+				args.length < 5 ? String.valueOf(ConfigManager.getInstance().get("auctions.default.autobuy")) : args[4],
+				args.length < 6 ? String.valueOf(ConfigManager.getConfig().getInt("auctions.default.auction-time")) : args[5],
 				true);
 
 		if (auction == null)

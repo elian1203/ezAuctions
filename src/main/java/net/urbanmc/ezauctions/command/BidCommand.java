@@ -48,7 +48,7 @@ public class BidCommand implements CommandExecutor {
 
 		if (auc.getAuctioneer().getUniqueId().equals(p.getUniqueId())) {
 			sendPropMessage(sender, "command.bid.self_bid");
-			return true;
+			//return true;
 		}
 
 		double amount = AuctionUtil.parseNumberFromConfig(args.length == 0 ? "0" : args[0], "bid");

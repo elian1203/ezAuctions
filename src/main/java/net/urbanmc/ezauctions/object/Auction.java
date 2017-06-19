@@ -92,7 +92,8 @@ public class Auction {
 
 		FileConfiguration data = ConfigManager.getConfig();
 
-		if (data.getBoolean("antisnipe.enabled") && getAuctionTime() <= data.getInt("antisnipe.seconds-for-start")) {
+		if (!isSealed() && data.getBoolean("antisnipe.enabled") &&
+				getAuctionTime() <= data.getInt("antisnipe.seconds-for-start")) {
 			EzAuctions.getAuctionManager().getCurrentRunnable().antiSnipe();
 		}
 	}

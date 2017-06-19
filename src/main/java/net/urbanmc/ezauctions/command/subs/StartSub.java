@@ -9,10 +9,10 @@ import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.object.Permission;
 import net.urbanmc.ezauctions.util.AuctionUtil;
+import net.urbanmc.ezauctions.util.ItemUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 public class StartSub extends SubCommand {
 
@@ -57,9 +57,12 @@ public class StartSub extends SubCommand {
 				ap,
 				args[1],
 				args[2],
-				args.length < 4 ? String.valueOf(ConfigManager.getInstance().get("auctions.default.increment")) : args[3],
-				args.length < 5 ? String.valueOf(ConfigManager.getInstance().get("auctions.default.autobuy")) : args[4],
-				args.length < 6 ? String.valueOf(ConfigManager.getConfig().getInt("auctions.default.auction-time")) : args[5],
+				args.length < 4 ? String
+						.valueOf(ConfigManager.getInstance().get("auctions.default.increment")) : args[3],
+				args.length < 5 ? String.valueOf(ConfigManager.getInstance().get("auctions.default.autobuy")) :
+						args[4],
+				args.length < 6 ? String
+						.valueOf(ConfigManager.getConfig().getInt("auctions.default.auction-time")) : args[5],
 				false);
 
 		if (auction == null)
@@ -73,7 +76,7 @@ public class StartSub extends SubCommand {
 
 		removeFee(p);
 
-		AuctionUtil.removeItemsFromInv(auction, p);
+		ItemUtil.removeItemsFromInv(auction, p);
 
 		EzAuctions.getAuctionManager().addToQueue(auction);
 	}

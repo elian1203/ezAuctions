@@ -70,7 +70,7 @@ public class ItemUtil {
 	static boolean addItemToInventory(Player p, ItemStack is, int amount, boolean message) {
 		List<ItemStack> items = new ArrayList<>();
 
-		int maxStackSize = ReflectionUtil.getMaxStackSize(is);
+		int maxStackSize = is.getMaxStackSize();
 
 		while (amount > maxStackSize) {
 			ItemStack cloned = is.clone();

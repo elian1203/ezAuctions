@@ -1,8 +1,11 @@
 package net.urbanmc.ezauctions.util;
 
+import net.milkbowl.vault.economy.Economy;
+import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
+import net.urbanmc.ezauctions.object.Bid;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -15,6 +18,10 @@ public class AuctionUtil {
 
 	public static Auction parseAuction(AuctionsPlayer ap, String amount, String startingPrice, String increment,
 	                                   String autoBuy, String time, boolean sealed) {
+
+
+		System.out.println("Increment: " + increment + "; Buyout: " + autoBuy + "; Time:" + time);
+
 		Player p = ap.getOnlinePlayer();
 
 		if (blockedWorld(p)) {
@@ -55,7 +62,7 @@ public class AuctionUtil {
 
 		double finalIncrement = getValueBasedOnConfig(increment, "increment");
 
-		if (!isPositiveDouble(autoBuy)) {
+		if (!isPos0Double(autoBuy)) {
 			message(p, "command.auction.start.invalid-buyout");
 			return null;
 		}
@@ -166,6 +173,16 @@ public class AuctionUtil {
 		}
 	}
 
+	private static boolean isPos0Double(String input) {
+		try {
+			double d = Double.parseDouble(input);
+			return d >= 0;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
+
+
 	private static Double getDefault(String config) {
 		return getConfig().getDouble("auctions.default." + config);
 	}
@@ -192,5 +209,19 @@ public class AuctionUtil {
 
 	private static void message(Player p, String prop) {
 		MessageUtil.privateMessage(p, prop);
+	}
+
+	public static void wonAuction(Auction auc) {
+		Economy econ = EzAuctions.getEcon();
+
+		Bid lastBid = auc.getLastBid();
+
+		String lastBidderName = lastBid.getBidder().getOfflinePlayer().getName();
+		double lastBidAmount = lastBid.getAmount();
+
+		MessageUtil.broadcastRegular("auction.finish", lastBidderName, lastBidAmount);
+
+		RewardUtil.rewardAuction(auc, econ);
+		RewardUtil.returnLosingBidders(auc, econ);
 	}
 }

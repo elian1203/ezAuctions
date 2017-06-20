@@ -5,6 +5,7 @@ import net.urbanmc.ezauctions.command.AuctionCommand;
 import net.urbanmc.ezauctions.command.BidCommand;
 import net.urbanmc.ezauctions.listener.JoinListener;
 import net.urbanmc.ezauctions.manager.AuctionManager;
+import org.bstats.Metrics;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -34,6 +35,7 @@ public class EzAuctions extends JavaPlugin {
 		registerListener();
 		registerCommands();
 		registerAuctionManger();
+		registerMetrics();
 	}
 
 	@Override
@@ -63,5 +65,9 @@ public class EzAuctions extends JavaPlugin {
 
 	private void registerAuctionManger() {
 		auctionManager = new AuctionManager(this);
+	}
+
+	private void registerMetrics() {
+		new Metrics(this);
 	}
 }

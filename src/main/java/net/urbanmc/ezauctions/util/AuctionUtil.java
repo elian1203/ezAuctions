@@ -62,6 +62,11 @@ public class AuctionUtil {
 
 		double finalAutoBuy = getValueBasedOnConfig(autoBuy, "autobuy");
 
+		if(finalAutoBuy > 0 && finalAutoBuy < finalStartingPrice) {
+			message(p, "command.auction.start.invalid-buyout");
+			return null;
+		}
+
 		if (!isPositiveDouble(time)) {
 			message(p, "command.auction.start.invalid-time");
 			return null;

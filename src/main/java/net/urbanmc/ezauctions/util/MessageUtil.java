@@ -23,7 +23,7 @@ public class MessageUtil {
 		Bukkit.getOnlinePlayers().stream().map(p -> AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId()))
 				.filter(ap -> !ap.isIgnoringAll()).forEach(ap -> ap.getOnlinePlayer().spigot().sendMessage(comp));
 
-		Bukkit.getConsoleSender().spigot().sendMessage(comp);
+		Bukkit.getConsoleSender().sendMessage(comp.toPlainText());
 	}
 
 	public static void broadcastSpammy(String prop, Object... args) {

@@ -5,14 +5,22 @@ import net.urbanmc.ezauctions.command.AuctionCommand;
 import net.urbanmc.ezauctions.command.BidCommand;
 import net.urbanmc.ezauctions.listener.JoinListener;
 import net.urbanmc.ezauctions.manager.AuctionManager;
+import net.urbanmc.ezauctions.manager.ConfigManager;
 import org.bstats.Metrics;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class EzAuctions extends JavaPlugin {
 
 	private static AuctionManager auctionManager;
 	private static Economy econ;
+
+	private static boolean updateAvailable = false;
 
 	public static AuctionManager getAuctionManager() {
 		return auctionManager;
@@ -20,6 +28,10 @@ public class EzAuctions extends JavaPlugin {
 
 	public static Economy getEcon() {
 		return econ;
+	}
+
+	public static boolean isUpdateAvailable() {
+		return updateAvailable;
 	}
 
 	@Override
@@ -36,6 +48,10 @@ public class EzAuctions extends JavaPlugin {
 		registerCommands();
 		registerAuctionManger();
 		registerMetrics();
+
+		if (ConfigManager.getConfig().getBoolean("general.check-updates", true)) {
+			checkUpdateAvailable();
+		}
 	}
 
 	@Override
@@ -69,5 +85,34 @@ public class EzAuctions extends JavaPlugin {
 
 	private void registerMetrics() {
 		new Metrics(this);
+	}
+
+	private void checkUpdateAvailable() {
+		String serverVersion = getDescription().getVersion();
+
+		// This is taken from the page: https://www.spigotmc.org/resources/ezauctions.42574/
+		int resourceId = 42574;
+
+		try {
+			// This method was taken from https://www.spigotmc.org/members/maximvdw.6687/
+			HttpURLConnection con =
+					(HttpURLConnection) new URL("http://www.spigotmc.org/api/general.php").openConnection();
+			con.setDoOutput(true);
+			con.setRequestMethod("POST");
+			con.getOutputStream()
+					.write(("key=98BE0FE67F88AB82B4C197FAF1DC3B69206EFDCC4D3B80FC83A00037510B99B4&resource=" +
+							resourceId).getBytes("UTF-8"));
+
+			String latestVersion = new BufferedReader(new InputStreamReader(con.getInputStream())).readLine();
+
+			if (serverVersion.equalsIgnoreCase(latestVersion))
+				return;
+
+			updateAvailable = true;
+			getLogger().info("Version " + latestVersion + " is available! You are currently running version " +
+					                 serverVersion + ".");
+		} catch (Exception ex) {
+			getLogger().warning("Error checking for updates!");
+		}
 	}
 }

@@ -1,6 +1,7 @@
 package net.urbanmc.ezauctions.manager;
 
 import org.apache.commons.io.IOUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 
 import java.io.*;
@@ -58,11 +59,21 @@ public class Messages {
 	}
 
 	private String getStringFromBundle(String key, Object... args) {
-		return format(bundle.getString(key), true, args);
+		try {
+			return format(bundle.getString(key), true, args);
+		} catch (Exception e) {
+			Bukkit.getLogger().severe("[ezAuctions] Missing message in message.properties! Message key: " + key);
+			return key;
+		}
 	}
 
 	public String getStringWithoutColoring(String key, Object... args) {
-		return format(bundle.getString(key), false, args);
+		try {
+			return format(bundle.getString(key), false, args);
+		} catch (Exception e) {
+			Bukkit.getLogger().severe("[ezAuctions] Missing message in message.properties! Message key: " + key);
+			return key;
+		}
 	}
 
 	private String format(String message, boolean color, Object... args) {

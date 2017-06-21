@@ -2,6 +2,8 @@
 #################################
 
 general:
+  # Should we check for updates and notify players on join? Permission is ezauctions.updatemessage
+  check-updates: true
   # Time between auctions (in seconds)
   time-between: 5
   # Players cannot do /auc cancel when the auction time is under this

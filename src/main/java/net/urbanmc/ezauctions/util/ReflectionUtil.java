@@ -9,16 +9,17 @@ import java.util.logging.Level;
 @SuppressWarnings("ConstantConditions")
 public class ReflectionUtil {
 
-	public static String getFriendlyName(ItemStack is) {
+	public static String getMinecraftName(ItemStack is) {
 		try {
 			Object nmsStack = asNMSCopy(is);
 
 			Object item = nmsStack.getClass().getMethod("getItem").invoke(nmsStack);
 
-			return item.getClass().getMethod("b", nmsStack.getClass()).invoke(item, nmsStack).toString();
+			return item.getClass().getMethod("a", nmsStack.getClass()).invoke(item, nmsStack).toString() + ".name";
 		} catch (Exception ex) {
 			Bukkit.getLogger()
-					.log(Level.WARNING, "[ezAuctions] Error getting friendly name for " + is.getType().toString(), ex);
+					.log(Level.WARNING, "[ezAuctions] Error getting minecraft name for " + is.getType().toString(),
+					     ex);
 			return "";
 		}
 	}

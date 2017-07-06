@@ -6,6 +6,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.HoverEvent.Action;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.TranslatableComponent;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
@@ -253,7 +254,7 @@ public class Auction {
 
 		for (String split2 : split) {
 			for (String arg : split2.split("(?=&)")) {
-				TextComponent extra = new TextComponent();
+				BaseComponent extra = new TextComponent();
 				ChatColor color = null;
 
 				if (arg.startsWith("&")) {
@@ -267,19 +268,26 @@ public class Auction {
 					}
 				}
 
-				if (color != null) {
-					extra.setColor(color);
-				}
 
 				if (arg.contains("%item%")) {
-					arg = arg.replace("%item%", ReflectionUtil.getFriendlyName(getItem()));
+					arg = arg.replace("%item%", ReflectionUtil.getMinecraftName(getItem()));
+
+					extra = new TranslatableComponent(arg.trim());
 
 					BaseComponent[] comp = {new TextComponent(ReflectionUtil.getItemAsJson(getItem()))};
 
 					extra.setHoverEvent(new HoverEvent(Action.SHOW_ITEM, comp));
+
+					if (arg.charAt(arg.length() - 1) == ' ') {
+						extra.addExtra(" ");
+					}
+				} else {
+					((TextComponent) extra).setText(arg);
 				}
 
-				extra.setText(arg);
+				if (color != null) {
+					extra.setColor(color);
+				}
 
 				main.addExtra(extra);
 			}

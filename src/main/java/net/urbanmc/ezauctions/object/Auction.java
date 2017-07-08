@@ -268,19 +268,27 @@ public class Auction {
 					}
 				}
 
-
 				if (arg.contains("%item%")) {
-					arg = arg.replace("%item%", ReflectionUtil.getMinecraftName(getItem()));
+					String minecraftItemName = ReflectionUtil.getMinecraftName(getItem());
+					arg = arg.replace("%item%", minecraftItemName);
 
-					extra = new TranslatableComponent(arg.trim());
+					String[] split3 = arg.split("((?<=" + minecraftItemName + ")|(?=" + minecraftItemName + "))");
 
-					BaseComponent[] comp = {new TextComponent(ReflectionUtil.getItemAsJson(getItem()))};
+					List<BaseComponent> addtoExtra = new ArrayList<>();
 
-					extra.setHoverEvent(new HoverEvent(Action.SHOW_ITEM, comp));
-
-					if (arg.charAt(arg.length() - 1) == ' ') {
-						extra.addExtra(" ");
+					for (String s : split3) {
+						if (s.equalsIgnoreCase(minecraftItemName)) {
+							addtoExtra.add(new TranslatableComponent(s));
+						} else {
+							addtoExtra.add(new TextComponent(s));
+						}
 					}
+
+					BaseComponent[] hover = {new TextComponent(ReflectionUtil.getItemAsJson(getItem()))};
+
+					extra.setHoverEvent(new HoverEvent(Action.SHOW_ITEM, hover));
+
+					addtoExtra.forEach(extra::addExtra);
 				} else {
 					((TextComponent) extra).setText(arg);
 				}

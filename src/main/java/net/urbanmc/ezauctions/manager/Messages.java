@@ -52,7 +52,9 @@ public class Messages {
 	private void loadBundle() {
 		try {
 			InputStream input = new FileInputStream(FILE);
-			bundle = new PropertyResourceBundle(input);
+			Reader reader = new InputStreamReader(input, "UTF-8");
+
+			bundle = new PropertyResourceBundle(reader);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

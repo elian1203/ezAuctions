@@ -1,6 +1,7 @@
 package net.urbanmc.ezauctions.command;
 
 import net.urbanmc.ezauctions.command.subs.*;
+import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Permission;
 import net.urbanmc.ezauctions.util.MessageUtil;
@@ -31,8 +32,11 @@ public class AuctionCommand implements CommandExecutor {
 		subs.add(new ReloadSub());
 		subs.add(new RemoveSub());
 		subs.add(new SpamSub());
-		subs.add(new StartSealedSub());
 		subs.add(new StartSub());
+
+		if (ConfigManager.getConfig().getBoolean("sealed-auctions.enabled")) {
+			subs.add(new StartSealedSub());
+		}
 	}
 
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {

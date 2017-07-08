@@ -50,7 +50,7 @@ public class EzAuctions extends JavaPlugin {
 		registerMetrics();
 
 		if (ConfigManager.getConfig().getBoolean("general.check-updates", true)) {
-			checkUpdateAvailable();
+			getServer().getScheduler().runTaskAsynchronously(this, this::checkUpdateAvailable);
 		}
 	}
 

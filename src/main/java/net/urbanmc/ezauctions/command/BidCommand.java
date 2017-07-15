@@ -108,6 +108,9 @@ public class BidCommand implements CommandExecutor {
 			return true;
 		}
 
+		if(auc.getAutoBuy() != 0 && amount > auc.getAutoBuy())
+			amount = auc.getAutoBuy();
+
 		Bid bid = new Bid(ap, amount);
 
 		AuctionBidEvent event = new AuctionBidEvent(auc, bid);

@@ -79,7 +79,7 @@ public class Auction {
 	public void addBid(Bid b) {
 		bids.add(b);
 
-		if (getAutoBuy() != 0 && b.getAmount() == getAutoBuy()) {
+		if (getAutoBuy() != 0 && b.getAmount() >= getAutoBuy()) {
 			EzAuctions.getAuctionManager().getCurrentRunnable().endAuction();
 			return;
 		}

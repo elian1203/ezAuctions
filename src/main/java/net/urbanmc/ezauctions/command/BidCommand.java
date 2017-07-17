@@ -82,6 +82,10 @@ public class BidCommand implements CommandExecutor {
 			}
 		}
 
+		if (auc.getAutoBuy() != 0 && amount > auc.getAutoBuy()) {
+			amount = auc.getAutoBuy();
+		}
+
 		double amountToRemove = amount;
 
 		Bid lastBid = auc.getLastBidFrom(ap);
@@ -107,9 +111,6 @@ public class BidCommand implements CommandExecutor {
 			sendPropMessage(sender, "command.bid.consecutive_limit");
 			return true;
 		}
-
-		if(auc.getAutoBuy() != 0 && amount > auc.getAutoBuy())
-			amount = auc.getAutoBuy();
 
 		Bid bid = new Bid(ap, amount);
 

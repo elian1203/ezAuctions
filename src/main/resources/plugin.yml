@@ -10,7 +10,7 @@ commands:
     description: Auctions command
     aliases: [ezauctions, ezauction, auctions, auc]
   bid:
-    description: Bidder on an auction
+    description: Bid on an auction
     aliases: [b]
 
 permissions:

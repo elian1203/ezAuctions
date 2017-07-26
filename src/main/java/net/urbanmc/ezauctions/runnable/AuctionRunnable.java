@@ -6,7 +6,7 @@ import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionEndEvent;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
-import net.urbanmc.ezauctions.object.Bid;
+import net.urbanmc.ezauctions.object.Bidder;
 import net.urbanmc.ezauctions.util.MessageUtil;
 import net.urbanmc.ezauctions.util.RewardUtil;
 import org.bukkit.Bukkit;
@@ -86,10 +86,10 @@ public class AuctionRunnable extends BukkitRunnable {
 			Auction auc = getAuction();
 			Economy econ = EzAuctions.getEcon();
 
-			Bid lastBid = auc.getLastBid();
+			Bidder lastBidder = auc.getLastBidder();
 
-			String lastBidderName = lastBid.getBidder().getOfflinePlayer().getName();
-			double lastBidAmount = lastBid.getAmount();
+			String lastBidderName = lastBidder.getBidder().getOfflinePlayer().getName();
+			double lastBidAmount = lastBidder.getAmount();
 
 			MessageUtil.broadcastRegular("auction.finish", lastBidderName, lastBidAmount);
 

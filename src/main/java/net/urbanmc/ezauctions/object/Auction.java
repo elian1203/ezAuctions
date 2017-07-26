@@ -1,6 +1,5 @@
 package net.urbanmc.ezauctions.object;
 
-import com.google.common.collect.Lists;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -16,7 +15,10 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Auction {
 
@@ -25,7 +27,7 @@ public class Auction {
 	private int amount, auctionTime;
 	private double starting, increment, autoBuy;
 	private boolean isSealed;
-	private List<Bid> bids;
+	private List<Bidder> bidders;
 
 	public Auction(AuctionsPlayer auctioneer, ItemStack item, int amount, int auctionTime, double starting,
 	               double increment, double autoBuy, boolean isSealed) {
@@ -37,7 +39,7 @@ public class Auction {
 		this.increment = increment;
 		this.autoBuy = autoBuy;
 		this.isSealed = isSealed;
-		bids = new ArrayList<>();
+		bidders = new ArrayList<>();
 	}
 
 	public AuctionsPlayer getAuctioneer() {
@@ -76,9 +78,29 @@ public class Auction {
 		return isSealed;
 	}
 
-	public void addBid(Bid b) {
-		bids.add(b);
+	public void addNewBidder(Bidder b) {
+		updateConsecutiveBidder(b, b.getAmount());
+		bidders.add(b);
+		broadcastBid(b);
+	}
 
+	public void updateBidder(Bidder b) {
+		broadcastBid(b);
+	}
+
+	public void updateConsecutiveBidder(Bidder upcomingLatestBidder, double upcomingAmount) {
+		Bidder lastBidder = getLastBidder();
+
+		if (lastBidder == null)
+			return;
+
+		if (lastBidder == upcomingLatestBidder)
+			return;
+
+		lastBidder.resetConsecutiveBids();
+	}
+
+	public void broadcastBid(Bidder b) {
 		if (getAutoBuy() != 0 && b.getAmount() == getAutoBuy()) {
 			EzAuctions.getAuctionManager().getCurrentRunnable().endAuction();
 			return;
@@ -100,87 +122,63 @@ public class Auction {
 	}
 
 	public boolean anyBids() {
-		return !bids.isEmpty();
+		return !bidders.isEmpty();
 	}
 
-	public Bid getLastBid() {
-		if (!bids.isEmpty())
-			return bids.get(bids.size() - 1);
+	public Bidder getLastBidder() {
+		if (!bidders.isEmpty()) {
+			List<Bidder> sorted = getBiddersHighestToLowest();
+			return sorted.get(sorted.size() - 1);
+		}
 
 		return null;
 	}
 
 	public int getTimesBid(AuctionsPlayer ap) {
-		int amt = 0;
+		int timesBid = 0;
 
-		for (Bid b : bids) {
-			if (b.getBidder().getUniqueId().equals(ap.getUniqueId()))
-				amt += 1;
+		for (Bidder b : bidders) {
+			if (b.getBidder() == ap) {
+				timesBid = b.getTimesBid();
+				break;
+			}
 		}
 
-		return amt;
+		return timesBid;
 	}
 
 	public int getConsecutiveBids(AuctionsPlayer ap) {
-		List<Bid> bidsReversed = Lists.reverse(bids);
-		int bids = 0;
+		Bidder bidder = getBidder(ap);
 
-		for (Bid bid : bidsReversed) {
-			if (bid.getBidder().getUniqueId().equals(ap.getUniqueId())) {
-				bids++;
-			} else
-				break;
-		}
-
-		return bids;
+		if (bidder == null)
+			return 0;
+		else
+			return bidder.getConsecutiveBids();
 	}
 
-	public Map<AuctionsPlayer, Double> getAllBids() {
-		if (bids.isEmpty())
-			return new HashMap<>();
-
-		List<Bid> bidsReversed = Lists.reverse(bids);
-		Map<AuctionsPlayer, Double> bidMap = new HashMap<>();
-
-		for (Bid bid : bidsReversed) {
-			if (!bidMap.containsKey(bid.getBidder())) {
-				bidMap.put(bid.getBidder(), bid.getAmount());
-			}
-		}
-
-		return bidMap;
+	public List<Bidder> getBidders() {
+		return bidders;
 	}
 
-	public Map<AuctionsPlayer, Double> getLosingBids() {
-		if (bids.size() < 2)
-			return new HashMap<>();
-
-		List<Bid> bidsReversed = Lists.reverse(bids).subList(0, bids.size() - 2);
-		Map<AuctionsPlayer, Double> losing = new HashMap<>();
-
-		UUID winnerId = getLastBid().getBidder().getUniqueId();
-
-		for (Bid bid : bidsReversed) {
-			if (bid.getBidder().getUniqueId().equals(winnerId))
-				continue;
-
-			if (!losing.containsKey(bid.getBidder())) {
-				losing.put(bid.getBidder(), bid.getAmount());
-			}
-		}
+	public List<Bidder> getLosingBidders() {
+		ArrayList<Bidder> losing = new ArrayList<>(bidders);
+		losing.remove(getLastBidder());
 
 		return losing;
 	}
 
-	public Bid getLastBidFrom(AuctionsPlayer ap) {
-		List<Bid> bidsReversed = Lists.reverse(bids);
-
-		for (Bid bid : bidsReversed) {
+	public Bidder getBidder(AuctionsPlayer ap) {
+		for (Bidder bid : bidders) {
 			if (bid.getBidder().equals(ap))
 				return bid;
 		}
 
 		return null;
+	}
+
+	public List<Bidder> getBiddersHighestToLowest() {
+		return bidders.stream().sorted(Comparator.comparingDouble(Bidder::getAmount)).
+				collect(Collectors.toList());
 	}
 
 	public BaseComponent getStartingMessage() {

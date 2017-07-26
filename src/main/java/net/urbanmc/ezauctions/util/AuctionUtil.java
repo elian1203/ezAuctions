@@ -161,7 +161,7 @@ public class AuctionUtil {
 		return getConfig().getDouble("auctions.default." + config);
 	}
 
-	private static boolean blockedWorld(Player p) {
+	public static boolean blockedWorld(Player p) {
 		List<String> blockedWorlds =
 				getConfig().getStringList("auctions.blocked-worlds").stream().map(String::toLowerCase)
 						.collect(Collectors.toList());

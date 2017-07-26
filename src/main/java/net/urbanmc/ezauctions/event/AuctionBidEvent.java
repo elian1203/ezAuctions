@@ -1,7 +1,7 @@
 package net.urbanmc.ezauctions.event;
 
 import net.urbanmc.ezauctions.object.Auction;
-import net.urbanmc.ezauctions.object.Bid;
+import net.urbanmc.ezauctions.object.Bidder;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -12,9 +12,9 @@ public class AuctionBidEvent extends Event implements Cancellable {
 	private boolean cancelled = false;
 
 	private Auction auction;
-	private Bid bid;
+	private Bidder bid;
 
-	public AuctionBidEvent(Auction auction, Bid bid) {
+	public AuctionBidEvent(Auction auction, Bidder bid) {
 		this.auction = auction;
 		this.bid = bid;
 	}
@@ -27,7 +27,7 @@ public class AuctionBidEvent extends Event implements Cancellable {
 		return auction;
 	}
 
-	public Bid getBid() {
+	public Bidder getBid() {
 		return bid;
 	}
 

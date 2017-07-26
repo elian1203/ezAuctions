@@ -1,6 +1,6 @@
 main: net.urbanmc.ezauctions.EzAuctions
 name: ezAuctions
-version: 1.3.2
+version: 1.3.3
 authors: [Elian, Silverwolfg11]
 description: A simple, text-based auction plugin
 softdepend: [Vault]
@@ -10,7 +10,7 @@ commands:
     description: Auctions command
     aliases: [ezauctions, ezauction, auctions, auc]
   bid:
-    description: Bid on an auction
+    description: Bidder on an auction
     aliases: [b]
 
 permissions:

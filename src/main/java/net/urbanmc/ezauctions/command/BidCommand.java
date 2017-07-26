@@ -7,7 +7,7 @@ import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
-import net.urbanmc.ezauctions.object.Bid;
+import net.urbanmc.ezauctions.object.Bidder;
 import net.urbanmc.ezauctions.object.Permission;
 import net.urbanmc.ezauctions.util.AuctionUtil;
 import org.bukkit.Bukkit;
@@ -46,6 +46,11 @@ public class BidCommand implements CommandExecutor {
 		Player p = (Player) sender;
 		AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
 
+		if (AuctionUtil.blockedWorld(p)) {
+			sendPropMessage(p, "command.bid.blocked_world");
+			return true;
+		}
+
 		if (auc.getAuctioneer().getUniqueId().equals(p.getUniqueId())) {
 			sendPropMessage(sender, "command.bid.self_bid");
 			return true;
@@ -58,11 +63,13 @@ public class BidCommand implements CommandExecutor {
 
 		double amount = AuctionUtil.parseNumberFromConfig(args.length == 0 ? "0" : args[0], "bid");
 
+		Bidder lastAuctionBidder = auc.getLastBidder();
+
 		if (args.length == 0) {
-			if (auc.getLastBid() == null)
+			if (lastAuctionBidder == null)
 				amount = auc.getStartingPrice();
 			else
-				amount = auc.getLastBid().getAmount() + auc.getIncrement();
+				amount = lastAuctionBidder.getAmount() + auc.getIncrement();
 		}
 
 		if (amount <= 0) {
@@ -70,13 +77,13 @@ public class BidCommand implements CommandExecutor {
 			return true;
 		}
 
-		if (auc.getLastBid() == null) {
+		if (lastAuctionBidder == null) {
 			if (amount < auc.getStartingPrice()) {
 				sendPropMessage(sender, "command.bid.too_low");
 				return true;
 			}
 		} else {
-			if (amount < auc.getLastBid().getAmount() + auc.getIncrement()) {
+			if (amount < lastAuctionBidder.getAmount() + auc.getIncrement()) {
 				sendPropMessage(sender, "command.bid.too_low");
 				return true;
 			}
@@ -88,10 +95,10 @@ public class BidCommand implements CommandExecutor {
 
 		double amountToRemove = amount;
 
-		Bid lastBid = auc.getLastBidFrom(ap);
+		Bidder bid = auc.getBidder(ap);
 
-		if (lastBid != null) {
-			amountToRemove -= lastBid.getAmount();
+		if (bid != null) {
+			amountToRemove -= bid.getAmount();
 		}
 
 		if (!hasAmount(p, amountToRemove)) {
@@ -112,7 +119,15 @@ public class BidCommand implements CommandExecutor {
 			return true;
 		}
 
-		Bid bid = new Bid(ap, amount);
+		boolean newBid;
+
+		if (bid == null) {
+			bid = new Bidder(ap, amount);
+			newBid = true;
+		} else {
+			bid.setAmount(amount);
+			newBid = false;
+		}
 
 		AuctionBidEvent event = new AuctionBidEvent(auc, bid);
 		Bukkit.getPluginManager().callEvent(event);
@@ -121,7 +136,12 @@ public class BidCommand implements CommandExecutor {
 			return true;
 
 		removeMoney(ap, amountToRemove);
-		auc.addBid(bid);
+
+		if (newBid) {
+			auc.addNewBidder(bid);
+		} else {
+			auc.updateBidder(bid);
+		}
 
 		if (auc.isSealed()) {
 			sendPropMessage(sender, "command.bid.placed");

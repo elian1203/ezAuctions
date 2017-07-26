@@ -6,15 +6,14 @@ import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
-import net.urbanmc.ezauctions.object.Bid;
+import net.urbanmc.ezauctions.object.Bidder;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.List;
 
 public class RewardUtil {
 
@@ -22,7 +21,7 @@ public class RewardUtil {
 		double percentTax = ConfigManager.getConfig().getDouble("auctions.fees.tax-percent");
 		double percentYield = (100 - percentTax) / 100;
 
-		Bid lastBid = auction.getLastBid();
+		Bidder lastBid = auction.getLastBidder();
 
 		double moneyYield = lastBid.getAmount() * percentYield;
 
@@ -53,14 +52,14 @@ public class RewardUtil {
 			AuctionsPlayerManager.getInstance().saveGson();
 		}
 
-		Map<AuctionsPlayer, Double> map = auction.getLosingBids();
+		List<Bidder> bidders = auction.getLosingBidders();
 
-		returnBidderMoney(map);
+		returnBidderMoney(bidders);
 	}
 
-	private static void returnBidderMoney(Map<AuctionsPlayer, Double> map) {
-		for (Entry<AuctionsPlayer, Double> entry : map.entrySet()) {
-			EzAuctions.getEcon().depositPlayer(entry.getKey().getOfflinePlayer(), entry.getValue());
+	private static void returnBidderMoney(List<Bidder> bidders) {
+		for (Bidder bidder : bidders) {
+			EzAuctions.getEcon().depositPlayer(bidder.getBidder().getOfflinePlayer(), bidder.getAmount());
 		}
 	}
 
@@ -80,17 +79,17 @@ public class RewardUtil {
 			AuctionsPlayerManager.getInstance().saveGson();
 		}
 
-		Map<AuctionsPlayer, Double> map = auction.getAllBids();
+		List<Bidder> bidders = auction.getBidders();
 
-		returnBidderMoney(map);
+		returnBidderMoney(bidders);
 	}
 
 	public static void rewardImpound(Auction auction, Player impounder) {
 		ItemUtil.addItemToInventory(impounder, auction.getItem(), auction.getAmount(), true);
 
-		Map<AuctionsPlayer, Double> map = auction.getAllBids();
+		List<Bidder> bidders = auction.getBidders();
 
-		returnBidderMoney(map);
+		returnBidderMoney(bidders);
 	}
 
 	public static void rewardOffline(AuctionsPlayer ap) {

@@ -5,6 +5,7 @@ import net.urbanmc.ezauctions.event.AuctionStartEvent;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.runnable.AuctionRunnable;
+import net.urbanmc.ezauctions.util.RewardUtil;
 import org.bukkit.Bukkit;
 
 import java.util.ArrayList;
@@ -136,5 +137,11 @@ public class AuctionManager {
 		if (getCurrentRunnable() != null) {
 			getCurrentRunnable().cancelAuction();
 		}
+
+		for (Auction auc : queue) {
+			RewardUtil.rewardCancel(auc);
+		}
+
+		queue.clear();
 	}
 }

@@ -32,6 +32,7 @@ local.properties
 # Maven
 log/
 target/
+dependency-reduced-pom.xml
 
 # External tool builders
 .externalToolBuilders/

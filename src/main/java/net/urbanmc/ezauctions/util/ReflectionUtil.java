@@ -9,13 +9,22 @@ import java.util.logging.Level;
 @SuppressWarnings("ConstantConditions")
 public class ReflectionUtil {
 
+	private static final Class<?> bannerClass = getNMSClass("ItemBanner");
+
 	public static String getMinecraftName(ItemStack is) {
 		try {
 			Object nmsStack = asNMSCopy(is);
 
 			Object item = nmsStack.getClass().getMethod("getItem").invoke(nmsStack);
 
-			return item.getClass().getMethod("a", nmsStack.getClass()).invoke(item, nmsStack).toString() + ".name";
+			if (item.getClass().isAssignableFrom(bannerClass)) {
+				Object enumColor = item.getClass().getMethod("c", nmsStack.getClass()).invoke(item, nmsStack);
+				String color = enumColor.getClass().getMethod("d").invoke(enumColor).toString();
+
+				return "item.banner." + color + ".name";
+			} else {
+				return item.getClass().getMethod("a", nmsStack.getClass()).invoke(item, nmsStack).toString() + ".name";
+			}
 		} catch (Exception ex) {
 			Bukkit.getLogger()
 					.log(Level.WARNING, "[ezAuctions] Error getting minecraft name for " + is.getType().toString(),

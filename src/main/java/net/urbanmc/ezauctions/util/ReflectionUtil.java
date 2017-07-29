@@ -17,7 +17,7 @@ public class ReflectionUtil {
 
 			Object item = nmsStack.getClass().getMethod("getItem").invoke(nmsStack);
 
-			if (item.getClass().isAssignableFrom(bannerClass)) {
+			if (bannerClass.isAssignableFrom(item.getClass())) {
 				Object enumColor = item.getClass().getMethod("c", nmsStack.getClass()).invoke(item, nmsStack);
 				String color = enumColor.getClass().getMethod("d").invoke(enumColor).toString();
 

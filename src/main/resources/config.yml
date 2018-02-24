@@ -42,6 +42,9 @@ auctions:
     # Should we allow players to specify autobuys?
     autobuy: true
 
+    # Should we restrict players to start auctions with items that are damaged?
+    restrict-damaged: false
+
     # Should we allow decimals in these prices? Ex: $5.64
     decimal:
       starting-price: false

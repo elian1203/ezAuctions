@@ -34,6 +34,11 @@ public class AuctionUtil {
 			return null;
 		}
 
+		if (damagedItem(item)) {
+			message(p, "command.auction.start.damaged_item");
+			return null;
+		}
+
 		int finalAmount = parseAmount(amount, p, item);
 
 		if (finalAmount == -1) {
@@ -62,7 +67,7 @@ public class AuctionUtil {
 
 		double finalAutoBuy = getValueBasedOnConfig(autoBuy, "autobuy");
 
-		if(finalAutoBuy > 0 && finalAutoBuy < finalStartingPrice) {
+		if (finalAutoBuy > 0 && finalAutoBuy < finalStartingPrice) {
 			message(p, "command.auction.start.invalid-buyout");
 			return null;
 		}
@@ -175,6 +180,10 @@ public class AuctionUtil {
 						.collect(Collectors.toList());
 
 		return blockedMaterials.contains(is.getType());
+	}
+
+	private static boolean damagedItem(ItemStack is) {
+		return ConfigManager.getConfig().getBoolean("auctions.toggles.restrict-damaged") && is.getDurability() > 0;
 	}
 
 	private static FileConfiguration getConfig() {

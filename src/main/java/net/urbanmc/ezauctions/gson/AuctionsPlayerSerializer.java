@@ -2,13 +2,14 @@ package net.urbanmc.ezauctions.gson;
 
 import com.google.gson.*;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
+import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>, JsonDeserializer<AuctionsPlayer> {
 
@@ -24,7 +25,26 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
 		Gson gson = new Gson();
 
 		for (ItemStack is : player.getOfflineItems()) {
-			JsonElement je = gson.toJsonTree(is.serialize());
+			Map<String, Object> map;
+
+			if (is.getType() == Material.ENCHANTED_BOOK) {
+				map = new HashMap<>();
+
+				EnchantmentStorageMeta meta = (EnchantmentStorageMeta) is.getItemMeta();
+
+				Map<String, Integer> enchants = new HashMap<>();
+
+				for (Entry<Enchantment, Integer> entry : meta.getStoredEnchants().entrySet()) {
+					enchants.put(entry.getKey().getName(), entry.getValue());
+				}
+
+				map.put("type", "ENCHANTED_BOOK");
+				map.put("enchants", enchants);
+			} else {
+				map = is.serialize();
+			}
+
+			JsonElement je = gson.toJsonTree(map);
 			array.add(je);
 		}
 
@@ -49,8 +69,28 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
 		Gson gson = new Gson();
 
 		for (JsonElement je : array) {
-			Map<String, Object> map = gson.fromJson(je, Map.class);
-			ItemStack is = ItemStack.deserialize(map);
+			ItemStack is;
+
+			JsonObject obj = je.getAsJsonObject();
+
+			if (obj.get("type").getAsString().equals("ENCHANTED_BOOK")) {
+				Map<Object, Double> map = gson.fromJson(obj.get("enchants"), Map.class);
+
+				is = new ItemStack(Material.ENCHANTED_BOOK);
+
+				EnchantmentStorageMeta meta = (EnchantmentStorageMeta) is.getItemMeta();
+
+				for (Entry<Object, Double> entry : map.entrySet()) {
+					Enchantment enchant = Enchantment.getByName(entry.getKey().toString());
+
+					meta.addStoredEnchant(enchant, entry.getValue().intValue(), true);
+				}
+
+				is.setItemMeta(meta);
+			} else {
+				Map<String, Object> map = gson.fromJson(je, Map.class);
+				is = ItemStack.deserialize(map);
+			}
 
 			offlineItems.add(is);
 		}

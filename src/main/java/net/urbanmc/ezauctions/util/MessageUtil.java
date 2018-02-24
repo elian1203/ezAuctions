@@ -48,6 +48,10 @@ public class MessageUtil {
 	}
 
 	public static void privateMessage(CommandSender sender, BaseComponent comp) {
-		sender.spigot().sendMessage(comp);
+		if (sender instanceof Player) {
+			((Player) sender).spigot().sendMessage(comp);
+		} else {
+			sender.sendMessage(comp.toPlainText());
+		}
 	}
 }

@@ -9,10 +9,12 @@ import net.urbanmc.ezauctions.manager.ConfigManager;
 import org.bstats.Metrics;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
-import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class EzAuctions extends JavaPlugin {
@@ -94,16 +96,16 @@ public class EzAuctions extends JavaPlugin {
 		int resourceId = 42574;
 
 		try {
-			// This method was taken from https://www.spigotmc.org/members/maximvdw.6687/
-			HttpURLConnection con =
-					(HttpURLConnection) new URL("http://www.spigotmc.org/api/general.php").openConnection();
-			con.setDoOutput(true);
-			con.setRequestMethod("POST");
-			con.getOutputStream()
-					.write(("key=98BE0FE67F88AB82B4C197FAF1DC3B69206EFDCC4D3B80FC83A00037510B99B4&resource=" +
-							resourceId).getBytes("UTF-8"));
+			InputStream input = new URL("https://api.spiget.org/v2/resources/" + resourceId + "/versions")
+					.openStream();
 
-			String latestVersion = new BufferedReader(new InputStreamReader(con.getInputStream())).readLine();
+			JSONParser parser = new JSONParser();
+
+			JSONArray array = (JSONArray) parser.parse(new InputStreamReader(input));
+
+			JSONObject object = (JSONObject) array.get(array.size() - 1);
+
+			String latestVersion = (String) object.get("name");
 
 			if (serverVersion.equalsIgnoreCase(latestVersion))
 				return;

@@ -9,13 +9,10 @@ import net.urbanmc.ezauctions.manager.ConfigManager;
 import org.bstats.Metrics;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Scanner;
 
 public class EzAuctions extends JavaPlugin {
 
@@ -96,19 +93,17 @@ public class EzAuctions extends JavaPlugin {
 		int resourceId = 42574;
 
 		try {
-			InputStream input = new URL("https://api.spiget.org/v2/resources/" + resourceId + "/versions")
-					.openStream();
+			InputStream input =
+					new URL("https://api.spigotmc.org/legacy/update.php?resource=" + resourceId).openStream();
 
-			JSONParser parser = new JSONParser();
+			Scanner scanner = new Scanner(input);
 
-			JSONArray array = (JSONArray) parser.parse(new InputStreamReader(input));
-
-			JSONObject object = (JSONObject) array.get(array.size() - 1);
-
-			String latestVersion = (String) object.get("name");
+			String latestVersion = scanner.nextLine();
 
 			if (serverVersion.equalsIgnoreCase(latestVersion))
 				return;
+
+			scanner.close();
 
 			updateAvailable = true;
 			getLogger().info("Version " + latestVersion + " is available! You are currently running version " +

@@ -13,103 +13,94 @@ import java.util.Map;
 
 public class ItemUtil {
 
-	public static void removeItemsFromInv(Auction auc, Player p) {
-		int amount = auc.getAmount();
-		ItemStack auctionItem = auc.getItem();
+    public static void removeItemsFromInv(Auction auc, Player p) {
+        int amount = auc.getAmount();
+        ItemStack auctionItem = auc.getItem();
 
-		for (int i = 0; i < p.getInventory().getSize(); i++) {
-			if (p.getInventory().getItem(i) == null)
-				continue;
+        for (int i = 0; i < p.getInventory().getSize(); i++) {
+            if (p.getInventory().getItem(i) == null)
+                continue;
 
-			ItemStack is = p.getInventory().getItem(i);
+            ItemStack is = p.getInventory().getItem(i);
 
-			if (!auctionItem.isSimilar(is))
-				continue;
+            if (!auctionItem.isSimilar(is))
+                continue;
 
-			if (is.getAmount() > amount) {
-				is.setAmount(is.getAmount() - amount);
-				p.getInventory().setItem(i, is);
+            if (is.getAmount() > amount) {
+                is.setAmount(is.getAmount() - amount);
+                p.getInventory().setItem(i, is);
 
-				break;
-			}
+                break;
+            }
 
-			amount -= is.getAmount();
-			p.getInventory().setItem(i, null);
+            amount -= is.getAmount();
+            p.getInventory().setItem(i, null);
 
-			if (amount == 0)
-				break;
-		}
-	}
+            if (amount == 0)
+                break;
+        }
+    }
 
-	@SuppressWarnings("deprecation")
-	static Material getMaterial(String type) {
-		Material material = Material.getMaterial(type.toUpperCase());
+    static Material getMaterial(String type) {
+        Material material = Material.getMaterial(type.toUpperCase());
 
-		if (material != null)
-			return material;
+        if (material != null)
+            return material;
 
-		if (isInt(type)) {
-			int id = Integer.parseInt(type);
-			material = Material.getMaterial(id);
+        ItemInfo item = Items.itemByName(type);
 
-			if (material != null)
-				return material;
-		}
+        if (item != null)
+            return item.getType();
 
-		ItemInfo item = Items.itemByName(type);
+        return null;
+    }
 
-		if (item != null)
-			return item.getType();
+    /**
+     * @return true if there is overflow, false if not
+     */
+    static boolean addItemToInventory(Player p, ItemStack is, int amount, boolean message) {
+        List<ItemStack> items = new ArrayList<>();
 
-		return null;
-	}
+        int maxStackSize = is.getMaxStackSize();
 
-	/**
-	 * @return true if there is overflow, false if not
-	 */
-	static boolean addItemToInventory(Player p, ItemStack is, int amount, boolean message) {
-		List<ItemStack> items = new ArrayList<>();
+        while (amount > maxStackSize) {
+            ItemStack cloned = is.clone();
+            cloned.setAmount(maxStackSize);
 
-		int maxStackSize = is.getMaxStackSize();
+            items.add(cloned);
+            amount -= maxStackSize;
+        }
 
-		while (amount > maxStackSize) {
-			ItemStack cloned = is.clone();
-			cloned.setAmount(maxStackSize);
+        if (amount != 0) {
+            ItemStack cloned = is.clone();
+            cloned.setAmount(amount);
 
-			items.add(cloned);
-			amount -= maxStackSize;
-		}
+            items.add(cloned);
+        }
 
-		if (amount != 0) {
-			ItemStack cloned = is.clone();
-			cloned.setAmount(amount);
+        ItemStack[] array = new ItemStack[items.size()];
+        array = items.toArray(array);
 
-			items.add(cloned);
-		}
+        Map<Integer, ItemStack> leftover = p.getInventory().addItem(array);
 
-		ItemStack[] array = new ItemStack[items.size()];
-		array = items.toArray(array);
+        if (!leftover.isEmpty()) {
+            leftover.values().forEach(item -> p.getWorld().dropItemNaturally(p.getLocation(), item));
 
-		Map<Integer, ItemStack> leftover = p.getInventory().addItem(array);
+            if (message) {
+                MessageUtil.privateMessage(p, "reward.full_inventory");
+            }
+        }
 
-		if (!leftover.isEmpty()) {
-			leftover.values().forEach(item -> p.getWorld().dropItemNaturally(p.getLocation(), item));
+        return !leftover.isEmpty();
+    }
 
-			if (message) {
-				MessageUtil.privateMessage(p, "reward.full_inventory");
-			}
-		}
-
-		return !leftover.isEmpty();
-	}
-
-	@SuppressWarnings("ResultOfMethodCallIgnored")
-	private static boolean isInt(String s) {
-		try {
-			Integer.parseInt(s);
-			return true;
-		} catch (NumberFormatException e) {
-			return false;
-		}
-	}
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private static boolean isInt(String s) {
+        try {
+            Integer.parseInt(s);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 }

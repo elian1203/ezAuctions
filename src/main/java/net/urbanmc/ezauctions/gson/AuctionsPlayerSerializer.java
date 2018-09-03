@@ -13,88 +13,108 @@ import java.util.Map.Entry;
 
 public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>, JsonDeserializer<AuctionsPlayer> {
 
-	@Override
-	public JsonElement serialize(AuctionsPlayer player, Type type, JsonSerializationContext context) {
-		JsonObject object = new JsonObject();
+    @Override
+    public JsonElement serialize(AuctionsPlayer player, Type type, JsonSerializationContext context) {
+        JsonObject object = new JsonObject();
 
-		object.addProperty("id", player.getUniqueId().toString());
-		object.addProperty("ignoringSpammy", player.isIgnoringSpammy());
-		object.addProperty("ignoringAll", player.isIgnoringAll());
+        object.addProperty("id", player.getUniqueId().toString());
+        object.addProperty("ignoringSpammy", player.isIgnoringSpammy());
+        object.addProperty("ignoringAll", player.isIgnoringAll());
 
-		JsonArray array = new JsonArray();
-		Gson gson = new Gson();
+        JsonArray ignoringPlayersArray = new JsonArray();
 
-		for (ItemStack is : player.getOfflineItems()) {
-			Map<String, Object> map;
+        for (UUID id : player.getIgnoringPlayers()) {
+            ignoringPlayersArray.add(id.toString());
+        }
 
-			if (is.getType() == Material.ENCHANTED_BOOK) {
-				map = new HashMap<>();
+        object.add("ignoringPlayers", ignoringPlayersArray);
 
-				EnchantmentStorageMeta meta = (EnchantmentStorageMeta) is.getItemMeta();
+        Gson gson = new Gson();
 
-				Map<String, Integer> enchants = new HashMap<>();
+        JsonArray offlineItemsArray = new JsonArray();
 
-				for (Entry<Enchantment, Integer> entry : meta.getStoredEnchants().entrySet()) {
-					enchants.put(entry.getKey().getName(), entry.getValue());
-				}
+        for (ItemStack is : player.getOfflineItems()) {
+            Map<String, Object> map;
 
-				map.put("type", "ENCHANTED_BOOK");
-				map.put("enchants", enchants);
-			} else {
-				map = is.serialize();
-			}
+            if (is.getType() == Material.ENCHANTED_BOOK) {
+                map = new HashMap<>();
 
-			JsonElement je = gson.toJsonTree(map);
-			array.add(je);
-		}
+                EnchantmentStorageMeta meta = (EnchantmentStorageMeta) is.getItemMeta();
 
-		object.add("offlineItems", array);
+                Map<String, Integer> enchants = new HashMap<>();
 
-		return object;
-	}
+                for (Entry<Enchantment, Integer> entry : meta.getStoredEnchants().entrySet()) {
+                    enchants.put(entry.getKey().getName(), entry.getValue());
+                }
 
-	@Override
-	public AuctionsPlayer deserialize(JsonElement element, Type type,
-	                                  JsonDeserializationContext context) throws JsonParseException {
-		JsonObject object = (JsonObject) element;
+                map.put("type", "ENCHANTED_BOOK");
+                map.put("enchants", enchants);
+            } else {
+                map = is.serialize();
+            }
 
-		UUID id = UUID.fromString(object.get("id").getAsString());
+            JsonElement je = gson.toJsonTree(map);
+            offlineItemsArray.add(je);
+        }
 
-		boolean ignoringSpammy = object.get("ignoringSpammy").getAsBoolean(), ignoringAll =
-				object.get("ignoringAll").getAsBoolean();
+        object.add("offlineItems", offlineItemsArray);
 
-		JsonArray array = object.getAsJsonArray("offlineItems");
-		List<ItemStack> offlineItems = new ArrayList<>();
+        return object;
+    }
 
-		Gson gson = new Gson();
+    @Override
+    public AuctionsPlayer deserialize(JsonElement element, Type type,
+                                      JsonDeserializationContext context) throws JsonParseException {
+        JsonObject object = (JsonObject) element;
 
-		for (JsonElement je : array) {
-			ItemStack is;
+        UUID id = UUID.fromString(object.get("id").getAsString());
 
-			JsonObject obj = je.getAsJsonObject();
+        boolean ignoringSpammy = object.get("ignoringSpammy").getAsBoolean(), ignoringAll =
+                object.get("ignoringAll").getAsBoolean();
 
-			if (obj.get("type").getAsString().equals("ENCHANTED_BOOK")) {
-				Map<Object, Double> map = gson.fromJson(obj.get("enchants"), Map.class);
+        List<UUID> ignoringPlayers = new ArrayList<>();
 
-				is = new ItemStack(Material.ENCHANTED_BOOK);
+        if (object.has("ignoringPlayers")) {
+            JsonArray ignoringPlayersArray = object.getAsJsonArray("ignoringPlayers");
 
-				EnchantmentStorageMeta meta = (EnchantmentStorageMeta) is.getItemMeta();
+            for (JsonElement je : ignoringPlayersArray) {
+                ignoringPlayers.add(UUID.fromString(je.getAsString()));
+            }
+        }
 
-				for (Entry<Object, Double> entry : map.entrySet()) {
-					Enchantment enchant = Enchantment.getByName(entry.getKey().toString());
+        Gson gson = new Gson();
 
-					meta.addStoredEnchant(enchant, entry.getValue().intValue(), true);
-				}
+        JsonArray array = object.getAsJsonArray("offlineItems");
+        List<ItemStack> offlineItems = new ArrayList<>();
 
-				is.setItemMeta(meta);
-			} else {
-				Map<String, Object> map = gson.fromJson(je, Map.class);
-				is = ItemStack.deserialize(map);
-			}
 
-			offlineItems.add(is);
-		}
+        for (JsonElement je : array) {
+            ItemStack is;
 
-		return new AuctionsPlayer(id, ignoringSpammy, ignoringAll, offlineItems);
-	}
+            JsonObject obj = je.getAsJsonObject();
+
+            if (obj.get("type").getAsString().equals("ENCHANTED_BOOK")) {
+                Map<Object, Double> map = gson.fromJson(obj.get("enchants"), Map.class);
+
+                is = new ItemStack(Material.ENCHANTED_BOOK);
+
+                EnchantmentStorageMeta meta = (EnchantmentStorageMeta) is.getItemMeta();
+
+                for (Entry<Object, Double> entry : map.entrySet()) {
+                    Enchantment enchant = Enchantment.getByName(entry.getKey().toString());
+
+                    meta.addStoredEnchant(enchant, entry.getValue().intValue(), true);
+                }
+
+                is.setItemMeta(meta);
+            } else {
+                Map<String, Object> map = gson.fromJson(je, Map.class);
+                is = ItemStack.deserialize(map);
+            }
+
+            offlineItems.add(is);
+        }
+
+        return new AuctionsPlayer(id, ignoringSpammy, ignoringAll, ignoringPlayers, offlineItems);
+    }
 }

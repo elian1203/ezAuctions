@@ -17,7 +17,9 @@ public class ReflectionUtil {
 
             Object item = nmsStack.getClass().getMethod("getItem").invoke(nmsStack);
 
-            if (Bukkit.getVersion().contains("(MC: 1.13)")) {
+            String version = Bukkit.getVersion();
+
+            if (version.contains("MC: 1.13") || version.contains("MC: 1.13.1")) {
                 return (String) item.getClass().getMethod("getName").invoke(item);
             } else {
                 if (bannerClass.isAssignableFrom(item.getClass())) {

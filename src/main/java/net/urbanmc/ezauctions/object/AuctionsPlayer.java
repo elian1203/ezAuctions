@@ -11,48 +11,55 @@ import java.util.UUID;
 
 public class AuctionsPlayer {
 
-	private UUID id;
-	private boolean ignoringSpammy, ignoringAll;
-	private List<ItemStack> offlineItems;
+    private UUID id;
+    private boolean ignoringSpammy, ignoringAll;
+    private List<UUID> ignoringPlayers;
+    private List<ItemStack> offlineItems;
 
-	public AuctionsPlayer(UUID id, boolean ignoringSpammy, boolean ignoringAll, List<ItemStack> offlineItems) {
-		this.id = id;
-		this.ignoringSpammy = ignoringSpammy;
-		this.ignoringAll = ignoringAll;
-		this.offlineItems = offlineItems;
-	}
+    public AuctionsPlayer(UUID id, boolean ignoringSpammy, boolean ignoringAll, List<UUID> ignoringPlayers,
+                          List<ItemStack> offlineItems) {
+        this.id = id;
+        this.ignoringSpammy = ignoringSpammy;
+        this.ignoringAll = ignoringAll;
+        this.offlineItems = offlineItems;
+        this.ignoringPlayers = ignoringPlayers;
+    }
 
-	public UUID getUniqueId() {
-		return id;
-	}
+    public UUID getUniqueId() {
+        return id;
+    }
 
-	public boolean isIgnoringSpammy() {
-		return ignoringSpammy;
-	}
+    public boolean isIgnoringSpammy() {
+        return ignoringSpammy;
+    }
 
-	public void setIgnoringSpammy(boolean ignoringSpammy) {
-		this.ignoringSpammy = ignoringSpammy;
-		AuctionsPlayerManager.getInstance().saveGson();
-	}
+    public void setIgnoringSpammy(boolean ignoringSpammy) {
+        this.ignoringSpammy = ignoringSpammy;
+        AuctionsPlayerManager.getInstance().saveGson();
+    }
 
-	public boolean isIgnoringAll() {
-		return ignoringAll;
-	}
+    public boolean isIgnoringAll() {
+        return ignoringAll;
+    }
 
-	public void setIgnoringAll(boolean ignoringAll) {
-		this.ignoringAll = ignoringAll;
-		AuctionsPlayerManager.getInstance().saveGson();
-	}
+    public void setIgnoringAll(boolean ignoringAll) {
+        this.ignoringAll = ignoringAll;
+        AuctionsPlayerManager.getInstance().saveGson();
+    }
 
-	public List<ItemStack> getOfflineItems() {
-		return offlineItems;
-	}
+    public List<ItemStack> getOfflineItems() {
+        return offlineItems;
+    }
 
-	public Player getOnlinePlayer() {
-		return Bukkit.getPlayer(id);
-	}
+    public Player getOnlinePlayer() {
+        return Bukkit.getPlayer(id);
+    }
 
-	public OfflinePlayer getOfflinePlayer() {
-		return Bukkit.getOfflinePlayer(id);
-	}
+    public OfflinePlayer getOfflinePlayer() {
+        return Bukkit.getOfflinePlayer(id);
+    }
+
+    public List<UUID> getIgnoringPlayers() {
+        return ignoringPlayers;
+    }
 }

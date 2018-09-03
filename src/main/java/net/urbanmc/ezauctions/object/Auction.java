@@ -22,283 +22,319 @@ import java.util.stream.Collectors;
 
 public class Auction {
 
-	private AuctionsPlayer auctioneer;
-	private ItemStack item;
-	private int amount, auctionTime;
-	private double starting, increment, autoBuy;
-	private boolean isSealed;
-	private List<Bidder> bidders;
+    private AuctionsPlayer auctioneer;
+    private ItemStack item;
+    private int amount, auctionTime;
+    private double starting, increment, autoBuy;
+    private boolean isSealed;
+    private List<Bidder> bidders;
 
-	public Auction(AuctionsPlayer auctioneer, ItemStack item, int amount, int auctionTime, double starting,
-	               double increment, double autoBuy, boolean isSealed) {
-		this.auctioneer = auctioneer;
-		this.item = item;
-		this.amount = amount;
-		this.auctionTime = auctionTime;
-		this.starting = starting;
-		this.increment = increment;
-		this.autoBuy = autoBuy;
-		this.isSealed = isSealed;
-		bidders = new ArrayList<>();
-	}
+    public Auction(AuctionsPlayer auctioneer, ItemStack item, int amount, int auctionTime, double starting,
+                   double increment, double autoBuy, boolean isSealed) {
+        this.auctioneer = auctioneer;
+        this.item = item;
+        this.amount = amount;
+        this.auctionTime = auctionTime;
+        this.starting = starting;
+        this.increment = increment;
+        this.autoBuy = autoBuy;
+        this.isSealed = isSealed;
+        bidders = new ArrayList<>();
+    }
 
-	public AuctionsPlayer getAuctioneer() {
-		return auctioneer;
-	}
+    public AuctionsPlayer getAuctioneer() {
+        return auctioneer;
+    }
 
-	public ItemStack getItem() {
-		return item;
-	}
+    public ItemStack getItem() {
+        return item;
+    }
 
-	public int getAmount() {
-		return amount;
-	}
+    public int getAmount() {
+        return amount;
+    }
 
-	public int getAuctionTime() {
-		return auctionTime;
-	}
+    public int getAuctionTime() {
+        return auctionTime;
+    }
 
-	public void setAuctionTime(int auctionTime) {
-		this.auctionTime = auctionTime;
-	}
+    public void setAuctionTime(int auctionTime) {
+        this.auctionTime = auctionTime;
+    }
 
-	public double getStartingPrice() {
-		return starting;
-	}
+    public double getStartingPrice() {
+        return starting;
+    }
 
-	public double getIncrement() {
-		return increment;
-	}
+    public double getIncrement() {
+        return increment;
+    }
 
-	public double getAutoBuy() {
-		return autoBuy;
-	}
+    public double getAutoBuy() {
+        return autoBuy;
+    }
 
-	public boolean isSealed() {
-		return isSealed;
-	}
+    public boolean isSealed() {
+        return isSealed;
+    }
 
-	public void addNewBidder(Bidder b) {
-		updateConsecutiveBidder(b, b.getAmount());
-		bidders.add(b);
-		broadcastBid(b);
-	}
+    public void addNewBidder(Bidder b) {
+        updateConsecutiveBidder(b, b.getAmount());
+        bidders.add(b);
+        broadcastBid(b);
+    }
 
-	public void updateBidder(Bidder b) {
-		broadcastBid(b);
-	}
+    public void updateBidder(Bidder b) {
+        broadcastBid(b);
+    }
 
-	public void updateConsecutiveBidder(Bidder upcomingLatestBidder, double upcomingAmount) {
-		Bidder lastBidder = getLastBidder();
+    public void updateConsecutiveBidder(Bidder upcomingLatestBidder, double upcomingAmount) {
+        Bidder lastBidder = getLastBidder();
 
-		if (lastBidder == null)
-			return;
+        if (lastBidder == null)
+            return;
 
-		if (lastBidder == upcomingLatestBidder)
-			return;
+        if (lastBidder == upcomingLatestBidder)
+            return;
 
-		lastBidder.resetConsecutiveBids();
-	}
+        lastBidder.resetConsecutiveBids();
+    }
 
-	public void broadcastBid(Bidder b) {
-		if (getAutoBuy() != 0 && b.getAmount() == getAutoBuy()) {
-			EzAuctions.getAuctionManager().getCurrentRunnable().endAuction();
-			return;
-		}
+    public void broadcastBid(Bidder b) {
+        if (getAutoBuy() != 0 && b.getAmount() == getAutoBuy()) {
+            EzAuctions.getAuctionManager().getCurrentRunnable().endAuction();
+            return;
+        }
 
-		if (!isSealed()) {
-			String bidder = b.getBidder().getOnlinePlayer().getName();
-			double amount = b.getAmount();
+        if (!isSealed()) {
+            String bidder = b.getBidder().getOnlinePlayer().getName();
+            double amount = b.getAmount();
 
-			MessageUtil.broadcastSpammy("auction.bid", bidder, amount);
-		}
+            MessageUtil.broadcastSpammy(auctioneer.getUniqueId(), "auction.bid", bidder, amount);
+        }
 
-		FileConfiguration data = ConfigManager.getConfig();
+        FileConfiguration data = ConfigManager.getConfig();
 
-		if (!isSealed() && data.getBoolean("antisnipe.enabled") &&
-				getAuctionTime() <= data.getInt("antisnipe.seconds-for-start")) {
-			EzAuctions.getAuctionManager().getCurrentRunnable().antiSnipe();
-		}
-	}
+        if (!isSealed() && data.getBoolean("antisnipe.enabled") &&
+                getAuctionTime() <= data.getInt("antisnipe.seconds-for-start")) {
+            EzAuctions.getAuctionManager().getCurrentRunnable().antiSnipe();
+        }
+    }
 
-	public boolean anyBids() {
-		return !bidders.isEmpty();
-	}
+    public boolean anyBids() {
+        return !bidders.isEmpty();
+    }
 
-	public Bidder getLastBidder() {
-		if (!bidders.isEmpty()) {
-			List<Bidder> sorted = getBiddersHighestToLowest();
-			return sorted.get(sorted.size() - 1);
-		}
+    public Bidder getLastBidder() {
+        if (!bidders.isEmpty()) {
+            List<Bidder> sorted = getBiddersHighestToLowest();
+            return sorted.get(sorted.size() - 1);
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	public int getTimesBid(AuctionsPlayer ap) {
-		int timesBid = 0;
+    public int getTimesBid(AuctionsPlayer ap) {
+        int timesBid = 0;
 
-		for (Bidder b : bidders) {
-			if (b.getBidder() == ap) {
-				timesBid = b.getTimesBid();
-				break;
-			}
-		}
+        for (Bidder b : bidders) {
+            if (b.getBidder() == ap) {
+                timesBid = b.getTimesBid();
+                break;
+            }
+        }
 
-		return timesBid;
-	}
+        return timesBid;
+    }
 
-	public int getConsecutiveBids(AuctionsPlayer ap) {
-		Bidder bidder = getBidder(ap);
+    public int getConsecutiveBids(AuctionsPlayer ap) {
+        Bidder bidder = getBidder(ap);
 
-		if (bidder == null)
-			return 0;
-		else
-			return bidder.getConsecutiveBids();
-	}
+        if (bidder == null)
+            return 0;
+        else
+            return bidder.getConsecutiveBids();
+    }
 
-	public List<Bidder> getBidders() {
-		return bidders;
-	}
+    public List<Bidder> getBidders() {
+        return bidders;
+    }
 
-	public List<Bidder> getLosingBidders() {
-		ArrayList<Bidder> losing = new ArrayList<>(bidders);
-		losing.remove(getLastBidder());
+    public List<Bidder> getLosingBidders() {
+        ArrayList<Bidder> losing = new ArrayList<>(bidders);
+        losing.remove(getLastBidder());
 
-		return losing;
-	}
+        return losing;
+    }
 
-	public Bidder getBidder(AuctionsPlayer ap) {
-		for (Bidder bid : bidders) {
-			if (bid.getBidder().equals(ap))
-				return bid;
-		}
+    public Bidder getBidder(AuctionsPlayer ap) {
+        for (Bidder bid : bidders) {
+            if (bid.getBidder().equals(ap))
+                return bid;
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	public List<Bidder> getBiddersHighestToLowest() {
-		return bidders.stream().sorted(Comparator.comparingDouble(Bidder::getAmount)).
-				collect(Collectors.toList());
-	}
+    public List<Bidder> getBiddersHighestToLowest() {
+        return bidders.stream().sorted(Comparator.comparingDouble(Bidder::getAmount)).
+                collect(Collectors.toList());
+    }
 
-	public BaseComponent getStartingMessage() {
-		StringBuilder message = new StringBuilder(Messages.getInstance().getStringWithoutColoring(
-				"auction.info",
-				getAuctioneer().getOfflinePlayer().getName(),
-				getAmount(),
-				"%item%",
-				getStartingPrice(),
-				getIncrement(),
-				getAuctionTime()));
+    public BaseComponent getStartingMessage() {
+        StringBuilder message = new StringBuilder(Messages.getInstance().getStringWithoutColoring(
+                "auction.info",
+                getAuctioneer().getOfflinePlayer().getName(),
+                getAmount(),
+                "%item%",
+                getStartingPrice(),
+                getIncrement(),
+                getAuctionTime()));
 
-		List<String> extra = new ArrayList<>();
-		List<String> remove = new ArrayList<>();
+        List<String> extra = new ArrayList<>();
+        List<String> remove = new ArrayList<>();
 
-		addAutoBuyBroadcast(extra);
-		addHeadBroadcast(extra);
-		addRepairBroadcast(extra);
-		addSealedBroadcast(extra);
+        addAutoBuyBroadcast(extra);
+        addHeadBroadcast(extra);
+        addRepairBroadcast(extra);
+        addSealedBroadcast(extra);
 
-		extra.stream().filter(s -> !s.startsWith("\n")).forEach(s -> {
-			message.append(s);
-			remove.add(s);
-		});
+        extra.stream().filter(s -> !s.startsWith("\n")).forEach(s -> {
+            message.append(s);
+            remove.add(s);
+        });
 
-		extra.removeAll(remove);
+        extra.removeAll(remove);
 
-		extra.forEach(message::append);
+        extra.forEach(message::append);
 
-		return formatStartingMessage(message.toString());
-	}
+        return formatStartingMessage(message.toString());
+    }
 
-	private void addAutoBuyBroadcast(List<String> extra) {
-		if (getAutoBuy() > 0) {
-			extra.add(Messages.getString("auction.autobuy", getAutoBuy()));
-		}
-	}
+    private void addAutoBuyBroadcast(List<String> extra) {
+        if (getAutoBuy() > 0) {
+            extra.add(Messages.getString("auction.autobuy", getAutoBuy()));
+        }
+    }
 
-	private void addHeadBroadcast(List<String> extra) {
-		if (ConfigManager.getConfig().getBoolean("auctions.toggles.broadcast-head") &&
-				getItem().getItemMeta() instanceof SkullMeta) {
-			SkullMeta meta = (SkullMeta) getItem().getItemMeta();
+    private void addHeadBroadcast(List<String> extra) {
+        if (ConfigManager.getConfig().getBoolean("auctions.toggles.broadcast-head") &&
+                getItem().getItemMeta() instanceof SkullMeta) {
+            SkullMeta meta = (SkullMeta) getItem().getItemMeta();
 
-			if (meta.hasOwner()) {
-				extra.add(Messages.getString("auction.skull", meta.getOwner()));
-			}
-		}
-	}
+            if (meta.hasOwner()) {
+                extra.add(Messages.getString("auction.skull", meta.getOwner()));
+            }
+        }
+    }
 
-	private void addRepairBroadcast(List<String> extra) {
-		if (ConfigManager.getConfig().getBoolean("auctions.toggles.broadcast-repair")) {
-			int xpToRepair = ReflectionUtil.getXPForRepair(getItem());
+    private void addRepairBroadcast(List<String> extra) {
+        if (ConfigManager.getConfig().getBoolean("auctions.toggles.broadcast-repair")) {
+            int xpToRepair = ReflectionUtil.getXPForRepair(getItem());
 
-			if (xpToRepair == -1) {
-				extra.add(Messages.getString("auction.repair.impossible"));
-			} else if (xpToRepair > 0) {
-				extra.add(Messages.getString("auction.repair.price", xpToRepair));
-			}
-		}
-	}
+            if (xpToRepair == -1) {
+                extra.add(Messages.getString("auction.repair.impossible"));
+            } else if (xpToRepair > 0) {
+                extra.add(Messages.getString("auction.repair.price", xpToRepair));
+            }
+        }
+    }
 
-	private void addSealedBroadcast(List<String> extra) {
-		if (isSealed()) {
-			extra.add(Messages.getString("auction.sealed"));
-		}
-	}
+    private void addSealedBroadcast(List<String> extra) {
+        if (isSealed()) {
+            extra.add(Messages.getString("auction.sealed"));
+        }
+    }
 
-	private BaseComponent formatStartingMessage(String message) {
-		BaseComponent main = new TextComponent();
-		String[] split = message.split("(= )");
+    private BaseComponent formatStartingMessage(String message) {
+        BaseComponent main = new TextComponent();
+        String[] split = message.split("(= )");
 
-		for (String split2 : split) {
-			for (String arg : split2.split("(?=&)")) {
-				BaseComponent extra = new TextComponent();
-				ChatColor color = null;
+        for (String split2 : split) {
+            for (String arg : split2.split("(?=&)(?!&l)(?!&m)(?!&n)(?!&o)")) {
+                TextComponent extra = new TextComponent();
+                ChatColor color = null;
+                boolean bold = false, strikeThrough = false, underlined = false, italic = false;
 
-				if (arg.startsWith("&")) {
-					color = ChatColor.getByChar(arg.charAt(1));
-					arg = arg.substring(2);
-				} else {
-					List<BaseComponent> extraList = main.getExtra();
+                if (arg.startsWith("&")) {
+                    color = ChatColor.getByChar(arg.charAt(1));
+                    arg = arg.substring(2);
 
-					if (extraList == null) {
-						color = ChatColor.WHITE;
-					}
-				}
+                    extra.setBold(false);
+                    extra.setStrikethrough(false);
+                    extra.setUnderlined(false);
+                    extra.setItalic(false);
+                } else {
+                    List<BaseComponent> extraList = main.getExtra();
 
-				if (arg.contains("%item%")) {
-					String minecraftItemName = ReflectionUtil.getMinecraftName(getItem());
-					arg = arg.replace("%item%", minecraftItemName);
+                    if (extraList == null) {
+                        color = ChatColor.WHITE;
+                    }
+                }
 
-					String[] split3 = arg.split("((?<=" + minecraftItemName + ")|(?=" + minecraftItemName + "))");
+                if (arg.startsWith("&l") || arg.startsWith("&m") || arg.startsWith("&n") || arg.startsWith("&o")) {
+                    switch (arg.substring(0, 2)) {
+                        case "&l":
+                            bold = true;
+                            break;
+                        case "&m":
+                            strikeThrough = true;
+                            break;
+                        case "&n":
+                            underlined = true;
+                            break;
+                        case "&o":
+                            italic = true;
+                    }
 
-					List<BaseComponent> addtoExtra = new ArrayList<>();
+                    arg = arg.substring(2);
+                }
 
-					for (String s : split3) {
-						if (s.equalsIgnoreCase(minecraftItemName)) {
-							addtoExtra.add(new TranslatableComponent(s));
-						} else {
-							addtoExtra.add(new TextComponent(s));
-						}
-					}
+                if (arg.contains("%item%")) {
+                    String minecraftItemName = ReflectionUtil.getMinecraftName(getItem());
+                    arg = arg.replace("%item%", minecraftItemName);
 
-					BaseComponent[] hover = {new TextComponent(ReflectionUtil.getItemAsJson(getItem()))};
+                    String[] split3 = arg.split("((?<=" + minecraftItemName + ")|(?=" + minecraftItemName + "))");
 
-					extra.setHoverEvent(new HoverEvent(Action.SHOW_ITEM, hover));
+                    List<BaseComponent> addtoExtra = new ArrayList<>();
 
-					addtoExtra.forEach(extra::addExtra);
-				} else {
-					((TextComponent) extra).setText(arg);
-				}
+                    for (String s : split3) {
+                        if (s.equalsIgnoreCase(minecraftItemName)) {
+                            addtoExtra.add(new TranslatableComponent(s));
+                        } else {
+                            addtoExtra.add(new TextComponent(s));
+                        }
+                    }
 
-				if (color != null) {
-					extra.setColor(color);
-				}
+                    BaseComponent[] hover = {new TextComponent(ReflectionUtil.getItemAsJson(getItem()))};
 
-				main.addExtra(extra);
-			}
-		}
+                    extra.setHoverEvent(new HoverEvent(Action.SHOW_ITEM, hover));
 
-		return main;
-	}
+                    addtoExtra.forEach(extra::addExtra);
+                } else {
+                    extra.setText(arg);
+                }
+
+                if (color != null) {
+                    extra.setColor(color);
+                }
+
+                if (bold)
+                    extra.setBold(true);
+
+                if (strikeThrough)
+                    extra.setStrikethrough(true);
+
+                if (underlined)
+                    extra.setUnderlined(true);
+
+                if (italic)
+                    extra.setItalic(true);
+
+                main.addExtra(extra);
+            }
+        }
+
+        return main;
+    }
 }

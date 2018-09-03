@@ -16,87 +16,87 @@ import java.util.logging.Level;
 
 public class AuctionsPlayerManager {
 
-	private static AuctionsPlayerManager instance = new AuctionsPlayerManager();
+    private static AuctionsPlayerManager instance = new AuctionsPlayerManager();
 
-	private final File FILE = new File("plugins/ezAuctions", "players.json");
+    private final File FILE = new File("plugins/ezAuctions", "players.json");
 
-	private final Gson gson =
-			new GsonBuilder().registerTypeAdapter(AuctionsPlayer.class, new AuctionsPlayerSerializer()).create();
+    private final Gson gson =
+            new GsonBuilder().registerTypeAdapter(AuctionsPlayer.class, new AuctionsPlayerSerializer()).create();
 
-	private List<AuctionsPlayer> players;
+    private List<AuctionsPlayer> players;
 
-	private AuctionsPlayerManager() {
-		createFile();
-		loadGson();
-	}
+    private AuctionsPlayerManager() {
+        createFile();
+        loadGson();
+    }
 
-	public static AuctionsPlayerManager getInstance() {
-		return instance;
-	}
+    public static AuctionsPlayerManager getInstance() {
+        return instance;
+    }
 
-	private void createFile() {
-		if (!FILE.getParentFile().isDirectory()) {
-			FILE.getParentFile().mkdir();
-		}
+    private void createFile() {
+        if (!FILE.getParentFile().isDirectory()) {
+            FILE.getParentFile().mkdir();
+        }
 
-		if (!FILE.exists()) {
-			try {
-				FILE.createNewFile();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+        if (!FILE.exists()) {
+            try {
+                FILE.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-	private void loadGson() {
-		Scanner scanner = null;
+    private void loadGson() {
+        Scanner scanner = null;
 
-		try {
-			scanner = new Scanner(FILE);
+        try {
+            scanner = new Scanner(FILE);
 
-			String json = scanner.nextLine();
+            String json = scanner.nextLine();
 
-			players = gson.fromJson(json, AuctionsPlayerList.class).getPlayers();
-		} catch (Exception ex) {
-			if (!(ex instanceof NoSuchElementException)) {
-				Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error loading players!", ex);
-			}
+            players = gson.fromJson(json, AuctionsPlayerList.class).getPlayers();
+        } catch (Exception ex) {
+            if (!(ex instanceof NoSuchElementException)) {
+                Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error loading players!", ex);
+            }
 
-			players = new ArrayList<>();
-		} finally {
-			if (scanner != null) {
-				scanner.close();
-			}
-		}
-	}
+            players = new ArrayList<>();
+        } finally {
+            if (scanner != null) {
+                scanner.close();
+            }
+        }
+    }
 
-	public void saveGson() {
-		try {
-			PrintWriter writer = new PrintWriter(FILE);
+    public void saveGson() {
+        try {
+            PrintWriter writer = new PrintWriter(FILE);
 
-			writer.write(gson.toJson(new AuctionsPlayerList(players)));
+            writer.write(gson.toJson(new AuctionsPlayerList(players)));
 
-			writer.close();
-		} catch (FileNotFoundException ex) {
-			ex.printStackTrace();
-		}
-	}
+            writer.close();
+        } catch (FileNotFoundException ex) {
+            ex.printStackTrace();
+        }
+    }
 
-	public AuctionsPlayer getPlayer(UUID id) {
-		for (AuctionsPlayer ap : players) {
-			if (ap.getUniqueId().equals(id))
-				return ap;
-		}
+    public AuctionsPlayer getPlayer(UUID id) {
+        for (AuctionsPlayer ap : players) {
+            if (ap.getUniqueId().equals(id))
+                return ap;
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	public void createPlayer(UUID id) {
-		AuctionsPlayer ap = getPlayer(id);
+    public void createPlayer(UUID id) {
+        AuctionsPlayer ap = getPlayer(id);
 
-		if (ap == null) {
-			players.add(new AuctionsPlayer(id, false, false, new ArrayList<>()));
-			saveGson();
-		}
-	}
+        if (ap == null) {
+            players.add(new AuctionsPlayer(id, false, false, new ArrayList<>(), new ArrayList<>()));
+            saveGson();
+        }
+    }
 }

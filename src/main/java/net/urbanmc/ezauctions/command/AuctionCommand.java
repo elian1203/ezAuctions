@@ -27,6 +27,7 @@ public class AuctionCommand implements CommandExecutor {
 		subs.add(new DisableSub());
 		subs.add(new EnableSub());
 		subs.add(new IgnoreSub());
+		subs.add(new IgnorePlayerSub());
 		subs.add(new ImpoundSub());
 		subs.add(new InfoSub());
 		subs.add(new ReloadSub());

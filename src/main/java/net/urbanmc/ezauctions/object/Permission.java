@@ -11,6 +11,7 @@ public enum Permission {
 	COMMAND_REMOVE("auction.remove"),
 	COMMAND_SPAM("auction.spam"),
 	COMMAND_IGNORE("auction.ignore"),
+	COMMAND_IGNORE_PLAYER("auction.ignore.player"),
 	COMMAND_IMPOUND("auction.impound"),
 	COMMAND_ENABLE("auction.enable"),
 	COMMAND_DISABLE("auction.disable"),

@@ -15,106 +15,109 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
+import java.util.UUID;
 
 public class AuctionRunnable extends BukkitRunnable {
 
-	private Auction auction;
-	private int timeLeft;
-	private List<Integer> broadcastTimes = ConfigManager.getConfig().getIntegerList("auctions.broadcast-times");
-	private int antiSnipeTimesRun = 0;
+    private Auction auction;
+    private UUID auctioneer;
+    private int timeLeft;
+    private List<Integer> broadcastTimes = ConfigManager.getConfig().getIntegerList("auctions.broadcast-times");
+    private int antiSnipeTimesRun = 0;
 
-	public AuctionRunnable(Auction auction, EzAuctions plugin) {
-		this.auction = auction;
-		this.timeLeft = auction.getAuctionTime();
+    public AuctionRunnable(Auction auction, EzAuctions plugin) {
+        this.auction = auction;
+        this.auctioneer = auction.getAuctioneer().getUniqueId();
+        this.timeLeft = auction.getAuctionTime();
 
-		broadcastStart();
-		runTaskTimer(plugin, 0, 20);
-	}
+        broadcastStart();
+        runTaskTimer(plugin, 0, 20);
+    }
 
-	@Override
-	public void run() {
-		if (broadcastTimes.contains(timeLeft)) {
-			MessageUtil.broadcastSpammy("auction.time_left", timeLeft);
-		}
+    @Override
+    public void run() {
+        if (broadcastTimes.contains(timeLeft)) {
+            MessageUtil.broadcastSpammy(auctioneer, "auction.time_left", timeLeft);
+        }
 
-		if (timeLeft == 0) {
-			endAuction();
-			return;
-		}
+        if (timeLeft == 0) {
+            endAuction();
+            return;
+        }
 
-		timeLeft--;
-		getAuction().setAuctionTime(timeLeft);
-	}
+        timeLeft--;
+        getAuction().setAuctionTime(timeLeft);
+    }
 
-	private void broadcastStart() {
-		BaseComponent comp = getAuction().getStartingMessage();
+    private void broadcastStart() {
+        BaseComponent comp = getAuction().getStartingMessage();
 
-		MessageUtil.broadcastRegular(comp);
-	}
+        MessageUtil.broadcastRegular(auctioneer, comp);
+    }
 
-	public Auction getAuction() {
-		return auction;
-	}
+    public Auction getAuction() {
+        return auction;
+    }
 
-	public int getAntiSnipeTimesRun() {
-		return antiSnipeTimesRun;
-	}
+    public int getAntiSnipeTimesRun() {
+        return antiSnipeTimesRun;
+    }
 
-	public void antiSnipe() {
-		FileConfiguration data = ConfigManager.getConfig();
+    public void antiSnipe() {
+        FileConfiguration data = ConfigManager.getConfig();
 
-		if (!(getAntiSnipeTimesRun() < data.getInt("antisnipe.run-times")))
-			return;
+        if (!(getAntiSnipeTimesRun() < data.getInt("antisnipe.run-times")))
+            return;
 
-		int addTime = data.getInt("antisnipe.time");
+        int addTime = data.getInt("antisnipe.time");
 
-		MessageUtil.broadcastSpammy("auction.antisnipe", addTime);
-		timeLeft += addTime;
+        MessageUtil.broadcastSpammy(auctioneer, "auction.antisnipe", addTime);
+        timeLeft += addTime;
 
-		antiSnipeTimesRun++;
-	}
+        antiSnipeTimesRun++;
+    }
 
-	public void endAuction() {
-		cancel();
+    public void endAuction() {
+        cancel();
 
-		AuctionEndEvent event = new AuctionEndEvent(getAuction());
-		Bukkit.getPluginManager().callEvent(event);
+        AuctionEndEvent event = new AuctionEndEvent(getAuction());
+        Bukkit.getPluginManager().callEvent(event);
 
-		EzAuctions.getAuctionManager().next();
+        EzAuctions.getAuctionManager().next();
 
-		if (getAuction().anyBids()) {
-			Auction auc = getAuction();
-			Economy econ = EzAuctions.getEcon();
+        if (getAuction().anyBids()) {
+            Auction auc = getAuction();
+            Economy econ = EzAuctions.getEcon();
 
-			Bidder lastBidder = auc.getLastBidder();
+            Bidder lastBidder = auc.getLastBidder();
 
-			String lastBidderName = lastBidder.getBidder().getOfflinePlayer().getName();
-			double lastBidAmount = lastBidder.getAmount();
+            String lastBidderName = lastBidder.getBidder().getOfflinePlayer().getName();
+            double lastBidAmount = lastBidder.getAmount();
 
-			MessageUtil.broadcastRegular("auction.finish", lastBidderName, lastBidAmount);
+            MessageUtil.broadcastRegular(auctioneer, "auction.finish", lastBidderName, lastBidAmount);
 
-			RewardUtil.rewardAuction(auc, econ);
-		} else {
-			MessageUtil.broadcastRegular("auction.finish.no_bids");
-			RewardUtil.rewardCancel(getAuction());
-		}
-	}
+            RewardUtil.rewardAuction(auc, econ);
+        } else {
+            MessageUtil.broadcastRegular(auctioneer, "auction.finish.no_bids");
+            RewardUtil.rewardCancel(getAuction());
+        }
+    }
 
-	public void cancelAuction() {
-		cancel();
+    public void cancelAuction() {
+        cancel();
 
-		MessageUtil.broadcastRegular("auction.cancelled");
-		EzAuctions.getAuctionManager().next();
+        MessageUtil.broadcastRegular(auctioneer, "auction.cancelled");
+        EzAuctions.getAuctionManager().next();
 
-		RewardUtil.rewardCancel(getAuction());
-	}
+        RewardUtil.rewardCancel(getAuction());
+    }
 
-	public void impoundAuction(Player impounder) {
-		cancel();
+    public void impoundAuction(Player impounder) {
+        cancel();
 
-		MessageUtil.broadcastRegular("auction.impounded");
-		EzAuctions.getAuctionManager().next();
+        MessageUtil.broadcastRegular(auctioneer, "auction.impounded");
+        EzAuctions.getAuctionManager().next();
 
-		RewardUtil.rewardImpound(getAuction(), impounder);
-	}
+        RewardUtil.rewardImpound(getAuction(), impounder);
+    }
 }

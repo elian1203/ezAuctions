@@ -1,7 +1,5 @@
 package net.urbanmc.ezauctions.util;
 
-import net.milkbowl.vault.item.ItemInfo;
-import net.milkbowl.vault.item.Items;
 import net.urbanmc.ezauctions.object.Auction;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -46,11 +44,6 @@ public class ItemUtil {
 
         if (material != null)
             return material;
-
-        ItemInfo item = Items.itemByName(type);
-
-        if (item != null)
-            return item.getType();
 
         return null;
     }

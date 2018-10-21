@@ -40,12 +40,7 @@ public class ItemUtil {
     }
 
     static Material getMaterial(String type) {
-        Material material = Material.getMaterial(type.toUpperCase());
-
-        if (material != null)
-            return material;
-
-        return null;
+        return Material.getMaterial(type.toUpperCase());
     }
 
     /**

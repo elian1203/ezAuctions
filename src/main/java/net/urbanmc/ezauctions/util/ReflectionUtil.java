@@ -19,7 +19,8 @@ public class ReflectionUtil {
 
             String version = Bukkit.getVersion();
 
-            if (version.contains("MC: 1.13") || version.contains("MC: 1.13.1")) {
+            if (version.contains("MC: 1.13") || version.contains("MC: 1.13.1") || version.contains("MC: 1.14") ||
+                    version.contains("MC: 1.14.1")) {
                 return (String) item.getClass().getMethod("getName").invoke(item);
             } else {
                 if (bannerClass.isAssignableFrom(item.getClass())) {

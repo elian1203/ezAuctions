@@ -22,7 +22,7 @@ public class InfoSub extends SubCommand {
 			return;
 		}
 
-		BaseComponent comp = current.getStartingMessage();
+		BaseComponent[] comp = current.getStartingMessage();
 		MessageUtil.privateMessage(sender, comp);
 	}
 }

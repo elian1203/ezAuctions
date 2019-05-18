@@ -2,11 +2,13 @@ package net.urbanmc.ezauctions.gson;
 
 import com.google.gson.*;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
+import net.urbanmc.ezauctions.util.ItemUtil;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.Map.Entry;
@@ -34,27 +36,8 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
         JsonArray offlineItemsArray = new JsonArray();
 
         for (ItemStack is : player.getOfflineItems()) {
-            Map<String, Object> map;
-
-            if (is.getType() == Material.ENCHANTED_BOOK) {
-                map = new HashMap<>();
-
-                EnchantmentStorageMeta meta = (EnchantmentStorageMeta) is.getItemMeta();
-
-                Map<String, Integer> enchants = new HashMap<>();
-
-                for (Entry<Enchantment, Integer> entry : meta.getStoredEnchants().entrySet()) {
-                    enchants.put(entry.getKey().getName(), entry.getValue());
-                }
-
-                map.put("type", "ENCHANTED_BOOK");
-                map.put("enchants", enchants);
-            } else {
-                map = is.serialize();
-            }
-
-            JsonElement je = gson.toJsonTree(map);
-            offlineItemsArray.add(je);
+            String serialized = ItemUtil.serialize(is);
+            offlineItemsArray.add(serialized);
         }
 
         object.add("offlineItems", offlineItemsArray);
@@ -87,32 +70,13 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
         JsonArray array = object.getAsJsonArray("offlineItems");
         List<ItemStack> offlineItems = new ArrayList<>();
 
-
         for (JsonElement je : array) {
-            ItemStack is;
-
-            JsonObject obj = je.getAsJsonObject();
-
-            if (obj.get("type").getAsString().equals("ENCHANTED_BOOK")) {
-                Map<Object, Double> map = gson.fromJson(obj.get("enchants"), Map.class);
-
-                is = new ItemStack(Material.ENCHANTED_BOOK);
-
-                EnchantmentStorageMeta meta = (EnchantmentStorageMeta) is.getItemMeta();
-
-                for (Entry<Object, Double> entry : map.entrySet()) {
-                    Enchantment enchant = Enchantment.getByName(entry.getKey().toString());
-
-                    meta.addStoredEnchant(enchant, entry.getValue().intValue(), true);
-                }
-
-                is.setItemMeta(meta);
-            } else {
-                Map<String, Object> map = gson.fromJson(je, Map.class);
-                is = ItemStack.deserialize(map);
+            try {
+                ItemStack is = ItemUtil.deserialize(je.getAsString());
+                offlineItems.add(is);
+            } catch (IOException e) {
+                System.out.println("[ezAuctions] Failed to deserialize an item for player \"" + id + "\"");
             }
-
-            offlineItems.add(is);
         }
 
         return new AuctionsPlayer(id, ignoringSpammy, ignoringAll, ignoringPlayers, offlineItems);

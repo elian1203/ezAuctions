@@ -1,6 +1,7 @@
 package net.urbanmc.ezauctions.util;
 
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import org.bukkit.Bukkit;
@@ -22,12 +23,12 @@ public class MessageUtil {
         Bukkit.getConsoleSender().sendMessage(ChatColor.stripColor(message));
     }
 
-    public static void broadcastRegular(UUID auctioneer, BaseComponent comp) {
+    public static void broadcastRegular(UUID auctioneer, BaseComponent... comp) {
         Bukkit.getOnlinePlayers().stream().map(p -> AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId()))
                 .filter(ap -> !ap.isIgnoringAll() && !ap.getIgnoringPlayers().contains(auctioneer))
                 .forEach(ap -> ap.getOnlinePlayer().spigot().sendMessage(comp));
 
-        Bukkit.getConsoleSender().sendMessage(comp.toPlainText());
+        Bukkit.getConsoleSender().sendMessage(ChatColor.stripColor(new TextComponent(comp).toPlainText()));
     }
 
     public static void broadcastSpammy(UUID auctioneer, String prop, Object... args) {
@@ -41,6 +42,15 @@ public class MessageUtil {
         Bukkit.getConsoleSender().sendMessage(ChatColor.stripColor(message));
     }
 
+    public static void broadcastSpammy(UUID auctioneer, BaseComponent... comp) {
+        Bukkit.getOnlinePlayers().stream().map(p -> AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId()))
+                .filter(ap -> !ap.isIgnoringAll() && !ap.isIgnoringSpammy()
+                        && !ap.getIgnoringPlayers().contains(auctioneer))
+                .forEach(ap -> ap.getOnlinePlayer().spigot().sendMessage(comp));
+
+        Bukkit.getConsoleSender().sendMessage(ChatColor.stripColor(new TextComponent(comp).toPlainText()));
+    }
+
     public static void privateMessage(CommandSender sender, String prop, Object... args) {
         String message = Messages.getString(prop, args);
 
@@ -52,11 +62,11 @@ public class MessageUtil {
         }
     }
 
-    public static void privateMessage(CommandSender sender, BaseComponent comp) {
+    public static void privateMessage(CommandSender sender, BaseComponent... comp) {
         if (sender instanceof Player) {
             ((Player) sender).spigot().sendMessage(comp);
         } else {
-            sender.sendMessage(comp.toPlainText());
+            sender.sendMessage(ChatColor.stripColor(new TextComponent(comp).toPlainText()));
         }
     }
 }

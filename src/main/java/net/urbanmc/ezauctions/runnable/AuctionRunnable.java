@@ -5,6 +5,7 @@ import net.milkbowl.vault.economy.Economy;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionEndEvent;
 import net.urbanmc.ezauctions.manager.ConfigManager;
+import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.Bidder;
 import net.urbanmc.ezauctions.util.MessageUtil;
@@ -37,7 +38,7 @@ public class AuctionRunnable extends BukkitRunnable {
     @Override
     public void run() {
         if (broadcastTimes.contains(timeLeft)) {
-            MessageUtil.broadcastSpammy(auctioneer, "auction.time_left", timeLeft);
+            broadcastTime();
         }
 
         if (timeLeft == 0) {
@@ -50,9 +51,18 @@ public class AuctionRunnable extends BukkitRunnable {
     }
 
     private void broadcastStart() {
-        BaseComponent comp = getAuction().getStartingMessage();
+        BaseComponent[] comp = getAuction().getStartingMessage();
 
         MessageUtil.broadcastRegular(auctioneer, comp);
+    }
+
+    private void broadcastTime() {
+        double currentAmount = auction.anyBids() ? auction.getBiddersHighestToLowest().get(0).getAmount() :
+                auction.getStartingPrice();
+        String broadcast = Messages.getInstance().getStringWithoutColoring("auction.time_left", timeLeft,
+                "%item%", auction.getAmount(), currentAmount);
+
+        MessageUtil.broadcastSpammy(auctioneer, auction.formatMessage(broadcast));
     }
 
     public Auction getAuction() {
@@ -94,11 +104,17 @@ public class AuctionRunnable extends BukkitRunnable {
             String lastBidderName = lastBidder.getBidder().getOfflinePlayer().getName();
             double lastBidAmount = lastBidder.getAmount();
 
-            MessageUtil.broadcastRegular(auctioneer, "auction.finish", lastBidderName, lastBidAmount);
+            String broadcast = Messages.getInstance().getStringWithoutColoring("auction.finish", lastBidderName,
+                    lastBidAmount, "%item%", auc.getAmount());
+
+            MessageUtil.broadcastRegular(auctioneer, auc.formatMessage(broadcast));
 
             RewardUtil.rewardAuction(auc, econ);
         } else {
-            MessageUtil.broadcastRegular(auctioneer, "auction.finish.no_bids");
+            String broadcast = Messages.getInstance().getStringWithoutColoring("auction.finish.no_bids", "%item%",
+                    getAuction().getAmount());
+
+            MessageUtil.broadcastRegular(auctioneer, getAuction().formatMessage(broadcast));
             RewardUtil.rewardCancel(getAuction());
         }
     }

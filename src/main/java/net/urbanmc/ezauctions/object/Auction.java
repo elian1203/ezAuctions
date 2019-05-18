@@ -16,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -110,7 +111,10 @@ public class Auction {
             String bidder = b.getBidder().getOnlinePlayer().getName();
             double amount = b.getAmount();
 
-            MessageUtil.broadcastSpammy(auctioneer.getUniqueId(), "auction.bid", bidder, amount);
+            String message = Messages.getInstance().getStringWithoutColoring("auction.bid", bidder, amount, "%item%",
+                    getAmount(), getAuctionTime());
+
+            MessageUtil.broadcastSpammy(auctioneer.getUniqueId(), formatMessage(message));
         }
 
         FileConfiguration data = ConfigManager.getConfig();
@@ -181,7 +185,7 @@ public class Auction {
                 collect(Collectors.toList());
     }
 
-    public BaseComponent getStartingMessage() {
+    public BaseComponent[] getStartingMessage() {
         StringBuilder message = new StringBuilder(Messages.getInstance().getStringWithoutColoring(
                 "auction.info",
                 getAuctioneer().getOfflinePlayer().getName(),
@@ -208,7 +212,7 @@ public class Auction {
 
         extra.forEach(message::append);
 
-        return formatStartingMessage(message.toString());
+        return formatMessage(message.toString());
     }
 
     private void addAutoBuyBroadcast(List<String> extra) {
@@ -246,95 +250,53 @@ public class Auction {
         }
     }
 
-    private BaseComponent formatStartingMessage(String message) {
-        BaseComponent main = new TextComponent();
-        String[] split = message.split("(= )");
+    public BaseComponent[] formatMessage(String message) {
+        if (message.contains("%item%")) {
+            String[] split = message.split("%item%");
+            BaseComponent[] first = TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', split[0])),
+                    second = TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&',
+                            split[1]));
 
-        for (String split2 : split) {
-            for (String arg : split2.split("(?=&)(?!&l)(?!&m)(?!&n)(?!&o)")) {
-                TextComponent extra = new TextComponent();
-                ChatColor color = null;
-                boolean bold = false, strikeThrough = false, underlined = false, italic = false;
+            BaseComponent lastComp = first[first.length - 1];
 
-                if (arg.startsWith("&")) {
-                    color = ChatColor.getByChar(arg.charAt(1));
-                    arg = arg.substring(2);
+            String minecraftItemName = ReflectionUtil.getMinecraftName(getItem());
+            String itemName = minecraftItemName;
 
-                    extra.setBold(false);
-                    extra.setStrikethrough(false);
-                    extra.setUnderlined(false);
-                    extra.setItalic(false);
-                } else {
-                    List<BaseComponent> extraList = main.getExtra();
-
-                    if (extraList == null) {
-                        color = ChatColor.WHITE;
-                    }
-                }
-
-                if (arg.startsWith("&l") || arg.startsWith("&m") || arg.startsWith("&n") || arg.startsWith("&o")) {
-                    switch (arg.substring(0, 2)) {
-                        case "&l":
-                            bold = true;
-                            break;
-                        case "&m":
-                            strikeThrough = true;
-                            break;
-                        case "&n":
-                            underlined = true;
-                            break;
-                        case "&o":
-                            italic = true;
-                    }
-
-                    arg = arg.substring(2);
-                }
-
-                if (arg.contains("%item%")) {
-                    String minecraftItemName = ReflectionUtil.getMinecraftName(getItem());
-                    arg = arg.replace("%item%", minecraftItemName);
-
-                    String[] split3 = arg.split("((?<=" + minecraftItemName + ")|(?=" + minecraftItemName + "))");
-
-                    List<BaseComponent> addtoExtra = new ArrayList<>();
-
-                    for (String s : split3) {
-                        if (s.equalsIgnoreCase(minecraftItemName)) {
-                            addtoExtra.add(new TranslatableComponent(s));
-                        } else {
-                            addtoExtra.add(new TextComponent(s));
-                        }
-                    }
-
-                    BaseComponent[] hover = {new TextComponent(ReflectionUtil.getItemAsJson(getItem()))};
-
-                    extra.setHoverEvent(new HoverEvent(Action.SHOW_ITEM, hover));
-
-                    addtoExtra.forEach(extra::addExtra);
-                } else {
-                    extra.setText(arg);
-                }
-
-                if (color != null) {
-                    extra.setColor(color);
-                }
-
-                if (bold)
-                    extra.setBold(true);
-
-                if (strikeThrough)
-                    extra.setStrikethrough(true);
-
-                if (underlined)
-                    extra.setUnderlined(true);
-
-                if (italic)
-                    extra.setItalic(true);
-
-                main.addExtra(extra);
+            if (ConfigManager.getConfig().getBoolean("auctions.toggles.display-custom-name") && getItem().hasItemMeta()
+                    && getItem().getItemMeta().hasDisplayName()) {
+                itemName = getItem().getItemMeta().getDisplayName();
             }
-        }
 
-        return main;
+            BaseComponent[] hover = {new TextComponent(ReflectionUtil.getItemAsJson(getItem()))};
+
+            BaseComponent item;
+
+            if (itemName.equals(minecraftItemName)) {
+                item = new TranslatableComponent(itemName);
+            } else {
+                item = new TextComponent(itemName);
+            }
+
+            item.setColor(lastComp.getColor());
+            item.setBold(lastComp.isBold());
+            item.setItalic(lastComp.isItalic());
+            item.setStrikethrough(lastComp.isStrikethrough());
+            item.setUnderlined(lastComp.isUnderlined());
+
+            item.setHoverEvent(new HoverEvent(Action.SHOW_ITEM, hover));
+
+            List<BaseComponent> list = new ArrayList<>();
+
+            list.addAll(Arrays.asList(first));
+            list.add(item);
+            list.addAll(Arrays.asList(second));
+
+            BaseComponent[] combined = new BaseComponent[list.size()];
+            combined = list.toArray(combined);
+
+            return combined;
+        } else {
+            return TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', message));
+        }
     }
 }

@@ -33,6 +33,9 @@ auctions:
 
   # Should only have "true" or false"
   toggles:
+    # When set to true, the custom item name will be used instead of the minecraft item name when available
+    display-custom-name: false
+
     # Should we broadcast the owner of the head if it is a player head?
     broadcast-head: true
 

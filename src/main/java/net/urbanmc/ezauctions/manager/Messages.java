@@ -55,6 +55,8 @@ public class Messages {
             Reader reader = new InputStreamReader(input, "UTF-8");
 
             bundle = new PropertyResourceBundle(reader);
+
+            reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

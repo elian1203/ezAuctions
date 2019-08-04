@@ -22,6 +22,7 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
         object.addProperty("id", player.getUniqueId().toString());
         object.addProperty("ignoringSpammy", player.isIgnoringSpammy());
         object.addProperty("ignoringAll", player.isIgnoringAll());
+        object.addProperty("ignoringScoreboard", player.isIgnoringScoreboard());
 
         JsonArray ignoringPlayersArray = new JsonArray();
 
@@ -30,8 +31,6 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
         }
 
         object.add("ignoringPlayers", ignoringPlayersArray);
-
-        Gson gson = new Gson();
 
         JsonArray offlineItemsArray = new JsonArray();
 
@@ -53,7 +52,11 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
         UUID id = UUID.fromString(object.get("id").getAsString());
 
         boolean ignoringSpammy = object.get("ignoringSpammy").getAsBoolean(), ignoringAll =
-                object.get("ignoringAll").getAsBoolean();
+                object.get("ignoringAll").getAsBoolean(), ignoringScoreboard = false;
+
+        if (object.has("ignoringScoreboard")) {
+            ignoringScoreboard = object.get("ignoringScoreboard").getAsBoolean();
+        }
 
         List<UUID> ignoringPlayers = new ArrayList<>();
 
@@ -64,8 +67,6 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
                 ignoringPlayers.add(UUID.fromString(je.getAsString()));
             }
         }
-
-        Gson gson = new Gson();
 
         JsonArray array = object.getAsJsonArray("offlineItems");
         List<ItemStack> offlineItems = new ArrayList<>();
@@ -79,6 +80,6 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
             }
         }
 
-        return new AuctionsPlayer(id, ignoringSpammy, ignoringAll, ignoringPlayers, offlineItems);
+        return new AuctionsPlayer(id, ignoringSpammy, ignoringAll, ignoringScoreboard, ignoringPlayers, offlineItems);
     }
 }

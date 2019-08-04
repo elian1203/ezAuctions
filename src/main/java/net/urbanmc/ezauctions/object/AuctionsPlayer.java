@@ -12,15 +12,16 @@ import java.util.UUID;
 public class AuctionsPlayer {
 
     private UUID id;
-    private boolean ignoringSpammy, ignoringAll;
+    private boolean ignoringSpammy, ignoringAll, ignoringScoreboard;
     private List<UUID> ignoringPlayers;
     private List<ItemStack> offlineItems;
 
-    public AuctionsPlayer(UUID id, boolean ignoringSpammy, boolean ignoringAll, List<UUID> ignoringPlayers,
-                          List<ItemStack> offlineItems) {
+    public AuctionsPlayer(UUID id, boolean ignoringSpammy, boolean ignoringAll, boolean ignoringScoreboard,
+                          List<UUID> ignoringPlayers, List<ItemStack> offlineItems) {
         this.id = id;
         this.ignoringSpammy = ignoringSpammy;
         this.ignoringAll = ignoringAll;
+        this.ignoringScoreboard = ignoringScoreboard;
         this.offlineItems = offlineItems;
         this.ignoringPlayers = ignoringPlayers;
     }
@@ -44,6 +45,15 @@ public class AuctionsPlayer {
 
     public void setIgnoringAll(boolean ignoringAll) {
         this.ignoringAll = ignoringAll;
+        AuctionsPlayerManager.getInstance().saveGson();
+    }
+
+    public boolean isIgnoringScoreboard() {
+        return ignoringScoreboard;
+    }
+
+    public void setIgnoringScoreboard(boolean ignoringScoreboard) {
+        this.ignoringScoreboard = ignoringScoreboard;
         AuctionsPlayerManager.getInstance().saveGson();
     }
 

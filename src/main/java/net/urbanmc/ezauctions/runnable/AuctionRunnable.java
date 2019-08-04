@@ -6,6 +6,7 @@ import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionEndEvent;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
+import net.urbanmc.ezauctions.manager.ScoreboardManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.Bidder;
 import net.urbanmc.ezauctions.util.MessageUtil;
@@ -40,6 +41,9 @@ public class AuctionRunnable extends BukkitRunnable {
         if (broadcastTimes.contains(timeLeft)) {
             broadcastTime();
         }
+
+        if (ConfigManager.getConfig().getBoolean("scoreboard.enabled"))
+            ScoreboardManager.getInstance().updateScoreboard(auction);
 
         if (timeLeft == 0) {
             endAuction();
@@ -93,6 +97,8 @@ public class AuctionRunnable extends BukkitRunnable {
         AuctionEndEvent event = new AuctionEndEvent(getAuction());
         Bukkit.getPluginManager().callEvent(event);
 
+        ScoreboardManager.getInstance().removeBoards();
+
         EzAuctions.getAuctionManager().next();
 
         if (getAuction().anyBids()) {
@@ -122,6 +128,8 @@ public class AuctionRunnable extends BukkitRunnable {
     public void cancelAuction() {
         cancel();
 
+        ScoreboardManager.getInstance().removeBoards();
+
         MessageUtil.broadcastRegular(auctioneer, "auction.cancelled");
         EzAuctions.getAuctionManager().next();
 
@@ -130,6 +138,8 @@ public class AuctionRunnable extends BukkitRunnable {
 
     public void impoundAuction(Player impounder) {
         cancel();
+
+        ScoreboardManager.getInstance().removeBoards();
 
         MessageUtil.broadcastRegular(auctioneer, "auction.impounded");
         EzAuctions.getAuctionManager().next();

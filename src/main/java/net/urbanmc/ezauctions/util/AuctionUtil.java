@@ -3,6 +3,7 @@ package net.urbanmc.ezauctions.util;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -19,6 +20,11 @@ public class AuctionUtil {
 
         if (blockedWorld(p)) {
             message(p, "command.auction.start.blocked-worlds");
+            return null;
+        }
+
+        if (denyCreative(p)) {
+            message(p, "command.auction.start.deny-creative");
             return null;
         }
 
@@ -172,6 +178,10 @@ public class AuctionUtil {
                         .collect(Collectors.toList());
 
         return blockedWorlds.contains(p.getWorld().getName().toLowerCase());
+    }
+
+    private static boolean denyCreative(Player p) {
+        return p.getGameMode() == GameMode.CREATIVE && getConfig().getBoolean("auctions.toggles.deny-creative");
     }
 
     private static boolean blockedMaterial(ItemStack is) {

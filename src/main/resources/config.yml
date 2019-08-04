@@ -33,6 +33,9 @@ auctions:
 
   # Should only have "true" or false"
   toggles:
+    # Should we deny players in creative mode from starting auctions?
+    deny-creative: false
+
     # When set to true, the custom item name will be used instead of the minecraft item name when available
     display-custom-name: false
 
@@ -95,3 +98,17 @@ antisnipe:
   run-times: 3
   # How much time should be added when anti-snipe is run?
   time: 5
+
+# Scoreboard for auctions. Auto-updating
+scoreboard:
+  enabled: true
+  # If the player has another scoreboard visible should we still attempt to display the auction scoreboard?
+  overlap: false
+  # Available options are skull, repair, autobuy, and sealed
+  # These are extra details about the item. For example if it's a skull it will display the skull name. Same as in the
+  # broadcast. Feel free to move these around or completely remove them as you wish
+  meta:
+  - autobuy
+  - skull
+  - repair
+  - sealed

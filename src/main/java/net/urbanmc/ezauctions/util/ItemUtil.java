@@ -22,10 +22,10 @@ public class ItemUtil {
         ItemStack auctionItem = auc.getItem();
 
         for (int i = 0; i < p.getInventory().getSize(); i++) {
-            if (p.getInventory().getItem(i) == null)
-                continue;
-
             ItemStack is = p.getInventory().getItem(i);
+
+            if (is == null)
+                continue;
 
             if (!auctionItem.isSimilar(is))
                 continue;
@@ -130,16 +130,6 @@ public class ItemUtil {
             return items[0];
         } catch (ClassNotFoundException e) {
             throw new IOException("Unable to decode class type.", e);
-        }
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static boolean isInt(String s) {
-        try {
-            Integer.parseInt(s);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
         }
     }
 }

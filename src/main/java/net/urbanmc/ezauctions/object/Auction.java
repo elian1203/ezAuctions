@@ -15,10 +15,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Auction {
@@ -183,6 +180,19 @@ public class Auction {
     public List<Bidder> getBiddersHighestToLowest() {
         return bidders.stream().sorted(Comparator.comparingDouble(Bidder::getAmount)).
                 collect(Collectors.toList());
+    }
+
+    public boolean isParticipant(UUID id) {
+        if (auctioneer.getUniqueId().equals(id)) {
+            return true;
+        } else {
+            for (Bidder bidder : bidders) {
+                if (bidder.getBidder().getUniqueId().equals(id))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     public BaseComponent[] getStartingMessage() {

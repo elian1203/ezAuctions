@@ -14,12 +14,18 @@ general:
 auctions:
   # Worlds that you cannot start auctions in
   blocked-worlds:
-  - 'example_world'
+    - 'example_world'
 
   # Materials that cannot be auctions
   # List of valid materials: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
   blocked-materials:
-  - 'bedrock'
+    - 'bedrock'
+
+  # Commands that cannot be executed while you are participating in an auction
+  # Participants include the auctioneer and the bidders
+  # Please do not include the '/' in the command
+  blocked-commands:
+    - 'nick'
 
   # When should we broadcast the time left in the auction?
   broadcast-times: [45, 30, 15, 3, 2, 1]
@@ -108,7 +114,7 @@ scoreboard:
   # These are extra details about the item. For example if it's a skull it will display the skull name. Same as in the
   # broadcast. Feel free to move these around or completely remove them as you wish
   meta:
-  - autobuy
-  - skull
-  - repair
-  - sealed
+    - autobuy
+    - skull
+    - repair
+    - sealed

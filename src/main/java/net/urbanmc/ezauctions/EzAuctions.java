@@ -3,10 +3,11 @@ package net.urbanmc.ezauctions;
 import net.milkbowl.vault.economy.Economy;
 import net.urbanmc.ezauctions.command.AuctionCommand;
 import net.urbanmc.ezauctions.command.BidCommand;
+import net.urbanmc.ezauctions.listener.CommandListener;
 import net.urbanmc.ezauctions.listener.JoinListener;
 import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
-import org.bstats.Metrics;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -45,7 +46,7 @@ public class EzAuctions extends JavaPlugin {
             return;
         }
 
-        registerListener();
+        registerListeners();
         registerCommands();
         registerAuctionManger();
         registerMetrics();
@@ -61,18 +62,22 @@ public class EzAuctions extends JavaPlugin {
     }
 
     private boolean setupEconomy() {
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        try {
+            RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
 
-        if (rsp == null)
-            return false;
+            if (rsp == null)
+                return false;
 
-        econ = rsp.getProvider();
+            econ = rsp.getProvider();
+        } catch (Exception ignored) {
+        }
 
         return econ != null;
     }
 
-    private void registerListener() {
+    private void registerListeners() {
         getServer().getPluginManager().registerEvents(new JoinListener(), this);
+        getServer().getPluginManager().registerEvents(new CommandListener(), this);
     }
 
     private void registerCommands() {

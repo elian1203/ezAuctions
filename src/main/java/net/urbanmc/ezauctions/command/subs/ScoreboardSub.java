@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 public class ScoreboardSub extends SubCommand {
 
     public ScoreboardSub() {
-        super("scoreboard", Permission.COMMAND_SCOREBOARD, true);
+        super("scoreboard", Permission.COMMAND_SCOREBOARD, true, "sb");
     }
 
     @Override

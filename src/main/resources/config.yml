@@ -1,6 +1,17 @@
 # ezAuctions Configuration File #
 #################################
 
+data:
+  # What format should the auction player data be stored in?
+  storage-type: json # Three Types: JSON, MySQL, SQLLLite
+  # Fill out the information below if you're using MySQL
+  mysql:
+    host: 'host'
+    port: 3306
+    database: 'auctions'
+    username: 'user'
+    password: 'pass'
+
 general:
   # Should we check for updates and notify players on join? Permission is ezauctions.updatemessage
   check-updates: true

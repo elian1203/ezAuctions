@@ -49,7 +49,7 @@ public class RewardUtil {
 			item.setAmount(auction.getAmount());
 
 			lastBid.getBidder().getOfflineItems().add(item);
-			AuctionsPlayerManager.getInstance().saveGson();
+			AuctionsPlayerManager.getInstance().saveItems(lastBid.getBidder());
 		}
 
 		List<Bidder> bidders = auction.getLosingBidders();
@@ -76,7 +76,7 @@ public class RewardUtil {
 			item.setAmount(auction.getAmount());
 
 			auction.getAuctioneer().getOfflineItems().add(item);
-			AuctionsPlayerManager.getInstance().saveGson();
+			AuctionsPlayerManager.getInstance().saveItems(auction.getAuctioneer());
 		}
 
 		List<Bidder> bidders = auction.getBidders();
@@ -108,7 +108,7 @@ public class RewardUtil {
 		}
 
 		ap.getOfflineItems().clear();
-		AuctionsPlayerManager.getInstance().saveGson();
+		AuctionsPlayerManager.getInstance().saveItems(ap);
 
 		if (overflow) {
 			MessageUtil.privateMessage(p, "reward.full_inventory");

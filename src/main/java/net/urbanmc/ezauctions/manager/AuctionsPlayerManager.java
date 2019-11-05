@@ -1,85 +1,44 @@
 package net.urbanmc.ezauctions.manager;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import net.urbanmc.ezauctions.gson.AuctionsPlayerSerializer;
+import net.urbanmc.ezauctions.datastorage.DataSource;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
-import net.urbanmc.ezauctions.object.AuctionsPlayerList;
-import org.bukkit.Bukkit;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
-import java.util.logging.Level;
 
 public class AuctionsPlayerManager {
 
     private static AuctionsPlayerManager instance = new AuctionsPlayerManager();
 
-    private final File FILE = new File("plugins/ezAuctions", "players.json");
-
-    private final Gson gson =
-            new GsonBuilder().registerTypeAdapter(AuctionsPlayer.class, new AuctionsPlayerSerializer()).create();
+    private DataSource dataSource;
 
     private List<AuctionsPlayer> players;
 
-    private AuctionsPlayerManager() {
-        createFile();
-        loadGson();
+    public void setDataSource(DataSource source) {
+        this.dataSource = source;
     }
 
     public static AuctionsPlayerManager getInstance() {
         return instance;
     }
 
-    private void createFile() {
-        if (!FILE.getParentFile().isDirectory()) {
-            FILE.getParentFile().mkdir();
-        }
-
-        if (!FILE.exists()) {
-            try {
-                FILE.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+    public void loadData() {
+        players = dataSource.load();
     }
 
-    private void loadGson() {
-        Scanner scanner = null;
-
-        try {
-            scanner = new Scanner(FILE);
-
-            String json = scanner.nextLine();
-
-            players = gson.fromJson(json, AuctionsPlayerList.class).getPlayers();
-        } catch (Exception ex) {
-            if (!(ex instanceof NoSuchElementException)) {
-                Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error loading players!", ex);
-            }
-
-            players = new ArrayList<>();
-        } finally {
-            if (scanner != null) {
-                scanner.close();
-            }
-        }
+    public void syncFullSaveData() {
+        dataSource.syncSave(players);
     }
 
-    public void saveGson() {
-        try {
-            PrintWriter writer = new PrintWriter(FILE);
+    public void saveBooleans(AuctionsPlayer player) {
+        dataSource.updateBooleanValue(players, player.clone());
+    }
 
-            writer.write(gson.toJson(new AuctionsPlayerList(players)));
+    public void saveIgnored(AuctionsPlayer player) {
+        dataSource.updateIgnored(players, player.clone());
+    }
 
-            writer.close();
-        } catch (FileNotFoundException ex) {
-            ex.printStackTrace();
-        }
+    public void saveItems(AuctionsPlayer player) {
+        dataSource.updateItems(players, player.clone());
     }
 
     public AuctionsPlayer getPlayer(UUID id) {
@@ -95,8 +54,9 @@ public class AuctionsPlayerManager {
         AuctionsPlayer ap = getPlayer(id);
 
         if (ap == null) {
-            players.add(new AuctionsPlayer(id, false, false, false, new ArrayList<>(), new ArrayList<>()));
-            saveGson();
+            ap = new AuctionsPlayer(id, false, false, false, new ArrayList<>(), new ArrayList<>());
+            players.add(ap);
+            saveBooleans(ap);
         }
     }
 }

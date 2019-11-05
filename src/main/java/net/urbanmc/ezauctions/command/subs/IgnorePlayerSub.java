@@ -47,6 +47,6 @@ public class IgnorePlayerSub extends SubCommand {
             sendPropMessage(p, "command.auction.ignoreplayer.is_ignoring", target.getName());
         }
 
-        AuctionsPlayerManager.getInstance().saveGson();
+        AuctionsPlayerManager.getInstance().saveIgnored(ap);
     }
 }

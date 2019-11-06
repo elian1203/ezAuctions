@@ -13,20 +13,35 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 
 public abstract class SQLStorage extends DataSource{
 
     /*
-     * Easy, but inefficient way:
-     * Save entire list to database every time save is called.
-     *
-     * Harder to implement:
-     * Schema Controlled Inserting
+    * This class handles the SQL Logic for both MySQL and SQLLite
+    * The only difference in logic between the two is the saving player statement which is set
+    * by the respective classes.
+    *
+    * The AuctionPlayer object is divided into three tables: one that contains the boolean values, another that
+    * contains a list of ignored players, and another for offline items.
+    *
+    * Loading:
+    *   We cannot join the tables because the ignored table and the items table do not have primary keys. They are
+    *   KV lists with duplicate keys and values. Hence, while loading we have to load data from each table separately.
+    *   Thus, we load the ignored players and offline items first and store them in hashmaps. Then we load the boolean auction player
+    *   table and create the auction players there.
+    *
+    * Saving:
+    *   There are 4 separate save methods: three that update the specific table, and one full save method.
+    *   The full save method passes through the auction player list once and uses three prepared statements,
+    *   so it only has to execute three large batch queries at the end.
      */
 
+    // All SQL statements/queries.
     private final String CREATE_PLAYER_TABLE = "CREATE TABLE IF NOT EXISTS AUCTION_PLAYERS " +
             "( player CHAR(36) NOT NULL PRIMARY KEY," +
             " ignoringSpam BOOLEAN, ignoringAll BOOLEAN, ignoringScoreboard BOOLEAN)";
@@ -54,9 +69,9 @@ public abstract class SQLStorage extends DataSource{
 
     private final String LOAD_PLAYERS_QRY = "SELECT * FROM AUCTION_PLAYERS_IGNORED";
 
-    private final String LOAD_ITEMS_STMT = "SELECT items FROM AUCTION_PLAYERS_ITEMS WHERE player = ?";
+    private final String LOAD_ITEMS_QRY = "SELECT * FROM AUCTION_PLAYERS_ITEMS";
 
-    private final String LOAD_IGNORED_STMT = "SELECT ignored FROM AUCTION_PLAYERS_IGNORED WHERE player = ?";
+    private final String LOAD_IGNORED_QRY = "SELECT * FROM AUCTION_PLAYERS_IGNORED";
 
     public SQLStorage(EzAuctions plugin) {
         super(plugin);
@@ -165,8 +180,8 @@ public abstract class SQLStorage extends DataSource{
                 savePlayerStmt.setBoolean(7, player.isIgnoringScoreboard());
 
                 savePlayerStmt.execute();
-
                 savePlayerStmt.close();
+
             } catch (SQLException ex) {
                 Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error updating SQL player data for player " + player, ex);
             } finally {
@@ -202,8 +217,8 @@ public abstract class SQLStorage extends DataSource{
                 }
 
                 saveIgnoredStmt.executeBatch();
-
                 saveIgnoredStmt.close();
+
             } catch (SQLException ex) {
                 Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error updating SQL ignored player data for player " + player, ex);
             } finally {
@@ -240,8 +255,8 @@ public abstract class SQLStorage extends DataSource{
                 }
 
                 saveItemsStmt.executeBatch();
-
                 saveItemsStmt.close();
+
             } catch (SQLException ex) {
                 Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error updating SQL player items data for player " + player, ex);
             } finally {
@@ -258,59 +273,83 @@ public abstract class SQLStorage extends DataSource{
 
             if (con == null) return auctionsPlayers;
 
-            // Load the players from the main player table
-            Statement loadPlayersQuery = con.createStatement();
+            // We only need one statement for all queries.
+            Statement loadQuery = con.createStatement();
 
-            ResultSet resultSet = loadPlayersQuery.executeQuery(LOAD_PLAYERS_QRY);
+            // Load ignored users
+            Map<UUID, List<UUID>> ignoredMap = new HashMap<>();
 
-            while (resultSet.next()) {
-                // Get the player ID as a string
-                String playerID = resultSet.getString("player");
+            // We use try-with-resources blocks because they create the resultset only in the needed scope
+            // and automatically close the resultset at the end.
+            try (ResultSet ignoredPlayersRslt = loadQuery.executeQuery(LOAD_IGNORED_QRY)) {
 
-                // Get the ignored players for this specific player
-                List<UUID> ignoredPlayers = new ArrayList<>();
+                while (ignoredPlayersRslt.next()) {
+                    UUID playerUUID = UUID.fromString(ignoredPlayersRslt.getString("player"));
+                    UUID ignoredID = UUID.fromString(ignoredPlayersRslt.getString("ignored"));
 
-                PreparedStatement ignoredStmt = con.prepareStatement(LOAD_IGNORED_STMT);
-                ignoredStmt.setString(1, playerID);
+                    List<UUID> ignoredList = ignoredMap.get(playerUUID);
 
-                ResultSet ignoredResult = ignoredStmt.executeQuery();
+                    if (ignoredList == null) {
+                        ignoredList = new ArrayList<>();
+                        ignoredList.add(ignoredID);
 
-                while (ignoredResult.next()) {
-                    ignoredPlayers.add(UUID.fromString(ignoredResult.getString("ignored")));
+                        ignoredMap.put(playerUUID, ignoredList);
+                    } else
+                        ignoredList.add(ignoredID);
                 }
-
-                ignoredResult.close();
-
-                // Get the offline items for this player
-                List<ItemStack> items = new ArrayList<>();
-
-                PreparedStatement itemStmt = con.prepareStatement(LOAD_ITEMS_STMT);
-                itemStmt.setString(1, playerID);
-
-                ResultSet itemSet = itemStmt.executeQuery();
-
-                while (itemSet.next()) {
-                    items.add(ItemUtil.deserialize(itemSet.getString("items")));
-                }
-
-                itemSet.close();
-
-                ignoredStmt.close();
-                itemStmt.close();
-
-                // Create the auction player
-                AuctionsPlayer aP = new AuctionsPlayer(UUID.fromString(playerID),
-                        resultSet.getBoolean("ignoringSpam"),
-                        resultSet.getBoolean("ignoringAll"),
-                        resultSet.getBoolean("ignoringScoreboard"),
-                        ignoredPlayers,
-                        items);
-
-                auctionsPlayers.add(aP);
             }
 
+            // Load offline items
+            Map<UUID, List<ItemStack>> itemsMap = new HashMap<>();
+
+            try (ResultSet itemsRslt = loadQuery.executeQuery(LOAD_ITEMS_QRY)) {
+
+                while (itemsRslt.next()) {
+                    UUID playerUUID = UUID.fromString(itemsRslt.getString("player"));
+                    ItemStack stack = ItemUtil.deserialize(itemsRslt.getString("items"));
+
+                    List<ItemStack> stackList = itemsMap.get(playerUUID);
+
+                    if (stackList == null) {
+                        stackList = new ArrayList<>();
+                        stackList.add(stack);
+
+                        itemsMap.put(playerUUID, stackList);
+                    } else
+                        stackList.add(stack);
+                }
+            }
+
+            // Load the players from the main player table
+            try (ResultSet resultSet = loadQuery.executeQuery(LOAD_PLAYERS_QRY)) {
+
+                while (resultSet.next()) {
+                    // Get the player ID as a string
+                    String playerID = resultSet.getString("player");
+                    UUID playerUUID = UUID.fromString(resultSet.getString("player"));
+
+                    // Get the ignored players for this specific player
+                    List<UUID> ignoredPlayers = ignoredMap.getOrDefault(playerUUID, new ArrayList<>());
+
+                    // Get the offline items for this player
+                    List<ItemStack> items = itemsMap.getOrDefault(playerUUID, new ArrayList<>());
+
+                    // Create the auction player
+                    AuctionsPlayer aP = new AuctionsPlayer(UUID.fromString(playerID),
+                            resultSet.getBoolean("ignoringSpam"),
+                            resultSet.getBoolean("ignoringAll"),
+                            resultSet.getBoolean("ignoringScoreboard"),
+                            ignoredPlayers,
+                            items);
+
+                    auctionsPlayers.add(aP);
+                }
+            }
+
+            loadQuery.close();
+
         } catch (SQLException | IOException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error loading data for SQLLite", ex);
+            Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error loading data for SQL", ex);
         }
 
         return auctionsPlayers;

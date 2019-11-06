@@ -26,6 +26,13 @@ public class AuctionsPlayerManager {
         players = dataSource.load();
     }
 
+    public void saveAndDisable() {
+        if (dataSource != null) {
+            dataSource.syncSave(players);
+            dataSource.finish();
+        }
+    }
+
     public void syncFullSaveData() {
         if (dataSource != null)
             dataSource.syncSave(players);
@@ -63,10 +70,6 @@ public class AuctionsPlayerManager {
             dataSource.finish();
             dataSource = newDataSource;
         }
-    }
-
-    public void disabling() {
-        if (dataSource != null) dataSource.finish();
     }
 
     public AuctionsPlayer getPlayer(UUID id) {

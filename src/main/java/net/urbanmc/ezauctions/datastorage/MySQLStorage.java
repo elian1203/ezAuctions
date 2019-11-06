@@ -82,4 +82,9 @@ public class MySQLStorage extends SQLStorage {
         }
         return null;
     }
+
+    @Override
+    public void finish() {
+        if (hikariDS != null) hikariDS.close();
+    }
 }

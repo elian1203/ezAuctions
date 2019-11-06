@@ -11,14 +11,10 @@ import java.util.logging.Level;
 
 public class SQLLiteStorage extends SQLStorage {
 
-    private final File file;
-
-    private Connection con;
+    private String filePath;
 
     public SQLLiteStorage(EzAuctions plugin) {
         super(plugin);
-
-        this.file = new File(plugin.getDataFolder(), "auctionplayers.db");
 
         SAVE_PLAYER_STMT =  "INSERT INTO AUCTION_PLAYERS (player, ignoringSpam, ignoringAll, ignoringScoreboard)" +
                 " VALUES(?, ?, ?, ?)" +
@@ -32,6 +28,8 @@ public class SQLLiteStorage extends SQLStorage {
     }
 
     private boolean createFile() {
+        final File file = new File(plugin.getDataFolder(), "auctionplayers.db");
+
         if (!file.getParentFile().isDirectory())
             file.getParentFile().mkdir();
 
@@ -44,18 +42,15 @@ public class SQLLiteStorage extends SQLStorage {
             }
         }
 
+        filePath = file.getPath();
+
         return true;
     }
 
     protected Connection getConnection() {
         try {
-            if (con != null && !con.isClosed())
-                return con;
-
             Class.forName("org.sqlite.JDBC");
-            con = DriverManager.getConnection("jdbc:sqlite:" + file);
-
-            return con;
+            return DriverManager.getConnection("jdbc:sqlite:" + filePath);
         } catch (SQLException ex) {
             plugin.getLogger().log(Level.SEVERE, "SQLite exception on initialize", ex);
         } catch (ClassNotFoundException ex) {

@@ -1,5 +1,7 @@
 package net.urbanmc.ezauctions.datastorage;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
@@ -66,8 +68,7 @@ public abstract class SQLStorage extends DataSource{
     protected abstract Connection getConnection();
 
     protected boolean createTables() {
-        try {
-            Connection con = getConnection();
+        try (Connection con = getConnection()) {
 
             if (con == null) return false;
 
@@ -88,8 +89,7 @@ public abstract class SQLStorage extends DataSource{
 
     @Override
     public void save(List<AuctionsPlayer> auctionPlayers) {
-        try {
-            Connection con = getConnection();
+        try (Connection con = getConnection()) {
 
             if (con == null) return;
 
@@ -148,22 +148,12 @@ public abstract class SQLStorage extends DataSource{
         }
     }
 
-    private AuctionsPlayer getPlayerFromList(UUID player, List<AuctionsPlayer> list) {
-        for (AuctionsPlayer aP : list) {
-            if (aP.getUniqueId().equals(player))
-                return aP.clone();
-        }
-
-        return null;
-    }
-
     @Override
     public void updateBooleanValue(List<AuctionsPlayer> list, final AuctionsPlayer player) {
         runAsync(() -> {
             lock();
 
-            try {
-                Connection connection = getConnection();
+            try (Connection connection = getConnection()) {
 
                 if (connection == null) return;
 
@@ -193,9 +183,7 @@ public abstract class SQLStorage extends DataSource{
         runAsync(() -> {
             lock();
 
-            try {
-                Connection connection = getConnection();
-
+            try (Connection connection = getConnection()) {
                 if (connection == null) return;
 
                 String id = player.getUniqueId().toString();
@@ -232,8 +220,7 @@ public abstract class SQLStorage extends DataSource{
         runAsync(() -> {
             lock();
 
-            try {
-                Connection connection = getConnection();
+            try (Connection connection = getConnection()) {
 
                 if (connection == null) return;
 
@@ -270,8 +257,7 @@ public abstract class SQLStorage extends DataSource{
     public List<AuctionsPlayer> load() {
         ArrayList<AuctionsPlayer> auctionsPlayers = new ArrayList<>();
 
-        try {
-            Connection con = getConnection();
+        try (Connection con = getConnection()) {
 
             if (con == null) return auctionsPlayers;
 

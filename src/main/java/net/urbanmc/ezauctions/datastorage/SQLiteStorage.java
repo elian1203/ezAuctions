@@ -9,11 +9,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
-public class SQLLiteStorage extends SQLStorage {
+public class SQLiteStorage extends SQLStorage {
 
     private String filePath;
 
-    public SQLLiteStorage(EzAuctions plugin) {
+    public SQLiteStorage(EzAuctions plugin) {
         super(plugin);
 
         SAVE_PLAYER_STMT =  "INSERT INTO AUCTION_PLAYERS (player, ignoringSpam, ignoringAll, ignoringScoreboard)" +

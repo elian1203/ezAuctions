@@ -112,8 +112,8 @@ public abstract class DataSource {
             case "sql":
             case "mysql":
                 return new MySQLStorage(plugin);
-            case "sqllite":
-                return new SQLLiteStorage(plugin);
+            case "sqlite":
+                return new SQLiteStorage(plugin);
             default:
                 Bukkit.getLogger().severe("[ezAuctions] Invalid data storage type! Please fix data storage type in the config.");
                 return null;

@@ -22,7 +22,7 @@ import java.util.logging.Level;
 public abstract class SQLStorage extends DataSource{
 
     /*
-    * This class handles the SQL Logic for both MySQL and SQLLite
+    * This class handles the SQL Logic for both MySQL and SQLite
     * The only difference in logic between the two is the saving player statement which is set
     * by the respective classes.
     *

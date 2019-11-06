@@ -2,6 +2,8 @@
 #################################
 
 data:
+  # Should the data be saved again when the plugin disables?
+  save-on-disable: true
   # What format should the auction player data be stored in?
   storage-type: json # Three Types: JSON, MySQL, SQLLLite
   # Fill out the information below if you're using MySQL

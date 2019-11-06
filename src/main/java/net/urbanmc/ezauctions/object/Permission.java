@@ -17,6 +17,7 @@ public enum Permission {
 	COMMAND_ENABLE("auction.enable"),
 	COMMAND_DISABLE("auction.disable"),
 	COMMAND_RELOAD("auction.reload"),
+	COMMAND_SAVE("auction.save"),
 	COMMAND_BID("bid"),
 	NOTIFY_UPDATE("updatemessage");
 

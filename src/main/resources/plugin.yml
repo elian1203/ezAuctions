@@ -29,6 +29,7 @@ permissions:
       ezauctions.auction.enable: true
       ezauctions.auction.disable: true
       ezauctions.auction.reload: true
+      ezauctions.auction.save: true
       ezauctions.updatemessage: true
   ezauctions.player:
     default: true
@@ -73,6 +74,8 @@ permissions:
   ezauctions.auction.disable:
     default: false
   ezauctions.auction.reload:
+    default: false
+  ezauctions.auction.save:
     default: false
   ezauctions.bid:
     default: false

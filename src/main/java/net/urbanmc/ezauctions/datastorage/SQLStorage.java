@@ -1,9 +1,6 @@
 package net.urbanmc.ezauctions.datastorage;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import net.urbanmc.ezauctions.EzAuctions;
-import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.util.ItemUtil;
 import org.bukkit.Bukkit;

@@ -77,6 +77,7 @@ public class EzAuctions extends JavaPlugin {
     public void onDisable() {
         getAuctionManager().disabling();
         AuctionsPlayerManager.getInstance().syncFullSaveData();
+        AuctionsPlayerManager.getInstance().disabling();
     }
 
     private boolean setupEconomy() {

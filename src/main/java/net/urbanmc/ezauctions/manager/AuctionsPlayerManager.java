@@ -1,5 +1,6 @@
 package net.urbanmc.ezauctions.manager;
 
+import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.datastorage.DataSource;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 
@@ -26,7 +27,12 @@ public class AuctionsPlayerManager {
     }
 
     public void syncFullSaveData() {
-        dataSource.syncSave(players);
+        if (dataSource != null)
+            dataSource.syncSave(players);
+    }
+
+    public void asyncSaveData() {
+        dataSource.asyncSave(players);
     }
 
     public void saveBooleans(AuctionsPlayer player) {
@@ -39,6 +45,28 @@ public class AuctionsPlayerManager {
 
     public void saveItems(AuctionsPlayer player) {
         dataSource.updateItems(players, player.clone());
+    }
+
+    public void reloadDataSource(EzAuctions plugin) {
+        if (dataSource.preventReload()) return;
+
+        dataSource.waitForFinish();
+
+        DataSource newDataSource = DataSource.determineDataSource(plugin);
+
+        // A new data source will only be loaded if the new data source is valid, not the same as the old one
+        // and can establish proper access.
+        if (newDataSource != null
+                && !dataSource.getClass().isInstance(newDataSource)
+                && newDataSource.testAccess()) {
+
+            dataSource.finish();
+            dataSource = newDataSource;
+        }
+    }
+
+    public void disabling() {
+        if (dataSource != null) dataSource.finish();
     }
 
     public AuctionsPlayer getPlayer(UUID id) {

@@ -38,6 +38,12 @@ public abstract class DataSource {
         asyncSave(list);
     }
 
+    // This is for external custom data sources in order to prevent a creation of a new data source.
+    public boolean preventReload() { return false; }
+
+    // Method is called when the plugin is disabling or a datasource is changing
+    public void finish() {}
+
     public void asyncSave(final List<AuctionsPlayer> players) {
         List<AuctionsPlayer> cloneList = new ArrayList<>(players); // Clone array list for thread-safe access
 
@@ -83,6 +89,18 @@ public abstract class DataSource {
         synchronized (lock) {
             lock.set(false);
             lock.notifyAll();
+        }
+    }
+
+    // This method will block the thread until data I/O is finished
+    public void waitForFinish() {
+        synchronized (lock) {
+            while (lock.get()) {
+                try {
+                    lock.wait();
+                } catch (InterruptedException ignored) {
+                }
+            }
         }
     }
 

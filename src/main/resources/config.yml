@@ -13,6 +13,7 @@ data:
     database: 'auctions'
     username: 'user'
     password: 'pass'
+    useSSL: false
 
 general:
   # Should we check for updates and notify players on join? Permission is ezauctions.updatemessage

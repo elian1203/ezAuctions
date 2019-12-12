@@ -10,6 +10,18 @@ import java.util.logging.Level;
 public class ReflectionUtil {
 
     private static final Class<?> bannerClass = getNMSClass("ItemBanner");
+    private static boolean useGetItemMethod;
+
+    // Get whether the getItem name method is the same. This allows us to be theoretically version independent
+    static {
+        try {
+            Class<?> itemStackClass = getNMSClass("ItemStack");
+            itemStackClass.getMethod("getItem");
+            useGetItemMethod = true;
+        } catch (ReflectiveOperationException ex) {
+            useGetItemMethod = false;
+        }
+    }
 
     public static String getMinecraftName(ItemStack is) {
         try {
@@ -17,10 +29,7 @@ public class ReflectionUtil {
 
             Object item = nmsStack.getClass().getMethod("getItem").invoke(nmsStack);
 
-            String version = Bukkit.getVersion();
-
-            if (version.contains("MC: 1.13") || version.contains("MC: 1.13.1") || version.contains("MC: 1.14") ||
-                    version.contains("MC: 1.14.1")) {
+            if (useGetItemMethod) {
                 return (String) item.getClass().getMethod("getName").invoke(item);
             } else {
                 if (bannerClass.isAssignableFrom(item.getClass())) {
@@ -86,7 +95,14 @@ public class ReflectionUtil {
             Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.newInstance();
             Object jsonItem = saveMethod.invoke(nmsStack, nmsNbtTagCompoundObj);
 
-            return jsonItem.toString();
+            String itemJson = jsonItem.toString();
+
+            // Prevent sending a packet that could be mishandled by bungeecord
+            if (itemJson.length() > Short.MAX_VALUE) {
+                return getItemAsJson(new ItemStack(is.getType(), 1));
+            }
+
+            return itemJson;
         } catch (Exception ex) {
             Bukkit.getLogger().log(Level.WARNING,
                     "[ezAuctions] Error getting item as json. Item: " + is.getType().toString(),

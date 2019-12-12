@@ -3,20 +3,17 @@ package net.urbanmc.ezauctions.gson;
 import com.google.gson.*;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.util.ItemUtil;
-import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
+import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.EnchantmentStorageMeta;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>, JsonDeserializer<AuctionsPlayer> {
 
-    @Override
-    public JsonElement serialize(AuctionsPlayer player, Type type, JsonSerializationContext context) {
+    public static JsonElement serializeAuctionPlayer(AuctionsPlayer player) {
         JsonObject object = new JsonObject();
 
         object.addProperty("id", player.getUniqueId().toString());
@@ -45,8 +42,11 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
     }
 
     @Override
-    public AuctionsPlayer deserialize(JsonElement element, Type type,
-                                      JsonDeserializationContext context) throws JsonParseException {
+    public JsonElement serialize(AuctionsPlayer player, Type type, JsonSerializationContext context) {
+        return serializeAuctionPlayer(player);
+    }
+
+    public static AuctionsPlayer deserializeAuctionsPlayers(JsonElement element) {
         JsonObject object = (JsonObject) element;
 
         UUID id = UUID.fromString(object.get("id").getAsString());
@@ -76,10 +76,16 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
                 ItemStack is = ItemUtil.deserialize(je.getAsString());
                 offlineItems.add(is);
             } catch (IOException e) {
-                System.out.println("[ezAuctions] Failed to deserialize an item for player \"" + id + "\"");
+                Bukkit.getLogger().warning("[ezAuctions] Failed to deserialize an item for player \"" + id + "\"");
             }
         }
 
         return new AuctionsPlayer(id, ignoringSpammy, ignoringAll, ignoringScoreboard, ignoringPlayers, offlineItems);
+    }
+
+    @Override
+    public AuctionsPlayer deserialize(JsonElement element, Type type,
+                                      JsonDeserializationContext context) throws JsonParseException {
+        return deserializeAuctionsPlayers(element);
     }
 }

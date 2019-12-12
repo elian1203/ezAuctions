@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.pool.HikariPool;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.manager.ConfigManager;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.sql.Connection;
@@ -48,7 +47,7 @@ public class MySQLStorage extends SQLStorage {
         try {
             hikariDS = new HikariDataSource(hikariConfig);
         } catch (HikariPool.PoolInitializationException exception) {
-            Bukkit.getLogger().severe("[ezAuctions] Error connecting to SQL Database. Please make sure everything is configured properly.");
+            plugin.getLogger().severe("[ezAuctions] Error connecting to SQL Database. Please make sure everything is configured properly.");
             hikariDS = null;
             return false;
         }
@@ -61,7 +60,7 @@ public class MySQLStorage extends SQLStorage {
         try {
             return hikariDS.getConnection();
         } catch (SQLException e) {
-            Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Could not connect to MySQL database!", e);
+            plugin.getLogger().log(Level.SEVERE, "[ezAuctions] Could not connect to MySQL database!", e);
         }
         return null;
     }

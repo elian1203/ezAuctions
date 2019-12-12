@@ -45,7 +45,10 @@ public abstract class DataSource {
     public void finish() {}
 
     public void asyncSave(final List<AuctionsPlayer> players) {
-        List<AuctionsPlayer> cloneList = new ArrayList<>(players); // Clone array list for thread-safe access
+        // Clone array list for thread-safe access
+        // Note that this does not mean the inner-reads are thread-safe
+        // However, since we lock the writes, it means any changes to the players will be re-saved anyway.
+        List<AuctionsPlayer> cloneList = new ArrayList<>(players);
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             lock();
@@ -115,7 +118,7 @@ public abstract class DataSource {
             case "sqlite":
                 return new SQLiteStorage(plugin);
             default:
-                Bukkit.getLogger().severe("[ezAuctions] Invalid data storage type! Please fix data storage type in the config.");
+                plugin.getLogger().severe("Invalid data storage type! Please fix data storage type in the config.");
                 return null;
         }
     }

@@ -3,9 +3,11 @@ package net.urbanmc.ezauctions;
 import net.milkbowl.vault.economy.Economy;
 import net.urbanmc.ezauctions.command.AuctionCommand;
 import net.urbanmc.ezauctions.command.BidCommand;
+import net.urbanmc.ezauctions.datastorage.DataSource;
 import net.urbanmc.ezauctions.listener.CommandListener;
 import net.urbanmc.ezauctions.listener.JoinListener;
 import net.urbanmc.ezauctions.manager.AuctionManager;
+import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -46,6 +48,21 @@ public class EzAuctions extends JavaPlugin {
             return;
         }
 
+        // Establish the data source:
+        // We do this here because we need to inject the plugin into the data source
+        // and we also have to make sure the config has already loaded.
+        DataSource dataSource = DataSource.determineDataSource(this);
+
+        // Check access to the data source
+        if (dataSource == null || !dataSource.testAccess()) {
+            getLogger().severe("Could not load auction player data properly! Please check above messages for more detail.");
+            setEnabled(false);
+            return;
+        }
+
+        AuctionsPlayerManager.getInstance().setDataSource(dataSource);
+        AuctionsPlayerManager.getInstance().loadData();
+
         registerListeners();
         registerCommands();
         registerAuctionManger();
@@ -59,6 +76,9 @@ public class EzAuctions extends JavaPlugin {
     @Override
     public void onDisable() {
         getAuctionManager().disabling();
+
+        // Save auction player data on the disable
+        AuctionsPlayerManager.getInstance().saveAndDisable();
     }
 
     private boolean setupEconomy() {

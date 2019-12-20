@@ -36,7 +36,7 @@ public class AuctionsPlayer {
 
     public void setIgnoringSpammy(boolean ignoringSpammy) {
         this.ignoringSpammy = ignoringSpammy;
-        AuctionsPlayerManager.getInstance().saveGson();
+        AuctionsPlayerManager.getInstance().saveBooleans(this);
     }
 
     public boolean isIgnoringAll() {
@@ -45,7 +45,7 @@ public class AuctionsPlayer {
 
     public void setIgnoringAll(boolean ignoringAll) {
         this.ignoringAll = ignoringAll;
-        AuctionsPlayerManager.getInstance().saveGson();
+        AuctionsPlayerManager.getInstance().saveBooleans(this);
     }
 
     public boolean isIgnoringScoreboard() {
@@ -54,7 +54,7 @@ public class AuctionsPlayer {
 
     public void setIgnoringScoreboard(boolean ignoringScoreboard) {
         this.ignoringScoreboard = ignoringScoreboard;
-        AuctionsPlayerManager.getInstance().saveGson();
+        AuctionsPlayerManager.getInstance().saveBooleans(this);
     }
 
     public List<ItemStack> getOfflineItems() {
@@ -71,5 +71,9 @@ public class AuctionsPlayer {
 
     public List<UUID> getIgnoringPlayers() {
         return ignoringPlayers;
+    }
+
+    public AuctionsPlayer clone() {
+        return new AuctionsPlayer(id, ignoringSpammy, ignoringAll, ignoringScoreboard, ignoringPlayers, offlineItems);
     }
 }

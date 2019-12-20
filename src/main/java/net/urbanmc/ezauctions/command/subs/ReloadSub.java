@@ -2,6 +2,8 @@ package net.urbanmc.ezauctions.command.subs;
 
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.command.AuctionCommand;
+import net.urbanmc.ezauctions.datastorage.DataSource;
+import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.manager.ScoreboardManager;
@@ -20,7 +22,11 @@ public class ReloadSub extends SubCommand {
 		Messages.getInstance().reload();
 		ScoreboardManager.getInstance().reload();
 
-		((EzAuctions) Bukkit.getPluginManager().getPlugin("ezAuctions")).getCommand("ezauctions")
+		final EzAuctions plugin = ((EzAuctions) Bukkit.getPluginManager().getPlugin("ezAuctions"));
+
+		AuctionsPlayerManager.getInstance().reloadDataSource(plugin);
+
+		plugin.getCommand("ezauctions")
 				.setExecutor(new AuctionCommand());
 
 		sendPropMessage(sender, "command.auction.reload");

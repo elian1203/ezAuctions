@@ -10,16 +10,20 @@ import java.util.logging.Level;
 public class ReflectionUtil {
 
     private static final Class<?> bannerClass = getNMSClass("ItemBanner");
-    private static boolean useGetItemMethod;
+    private static double version;
 
-    // Get whether the getItem name method is the same. This allows us to be theoretically version independent
+    // Put the version into a double
     static {
         try {
-            Class<?> itemStackClass = getNMSClass("ItemStack");
-            itemStackClass.getMethod("getItem");
-            useGetItemMethod = true;
-        } catch (ReflectiveOperationException ex) {
-            useGetItemMethod = false;
+            String version = Bukkit.getVersion(); // "git-Paper-153 MC: 1.13.2"
+            String[] spaceSplit = version.split(" "); // { "git-Paper-153", "MC:", "1.13.2" }
+            String numberVersion = spaceSplit[2]; // "1.13.2"
+            String[] dotSplit = numberVersion.split("\\."); // { "1", "13", "2" }
+            ReflectionUtil.version = Double.parseDouble(dotSplit[0] + "." + dotSplit[1]); // 1.13
+        } catch (Exception e) {
+            // In case anything goes wrong, assume it's a newer version
+            Bukkit.getLogger().severe("[ezAuctions] Could not determine Bukkit version for reflection. Assuming 1.13+ ...");
+            version = 1.13;
         }
     }
 
@@ -29,7 +33,8 @@ public class ReflectionUtil {
 
             Object item = nmsStack.getClass().getMethod("getItem").invoke(nmsStack);
 
-            if (useGetItemMethod) {
+            // We can do a simple version check like this which should work for future versions
+            if (version > 1.12) {
                 return (String) item.getClass().getMethod("getName").invoke(item);
             } else {
                 if (bannerClass.isAssignableFrom(item.getClass())) {
@@ -38,7 +43,7 @@ public class ReflectionUtil {
 
                     return "item.banner." + color + ".name";
                 } else {
-                    return item.getClass().getMethod("a", nmsStack.getClass()).invoke(item, nmsStack).toString() + "" +
+                    return item.getClass().getMethod("a", nmsStack.getClass()).invoke(item, nmsStack).toString() +
                             ".name";
                 }
             }

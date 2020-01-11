@@ -6,6 +6,7 @@ import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
+import net.urbanmc.ezauctions.object.BidList;
 import net.urbanmc.ezauctions.object.Bidder;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -52,15 +53,19 @@ public class RewardUtil {
 			AuctionsPlayerManager.getInstance().saveItems(lastBid.getBidder());
 		}
 
-		List<Bidder> bidders = auction.getLosingBidders();
-
-		returnBidderMoney(bidders);
+		returnBidderMoney(auction.getBidList());
 	}
 
 	private static void returnBidderMoney(List<Bidder> bidders) {
 		for (Bidder bidder : bidders) {
 			EzAuctions.getEcon().depositPlayer(bidder.getBidder().getOfflinePlayer(), bidder.getAmount());
 		}
+	}
+
+	private static void returnBidderMoney(BidList bidList) {
+		bidList.forEach((bidder) -> EzAuctions.getEcon().depositPlayer(bidder.getBidder().getOfflinePlayer(), bidder.getAmount()),
+				0, bidList.size() - 1);
+		// Ending position is size - 1 because the last bidder is the winning bidder.
 	}
 
 	public static void rewardCancel(Auction auction) {
@@ -79,17 +84,13 @@ public class RewardUtil {
 			AuctionsPlayerManager.getInstance().saveItems(auction.getAuctioneer());
 		}
 
-		List<Bidder> bidders = auction.getBidders();
-
-		returnBidderMoney(bidders);
+		returnBidderMoney(auction.getBidList());
 	}
 
 	public static void rewardImpound(Auction auction, Player impounder) {
 		ItemUtil.addItemToInventory(impounder, auction.getItem(), auction.getAmount(), true);
 
-		List<Bidder> bidders = auction.getBidders();
-
-		returnBidderMoney(bidders);
+		returnBidderMoney(auction.getBidList());
 	}
 
 	public static void rewardOffline(AuctionsPlayer ap) {

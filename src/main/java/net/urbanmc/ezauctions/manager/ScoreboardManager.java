@@ -1,6 +1,8 @@
 package net.urbanmc.ezauctions.manager;
 
 import net.md_5.bungee.api.chat.TranslatableComponent;
+import net.milkbowl.vault.chat.Chat;
+import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.util.ReflectionUtil;
@@ -37,7 +39,16 @@ public class ScoreboardManager {
         board = Bukkit.getScoreboardManager().getNewScoreboard();
 
         String displayName = Messages.getString("scoreboard.title");
-        objective = board.registerNewObjective("auctionBoard", "dummy", displayName);
+
+        try {
+            objective = board.registerNewObjective("auctionBoard", "dummy", displayName);
+        }
+        catch (NoSuchMethodError ex) {
+            // 1.12 Compat
+            objective = board.registerNewObjective("auctionBoard", "dummy");
+            objective.setDisplayName(displayName);
+        }
+
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         price = board.registerNewTeam("auctionPrice");
         time = board.registerNewTeam("auctionTime");
@@ -52,16 +63,32 @@ public class ScoreboardManager {
 
         double currentPrice = auc.getStartingPrice();
 
-        if (!auc.isSealed() && !auc.getBidders().isEmpty()) {
-            currentPrice = auc.getBiddersHighestToLowest().get(0).getAmount();
+        if (!auc.isSealed() && !auc.getBidList().isEmpty()) {
+            currentPrice = auc.getBidList().getTopBid().getAmount();
         }
 
         String priceString = auc.isSealed() ?
                 Messages.getString("scoreboard.current_bid_sealed", currentPrice) :
                 Messages.getString("scoreboard.current_bid", currentPrice);
-        price.setPrefix(priceString);
 
-        time.setPrefix(Messages.getString("scoreboard.time", auc.getAuctionTime()));
+        try {
+            price.setPrefix(priceString);
+        } catch (IllegalArgumentException ex) {
+            // 1.12 Compatibility
+            Bukkit.getLogger().warning("[ezAuctions] Price String longer than 16 characters! Please shorten in messages.properties!");
+            // Error-values are hardcoded so it's certain that the same exception won't be thrown
+            price.setPrefix(auc.isSealed() ?
+                    ChatColor.BLUE  + "Bid: " + ChatColor.GOLD + currentPrice :
+                    ChatColor.BLUE + "Price: " + ChatColor.GOLD + currentPrice);
+        }
+
+        try {
+            time.setPrefix(Messages.getString("scoreboard.time", auc.getAuctionTime()));
+        } catch (IllegalArgumentException ex) {
+            // 1.12 Compatibility
+            Bukkit.getLogger().warning("[ezAuctions] Time string longer than 16 characters! Please shorten in messages.properties!");
+            time.setPrefix(ChatColor.BLUE + "Time: " + ChatColor.GOLD + auc.getAuctionTime());
+        }
 
         for (Player p : Bukkit.getOnlinePlayers()) {
             AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());

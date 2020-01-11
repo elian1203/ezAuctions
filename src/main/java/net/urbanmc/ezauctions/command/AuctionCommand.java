@@ -36,6 +36,7 @@ public class AuctionCommand implements CommandExecutor {
         subs.add(new ScoreboardSub());
         subs.add(new SpamSub());
         subs.add(new StartSub());
+        subs.add(new QueueSub());
 
         if (ConfigManager.getConfig().getBoolean("sealed-auctions.enabled")) {
             subs.add(new StartSealedSub());

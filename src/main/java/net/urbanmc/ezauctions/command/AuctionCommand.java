@@ -9,12 +9,13 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class AuctionCommand implements CommandExecutor {
+public class AuctionCommand implements CommandExecutor, TabCompleter {
 
     private List<SubCommand> subs = new ArrayList<>();
 
@@ -70,6 +71,39 @@ public class AuctionCommand implements CommandExecutor {
         sub.run(sender, args);
 
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args) {
+        // Check base permission and check that there are tab-completing a sub-argument
+        if (!sender.hasPermission(Permission.COMMAND_BASE.toString()) || args.length == 0)
+            return null;
+
+        String initialArgument = args[0].trim();
+
+        if (args.length == 1) {
+            List<String> subNames = new ArrayList<>(subs.size());
+            // Could this be done with streams? Yes. Will I do it with streams? Hell to the no.
+            for (SubCommand sub : subs) {
+                if (sender.hasPermission(sub.getPermission())) {
+                    if (initialArgument.isEmpty() || sub.getSubName().startsWith(initialArgument)) {
+                        subNames.add(sub.getSubName());
+                    }
+                }
+            }
+
+            return subNames;
+        }
+
+        SubCommand sub = findSub(initialArgument);
+
+        if (sub != null &&
+            sender.hasPermission(sub.getPermission()) &&
+            (!sub.isPlayerOnly() || sender instanceof Player)) {
+            return sub.onTabComplete(sender, args);
+        }
+
+        return null;
     }
 
 

@@ -200,7 +200,7 @@ public class AuctionQueue {
 
             // Check if the index is between head and end of the array
             if (index > head) {
-                // Shift elements from
+                // Shift elements from the index
                 System.arraycopy(queue, index + 1, queue, index, queue.length - 1 - index);
                 shiftTowardsIndex = 0;
             }
@@ -211,7 +211,7 @@ public class AuctionQueue {
                 queue[queue.length - 1] = queue[0];
 
                 // Copy elements from 0 to the tail.
-                System.arraycopy(queue, index + 1, queue, index, tail - shiftTowardsIndex);
+                System.arraycopy(queue, shiftTowardsIndex + 1, queue, shiftTowardsIndex, tail - shiftTowardsIndex);
             }
         }
 

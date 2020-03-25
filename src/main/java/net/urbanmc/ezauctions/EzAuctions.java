@@ -101,9 +101,18 @@ public class EzAuctions extends JavaPlugin {
     }
 
     private void registerCommands() {
-        getCommand("ezauctions").setExecutor(new AuctionCommand());
+        AuctionCommand aucCmd = new AuctionCommand();
+        getCommand("ezauctions").setExecutor(aucCmd);
         getCommand("bid").setExecutor(new BidCommand());
+
+        registerTabCompletions(aucCmd);
     }
+
+    private void registerTabCompletions(AuctionCommand auctionCommand) {
+        // This method is in case in the future, we want to use Paper's async tab-completion
+        getCommand("ezauctions").setTabCompleter(auctionCommand);
+    }
+
 
     private void registerAuctionManger() {
         auctionManager = new AuctionManager(this);

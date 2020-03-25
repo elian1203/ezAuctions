@@ -25,7 +25,7 @@ public class Auction {
     private int amount, auctionTime;
     private double starting, increment, autoBuy;
     private boolean isSealed;
-    private List<Bidder> bidders;
+    private BidList bidders;
 
     public Auction(AuctionsPlayer auctioneer, ItemStack item, int amount, int auctionTime, double starting,
                    double increment, double autoBuy, boolean isSealed) {
@@ -37,7 +37,7 @@ public class Auction {
         this.increment = increment;
         this.autoBuy = autoBuy;
         this.isSealed = isSealed;
-        bidders = new ArrayList<>();
+        bidders = new BidList();
     }
 
     public AuctionsPlayer getAuctioneer() {
@@ -89,10 +89,7 @@ public class Auction {
     public void updateConsecutiveBidder(Bidder upcomingLatestBidder, double upcomingAmount) {
         Bidder lastBidder = getLastBidder();
 
-        if (lastBidder == null)
-            return;
-
-        if (lastBidder == upcomingLatestBidder)
+        if (lastBidder == null || lastBidder == upcomingLatestBidder)
             return;
 
         lastBidder.resetConsecutiveBids();
@@ -127,25 +124,16 @@ public class Auction {
     }
 
     public Bidder getLastBidder() {
-        if (!bidders.isEmpty()) {
-            List<Bidder> sorted = getBiddersHighestToLowest();
-            return sorted.get(sorted.size() - 1);
-        }
-
-        return null;
+        return bidders.getTopBid();
     }
 
     public int getTimesBid(AuctionsPlayer ap) {
-        int timesBid = 0;
+        Bidder bidder = getBidder(ap);
 
-        for (Bidder b : bidders) {
-            if (b.getBidder() == ap) {
-                timesBid = b.getTimesBid();
-                break;
-            }
-        }
-
-        return timesBid;
+        if (bidder != null)
+            return bidder.getTimesBid();
+        else
+            return 0;
     }
 
     public int getConsecutiveBids(AuctionsPlayer ap) {
@@ -157,24 +145,21 @@ public class Auction {
             return bidder.getConsecutiveBids();
     }
 
+    // Keep for API compatibility
     public List<Bidder> getBidders() {
         return bidders;
     }
 
-    public List<Bidder> getLosingBidders() {
-        ArrayList<Bidder> losing = new ArrayList<>(bidders);
-        losing.remove(getLastBidder());
+    public BidList getBidList() {
+        return bidders;
+    }
 
-        return losing;
+    public List<Bidder> getLosingBidders() {
+        return bidders.toArrayList(0, bidders.size() - 1);
     }
 
     public Bidder getBidder(AuctionsPlayer ap) {
-        for (Bidder bid : bidders) {
-            if (bid.getBidder().equals(ap))
-                return bid;
-        }
-
-        return null;
+        return bidders.get(ap);
     }
 
     public List<Bidder> getBiddersHighestToLowest() {
@@ -183,16 +168,7 @@ public class Auction {
     }
 
     public boolean isParticipant(UUID id) {
-        if (auctioneer.getUniqueId().equals(id)) {
-            return true;
-        } else {
-            for (Bidder bidder : bidders) {
-                if (bidder.getBidder().getUniqueId().equals(id))
-                    return true;
-            }
-        }
-
-        return false;
+        return auctioneer.getUniqueId().equals(id) || bidders.contains(id);
     }
 
     public BaseComponent[] getStartingMessage() {
@@ -277,7 +253,7 @@ public class Auction {
                 itemName = getItem().getItemMeta().getDisplayName();
             }
 
-            BaseComponent[] hover = {new TextComponent(ReflectionUtil.getItemAsJson(getItem()))};
+            BaseComponent[] hover = { new TextComponent(ReflectionUtil.getItemAsJson(getItem())) };
 
             BaseComponent item;
 

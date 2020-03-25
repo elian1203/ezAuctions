@@ -8,6 +8,10 @@ public class Bidder {
 	private double amount;
 	private int timesBid = 0, consecutiveBids = 0;
 
+	public Bidder(AuctionsPlayer bidder) {
+		this.bidder = bidder;
+	}
+
 	public Bidder(AuctionsPlayer bidder, double amount) {
 		this.bidder = bidder;
 		this.amount = amount;
@@ -26,6 +30,8 @@ public class Bidder {
 		this.amount = amount;
 		timesBid++;
 		consecutiveBids++;
+		System.out.println("Times Bids " + timesBid);
+		System.out.println("Consecutive Bids " + consecutiveBids + " for " + getBidder().getUniqueId().toString());
 	}
 
 	public int getTimesBid() {

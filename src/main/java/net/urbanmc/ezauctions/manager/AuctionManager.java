@@ -3,27 +3,28 @@ package net.urbanmc.ezauctions.manager;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionStartEvent;
 import net.urbanmc.ezauctions.object.Auction;
+import net.urbanmc.ezauctions.object.AuctionQueue;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.runnable.AuctionRunnable;
 import net.urbanmc.ezauctions.util.RewardUtil;
 import org.bukkit.Bukkit;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class AuctionManager {
 
 	private EzAuctions plugin;
 
 	private AuctionRunnable currentRunnable;
-	private List<Auction> queue;
+	private AuctionQueue queue;
 
 	private boolean auctionsEnabled = true, inDelayedTask = false;
 
 	public AuctionManager(EzAuctions plugin) {
 		this.plugin = plugin;
-		this.queue = new ArrayList<>();
+		this.queue = new AuctionQueue(3);
 	}
 
 	public int getQueueSize() {
@@ -41,47 +42,36 @@ public class AuctionManager {
 
 			return false;
 		} else {
-			queue.add(auction);
+			queue.enqueue(auction);
 			return true;
 		}
 	}
 
 	public boolean inQueueOrCurrent(UUID auctioneer) {
-		for (Auction auc : queue) {
-			if (auc.getAuctioneer().getUniqueId().equals(auctioneer))
-				return true;
-		}
+		if (getCurrentAuction() != null && getCurrentAuction().getAuctioneer().getUniqueId().equals(auctioneer))
+			return true;
 
-		return getCurrentAuction() != null && getCurrentAuction().getAuctioneer().getUniqueId().equals(auctioneer);
+		return queue.indexOf(auctioneer) != -1;
 	}
 
 	public int getPositionInQueue(AuctionsPlayer ap) {
 		if (queue.isEmpty())
 			return -1;
 
-		for (int i = 0; i < queue.size(); i++) {
-			Auction auc = queue.get(i);
+		int index = queue.indexOf(ap);
 
-			if (auc.getAuctioneer().getUniqueId().equals(ap.getUniqueId()))
-				return i + 1;
-		}
-
-		return -1;
+		return index == -1 ? index : index + 1;
 	}
 
 	public Auction removeFromQueue(UUID auctioneer) {
-		Auction auction = null;
+		int index = queue.indexOf(auctioneer);
 
-		for (Auction auc : queue) {
-			if (auc.getAuctioneer().getUniqueId().equals(auctioneer)) {
-				auction = auc;
-				break;
-			}
-		}
+		if (index == -1)
+			return null;
 
-		if (auction != null) {
-			queue.remove(auction);
-		}
+		Auction auction = queue.get(index);
+
+		queue.remove(index);
 
 		return auction;
 	}
@@ -95,9 +85,7 @@ public class AuctionManager {
 		if (queue.isEmpty())
 			return;
 
-		Auction auction = queue.get(0);
-
-		queue.remove(0);
+		Auction auction = queue.poll();
 
 		AuctionStartEvent event = new AuctionStartEvent(auction);
 		Bukkit.getPluginManager().callEvent(event);
@@ -133,14 +121,20 @@ public class AuctionManager {
 		this.auctionsEnabled = auctionsEnabled;
 	}
 
+	public void forEachAuctionInQueue(Consumer<Auction> consumer) {
+		queue.forEach(consumer);
+	}
+
+	public Iterator<Auction> getQueue() {
+		return queue.iterator();
+	}
+
 	public void disabling() {
 		if (getCurrentRunnable() != null) {
 			getCurrentRunnable().cancelAuction();
 		}
 
-		for (Auction auc : queue) {
-			RewardUtil.rewardCancel(auc);
-		}
+		queue.forEach(RewardUtil::rewardCancel);
 
 		queue.clear();
 	}

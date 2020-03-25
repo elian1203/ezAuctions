@@ -14,6 +14,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Collections;
+import java.util.List;
+
 public class StartSub extends SubCommand {
 
 	public StartSub() {
@@ -96,5 +99,13 @@ public class StartSub extends SubCommand {
 		if (fee > 0) {
 			EzAuctions.getEcon().withdrawPlayer(p, fee);
 		}
+	}
+
+	@Override
+	public List<String> onTabComplete(CommandSender sender, String[] args) {
+		if (args.length == 2 && "hand".startsWith(args[1])) {
+			return Collections.singletonList("hand");
+		}
+		return null;
 	}
 }

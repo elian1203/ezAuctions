@@ -95,7 +95,8 @@ public class BidCommand implements CommandExecutor {
 
         double amountToRemove = amount;
 
-        Bidder bid = auc.getBidder(ap);
+        int bidderIndex = auc.getBidList().indexOf(ap);
+        Bidder bid = auc.getBidList().get(bidderIndex);
 
         if (bid != null) {
             amountToRemove -= bid.getAmount();
@@ -119,15 +120,14 @@ public class BidCommand implements CommandExecutor {
             return true;
         }
 
-        boolean newBid;
+        boolean newBid = false;
 
         if (bid == null) {
-            bid = new Bidder(ap, amount);
+            bid = new Bidder(ap);
             newBid = true;
-        } else {
-            bid.setAmount(amount);
-            newBid = false;
         }
+
+        bid.setAmount(amount);
 
         AuctionBidEvent event = new AuctionBidEvent(auc, bid);
         Bukkit.getPluginManager().callEvent(event);
@@ -140,6 +140,7 @@ public class BidCommand implements CommandExecutor {
         if (newBid) {
             auc.addNewBidder(bid);
         } else {
+            auc.getBidList().updateBid(bidderIndex);
             auc.updateBidder(bid);
         }
 

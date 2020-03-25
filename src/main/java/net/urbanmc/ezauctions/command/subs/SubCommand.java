@@ -4,6 +4,8 @@ import net.urbanmc.ezauctions.object.Permission;
 import net.urbanmc.ezauctions.util.MessageUtil;
 import org.bukkit.command.CommandSender;
 
+import java.util.List;
+
 public abstract class SubCommand {
 
 	private String sub;
@@ -16,6 +18,10 @@ public abstract class SubCommand {
 		this.permission = permission.toString();
 		this.playerOnly = playerOnly;
 		this.aliases = aliases;
+	}
+
+	public String getSubName() {
+		return sub;
 	}
 
 	public abstract void run(CommandSender sender, String[] args);
@@ -48,5 +54,12 @@ public abstract class SubCommand {
 
 	void sendPropMessage(CommandSender sender, String property, Object... args) {
 		MessageUtil.privateMessage(sender, property, args);
+	}
+
+	// Overridable method for sub-arguments to use tab-complete.
+	// Permission for the sub-argument will be checked before calling the tab-complete.
+	// Player only will also be checked before calling this method.
+	public List<String> onTabComplete(CommandSender sender, String[] args) {
+		return null;
 	}
 }

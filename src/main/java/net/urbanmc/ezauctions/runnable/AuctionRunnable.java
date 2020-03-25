@@ -61,7 +61,7 @@ public class AuctionRunnable extends BukkitRunnable {
     }
 
     private void broadcastTime() {
-        double currentAmount = auction.anyBids() ? auction.getBiddersHighestToLowest().get(0).getAmount() :
+        double currentAmount = auction.anyBids() ? auction.getBidList().getTopBid().getAmount() :
                 auction.getStartingPrice();
         String broadcast = Messages.getInstance().getStringWithoutColoring("auction.time_left", timeLeft,
                 "%item%", auction.getAmount(), currentAmount);

@@ -53,7 +53,7 @@ public class RewardUtil {
 			AuctionsPlayerManager.getInstance().saveItems(lastBid.getBidder());
 		}
 
-		returnBidderMoney(auction.getBidList());
+		returnBidderMoney(auction.getBidList(), false);
 	}
 
 	private static void returnBidderMoney(List<Bidder> bidders) {
@@ -62,9 +62,9 @@ public class RewardUtil {
 		}
 	}
 
-	private static void returnBidderMoney(BidList bidList) {
+	private static void returnBidderMoney(BidList bidList, boolean allBidders) {
 		bidList.forEach((bidder) -> EzAuctions.getEcon().depositPlayer(bidder.getBidder().getOfflinePlayer(), bidder.getAmount()),
-				0, bidList.size() - 1);
+				0, bidList.size() - (allBidders ? 0 : 1));
 		// Ending position is size - 1 because the last bidder is the winning bidder.
 	}
 
@@ -84,13 +84,13 @@ public class RewardUtil {
 			AuctionsPlayerManager.getInstance().saveItems(auction.getAuctioneer());
 		}
 
-		returnBidderMoney(auction.getBidList());
+		returnBidderMoney(auction.getBidList(), true);
 	}
 
 	public static void rewardImpound(Auction auction, Player impounder) {
 		ItemUtil.addItemToInventory(impounder, auction.getItem(), auction.getAmount(), true);
 
-		returnBidderMoney(auction.getBidList());
+		returnBidderMoney(auction.getBidList(), true);
 	}
 
 	public static void rewardOffline(AuctionsPlayer ap) {

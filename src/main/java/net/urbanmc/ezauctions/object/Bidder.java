@@ -30,8 +30,6 @@ public class Bidder {
 		this.amount = amount;
 		timesBid++;
 		consecutiveBids++;
-		System.out.println("Times Bids " + timesBid);
-		System.out.println("Consecutive Bids " + consecutiveBids + " for " + getBidder().getUniqueId().toString());
 	}
 
 	public int getTimesBid() {

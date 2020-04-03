@@ -190,7 +190,13 @@ public class AuctionQueue {
 
         // Handle end cases
         if (index == head) {
+            // Advance head
             queue[head++] = null;
+
+            // Make sure head doesn't go out of bounds.
+            if (head == queue.length)
+                head = 0;
+
             return;
         }
 

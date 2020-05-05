@@ -59,6 +59,18 @@ public class AuctionUtil {
 
         double finalStartingPrice = parseNumberFromConfig(startingPrice, "starting-price");
 
+        double configMin = getConfig().getDouble("auctions.minimum.starting-price");
+        if (configMin != -1 && configMin > finalStartingPrice) {
+            MessageUtil.privateMessage(p, "command.auction.start.invalid_start_price.min", configMin);
+            return null;
+        }
+
+        double configMax = getConfig().getDouble("auctions.maximum.starting-price");
+        if (configMax != -1 && configMax < finalStartingPrice) {
+            MessageUtil.privateMessage(p, "command.auction.start.invalid_start_price.max", configMax);
+            return null;
+        }
+
         if (!isPositiveDouble(increment)) {
             message(p, "command.auction.start.invalid-inc");
             return null;
@@ -128,8 +140,8 @@ public class AuctionUtil {
     }
 
     private static boolean betweenLimits(double number, String config) {
-        double configMin = getConfig().getDouble("auctions.minimum." + config), configMax =
-                getConfig().getDouble("auctions.maximum." + config);
+        double configMin = getConfig().getDouble("auctions.minimum." + config),
+                configMax = getConfig().getDouble("auctions.maximum." + config);
 
         if (configMin == -1 && configMax == -1)
             return number == getDefault(config);

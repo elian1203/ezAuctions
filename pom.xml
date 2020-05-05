@@ -70,6 +70,10 @@
                             <pattern>org.bstats</pattern>
                             <shadedPattern>net.urbanmc.ezauctions</shadedPattern>
                         </relocation>
+                        <relocation>
+                            <pattern>com.zaxxer</pattern>
+                            <shadedPattern>net.urbanmc.ezauctions.hikaricp</shadedPattern>
+                        </relocation>
                     </relocations>
                 </configuration>
                 <executions>

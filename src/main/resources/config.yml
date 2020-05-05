@@ -94,6 +94,8 @@ auctions:
     increment: 1
     # The minimum here will be $0
     autobuy: 0
+    # Minimum starting price for an auction. Set to 0 to disable
+    starting-price: -1
 
   maximum:
     auction-time: -1
@@ -101,6 +103,8 @@ auctions:
     autobuy: 10000000
     # How many times can a player bid in a row before someone else bids?
     consecutive-bids: 2
+    # Maximum starting price for an auction. Set to -1 to disable
+    starting-price: -1
 
 # They use the same settings as auctions
 sealed-auctions:

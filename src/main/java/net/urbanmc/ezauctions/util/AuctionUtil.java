@@ -59,13 +59,13 @@ public class AuctionUtil {
 
         double finalStartingPrice = parseNumberFromConfig(startingPrice, "starting-price");
 
-        double configMin = getConfig().getDouble("auctions.minimum.starting-price");
+        double configMin = getConfig().getDouble("auctions.minimum.starting-price", -1);
         if (configMin != -1 && configMin > finalStartingPrice) {
             MessageUtil.privateMessage(p, "command.auction.start.invalid_start_price.min", configMin);
             return null;
         }
 
-        double configMax = getConfig().getDouble("auctions.maximum.starting-price");
+        double configMax = getConfig().getDouble("auctions.maximum.starting-price", -1);
         if (configMax != -1 && configMax < finalStartingPrice) {
             MessageUtil.privateMessage(p, "command.auction.start.invalid_start_price.max", configMax);
             return null;

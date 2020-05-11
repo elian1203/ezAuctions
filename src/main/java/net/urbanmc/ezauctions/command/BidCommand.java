@@ -1,5 +1,7 @@
 package net.urbanmc.ezauctions.command;
 
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.annotation.*;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionBidEvent;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
@@ -8,172 +10,159 @@ import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.object.Bidder;
-import net.urbanmc.ezauctions.object.Permission;
 import net.urbanmc.ezauctions.util.AuctionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class BidCommand implements CommandExecutor {
+@CommandAlias("bid|b")
+@CommandPermission("ezauctions.bid")
+@Description("Bid on an auction")
+public class BidCommand extends BaseCommand {
 
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sendPropMessage(sender, "command.player_only");
-            return true;
-        }
+	@Default
+	public void bid(AuctionsPlayer ap, String[] args) {
+		Player p = ap.getOnlinePlayer();
+		Auction auc = EzAuctions.getAuctionManager().getCurrentAuction();
 
-        if (!sender.hasPermission(Permission.COMMAND_BID.toString())) {
-            sendPropMessage(sender, "command.no-perm");
-            return true;
-        }
+		double amount;
 
-        if (args.length > 1) {
-            sendPropMessage(sender, "command.bid.help");
-            return true;
-        }
+		if (args.length == 0) {
+			amount = 0;
+		} else {
+			if (isPositiveDouble(args[0])) {
+				amount = Double.parseDouble(args[0]);
+			} else {
+				sendPropMessage(p, "command.bid.invalid_amount");
+				return;
+			}
+		}
 
-        Auction auc = EzAuctions.getAuctionManager().getCurrentAuction();
+		if (auc == null) {
+			sendPropMessage(p, "command.no_current_auction");
+			return;
+		}
 
-        if (auc == null) {
-            sendPropMessage(sender, "command.no_current_auction");
-            return true;
-        }
+		if (AuctionUtil.blockedWorld(p)) {
+			sendPropMessage(p, "command.bid.blocked_world");
+			return;
+		}
 
-        Player p = (Player) sender;
-        AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
+		if (auc.getAuctioneer().getUniqueId().equals(p.getUniqueId())) {
+			sendPropMessage(p, "command.bid.self_bid");
+			return;
+		}
 
-        if (AuctionUtil.blockedWorld(p)) {
-            sendPropMessage(p, "command.bid.blocked_world");
-            return true;
-        }
+		if (amount < 0) {
+			sendPropMessage(p, "command.bid.invalid_amount");
+			return;
+		}
 
-        if (auc.getAuctioneer().getUniqueId().equals(p.getUniqueId())) {
-            sendPropMessage(sender, "command.bid.self_bid");
-            return true;
-        }
+		Bidder lastAuctionBidder = auc.getLastBidder();
 
-        if (args.length > 0 && !isPositiveDouble(args[0])) {
-            sendPropMessage(sender, "command.bid.invalid_amount");
-            return true;
-        }
+		if (amount == 0) {
+			if (lastAuctionBidder == null)
+				amount = auc.getStartingPrice();
+			else
+				amount = lastAuctionBidder.getAmount() + auc.getIncrement();
+		}
 
-        double amount = AuctionUtil.parseNumberFromConfig(args.length == 0 ? "0" : args[0], "bid");
+		if (lastAuctionBidder == null) {
+			if (amount < auc.getStartingPrice()) {
+				sendPropMessage(p, "command.bid.too_low");
+				return;
+			}
+		} else {
+			if (amount < lastAuctionBidder.getAmount() + auc.getIncrement()) {
+				sendPropMessage(p, "command.bid.too_low");
+				return;
+			}
+		}
 
-        Bidder lastAuctionBidder = auc.getLastBidder();
+		if (auc.getAutoBuy() != 0 && amount > auc.getAutoBuy()) {
+			amount = auc.getAutoBuy();
+		}
 
-        if (args.length == 0) {
-            if (lastAuctionBidder == null)
-                amount = auc.getStartingPrice();
-            else
-                amount = lastAuctionBidder.getAmount() + auc.getIncrement();
-        }
+		double amountToRemove = amount;
 
-        if (amount <= 0) {
-            sendPropMessage(sender, "command.bid.invalid_amount");
-            return true;
-        }
+		int bidderIndex = auc.getBidList().indexOf(ap);
+		Bidder bid = auc.getBidList().get(bidderIndex);
 
-        if (lastAuctionBidder == null) {
-            if (amount < auc.getStartingPrice()) {
-                sendPropMessage(sender, "command.bid.too_low");
-                return true;
-            }
-        } else {
-            if (amount < lastAuctionBidder.getAmount() + auc.getIncrement()) {
-                sendPropMessage(sender, "command.bid.too_low");
-                return true;
-            }
-        }
+		if (bid != null) {
+			amountToRemove -= bid.getAmount();
+		}
 
-        if (auc.getAutoBuy() != 0 && amount > auc.getAutoBuy()) {
-            amount = auc.getAutoBuy();
-        }
+		if (!hasAmount(p, amountToRemove)) {
+			sendPropMessage(p, "command.bid.lacking_money");
+			return;
+		}
 
-        double amountToRemove = amount;
+		if (auc.isSealed() && auc.getTimesBid(ap) == ConfigManager.getConfig().getInt("sealed-auctions.max-bids")) {
+			sendPropMessage(p, "command.bid.max-bids");
+			return;
+		}
 
-        int bidderIndex = auc.getBidList().indexOf(ap);
-        Bidder bid = auc.getBidList().get(bidderIndex);
+		int consecutiveBids = auc.getConsecutiveBids(ap), maxConsecutiveBids =
+				ConfigManager.getConfig().getInt("auctions.maximum.consecutive-bids");
 
-        if (bid != null) {
-            amountToRemove -= bid.getAmount();
-        }
+		if (maxConsecutiveBids != 0 && consecutiveBids == maxConsecutiveBids) {
+			sendPropMessage(p, "command.bid.consecutive_limit");
+			return;
+		}
 
-        if (!hasAmount(p, amountToRemove)) {
-            sendPropMessage(sender, "command.bid.lacking_money");
-            return true;
-        }
+		boolean newBid = false;
 
-        if (auc.isSealed() && auc.getTimesBid(ap) == ConfigManager.getConfig().getInt("sealed-auctions.max-bids")) {
-            sendPropMessage(sender, "command.bid.max-bids");
-            return true;
-        }
+		if (bid == null) {
+			bid = new Bidder(ap);
+			newBid = true;
+		}
 
-        int consecutiveBids = auc.getConsecutiveBids(ap), maxConsecutiveBids =
-                ConfigManager.getConfig().getInt("auctions.maximum.consecutive-bids");
+		bid.setAmount(amount);
 
-        if (maxConsecutiveBids != 0 && consecutiveBids == maxConsecutiveBids) {
-            sendPropMessage(sender, "command.bid.consecutive_limit");
-            return true;
-        }
+		AuctionBidEvent event = new AuctionBidEvent(auc, bid);
+		Bukkit.getPluginManager().callEvent(event);
 
-        boolean newBid = false;
+		if (event.isCancelled())
+			return;
 
-        if (bid == null) {
-            bid = new Bidder(ap);
-            newBid = true;
-        }
+		removeMoney(ap, amountToRemove);
 
-        bid.setAmount(amount);
+		if (newBid) {
+			auc.addNewBidder(bid);
+		} else {
+			auc.getBidList().updateBid(bidderIndex);
+			auc.updateBidder(bid);
+		}
 
-        AuctionBidEvent event = new AuctionBidEvent(auc, bid);
-        Bukkit.getPluginManager().callEvent(event);
+		if (auc.isSealed()) {
+			sendPropMessage(p, "command.bid.placed");
+		}
+	}
 
-        if (event.isCancelled())
-            return true;
+	private void sendPropMessage(CommandSender sender, String property) {
+		String message = Messages.getString(property);
 
-        removeMoney(ap, amountToRemove);
+		if (sender instanceof Player)
+			sender.sendMessage(message);
+		else
+			sender.sendMessage(ChatColor.stripColor(message));
+	}
 
-        if (newBid) {
-            auc.addNewBidder(bid);
-        } else {
-            auc.getBidList().updateBid(bidderIndex);
-            auc.updateBidder(bid);
-        }
+	private void removeMoney(AuctionsPlayer ap, double amt) {
+		EzAuctions.getEcon().withdrawPlayer(ap.getOfflinePlayer(), amt);
+	}
 
-        if (auc.isSealed()) {
-            sendPropMessage(sender, "command.bid.placed");
-        }
+	private boolean hasAmount(Player p, double amt) {
+		return EzAuctions.getEcon().getBalance(p) >= amt;
+	}
 
-        return true;
-    }
-
-    private void sendPropMessage(CommandSender sender, String property) {
-        String message = Messages.getString(property);
-
-        if (sender instanceof Player)
-            sender.sendMessage(message);
-        else
-            sender.sendMessage(ChatColor.stripColor(message));
-    }
-
-    private void removeMoney(AuctionsPlayer ap, double amt) {
-        EzAuctions.getEcon().withdrawPlayer(ap.getOfflinePlayer(), amt);
-    }
-
-    private boolean hasAmount(Player p, double amt) {
-        return EzAuctions.getEcon().getBalance(p) >= amt;
-    }
-
-    private boolean isPositiveDouble(String number) {
-        try {
-            double d = Double.parseDouble(number);
-            return d > 0;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
+	private boolean isPositiveDouble(String input) {
+		try {
+			double d = Double.parseDouble(input);
+			return d > 0;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
 }

@@ -1,156 +1,413 @@
 package net.urbanmc.ezauctions.command;
 
-import net.urbanmc.ezauctions.command.subs.*;
-import net.urbanmc.ezauctions.manager.ConfigManager;
-import net.urbanmc.ezauctions.manager.Messages;
-import net.urbanmc.ezauctions.object.Permission;
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.ConditionFailedException;
+import co.aikar.commands.RegisteredCommand;
+import co.aikar.commands.annotation.*;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.urbanmc.ezauctions.EzAuctions;
+import net.urbanmc.ezauctions.event.AuctionCancelEvent;
+import net.urbanmc.ezauctions.event.AuctionImpoundEvent;
+import net.urbanmc.ezauctions.event.AuctionQueueEvent;
+import net.urbanmc.ezauctions.manager.*;
+import net.urbanmc.ezauctions.object.Auction;
+import net.urbanmc.ezauctions.object.AuctionsPlayer;
+import net.urbanmc.ezauctions.util.AuctionUtil;
+import net.urbanmc.ezauctions.util.ItemUtil;
 import net.urbanmc.ezauctions.util.MessageUtil;
-import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import net.urbanmc.ezauctions.util.RewardUtil;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
-public class AuctionCommand implements CommandExecutor, TabCompleter {
+@CommandAlias("auction|auctions|auc|ezauctions|ezauction")
+@CommandPermission("ezauctions.auction")
+@Description("Auction Command")
+public class AuctionCommand extends BaseCommand {
 
-    private List<SubCommand> subs = new ArrayList<>();
+	@Default
+	@CatchUnknown
+	public void help(CommandSender sender) {
+		List<RegisteredCommand> subs = getRegisteredCommands();
+		List<String> display = new ArrayList<>();
 
-    public AuctionCommand() {
-        registerSubs();
-    }
+		for (RegisteredCommand sub : subs) {
+			Iterator<String> perms = sub.getRequiredPermissions().iterator();
+			perms.next();
 
-    private void registerSubs() {
-        subs.add(new CancelSub());
-        subs.add(new DisableSub());
-        subs.add(new EnableSub());
-        subs.add(new IgnoreSub());
-        subs.add(new IgnorePlayerSub());
-        subs.add(new ImpoundSub());
-        subs.add(new InfoSub());
-        subs.add(new ReloadSub());
-        subs.add(new SaveSub());
-        subs.add(new RemoveSub());
-        subs.add(new ScoreboardSub());
-        subs.add(new SpamSub());
-        subs.add(new StartSub());
-        subs.add(new QueueSub());
+			if (!perms.hasNext())
+				continue;
 
-        if (ConfigManager.getConfig().getBoolean("sealed-auctions.enabled")) {
-            subs.add(new StartSealedSub());
-        }
-    }
+			String permission = perms.next();
 
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!hasPermission(sender))
-            return true;
+			if (!sender.hasPermission(permission))
+				continue;
 
-        if (args.length == 0)
-            return help(sender);
+			String[] split = sub.getCommand().split(" ");
 
-        SubCommand sub = findSub(args[0]);
+			if (split.length == 1)
+				continue;
 
-        if (sub == null) {
-            sendPropMessage(sender, "command.invalid_sub");
-            return true;
-        }
+			String subCommand = split[1];
+			if (!display.contains(subCommand))
+				display.add(subCommand);
+		}
 
-        if (!sender.hasPermission(sub.getPermission())) {
-            sendPropMessage(sender, "command.no_perm");
-            return true;
-        }
+		Collections.sort(display);
 
-        if (sub.isPlayerOnly() && !(sender instanceof Player)) {
-            sendPropMessage(sender, "command.player_only");
-            return true;
-        }
+		sendPropMessage(sender, "command.help");
 
-        sub.run(sender, args);
+		for (String command : display) {
+			String message = "command.auction." + command + ".help";
+			sendPropMessage(sender, message);
+		}
 
-        return true;
-    }
+		if (sender.hasPermission("ezauctions.bid")) {
+			sendPropMessage(sender, "command.bid.help");
+		}
+	}
 
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args) {
-        // Check base permission and check that there are tab-completing a sub-argument
-        if (!sender.hasPermission(Permission.COMMAND_BASE.toString()) || args.length == 0)
-            return null;
+	@Subcommand("cancel|c")
+	@CommandPermission("ezauctions.auction.cancel")
+	public void cancel(CommandSender sender) {
+		Auction current = EzAuctions.getAuctionManager().getCurrentAuction();
 
-        String initialArgument = args[0].trim();
+		if (current == null) {
+			sendPropMessage(sender, "command.no_current_auction");
+			return;
+		}
 
-        if (args.length == 1) {
-            List<String> subNames = new ArrayList<>(subs.size());
-            // Could this be done with streams? Yes. Will I do it with streams? Hell to the no.
-            for (SubCommand sub : subs) {
-                if (sender.hasPermission(sub.getPermission())) {
-                    if (initialArgument.isEmpty() || sub.getSubName().startsWith(initialArgument)) {
-                        subNames.add(sub.getSubName());
-                    }
-                }
-            }
+		if (!sender.hasPermission("ezauctions.auction.cancel.others")) {
+			Player p = (Player) sender;
 
-            return subNames;
-        }
+			if (!p.getUniqueId().equals(current.getAuctioneer().getUniqueId())) {
+				sendPropMessage(p, "command.auction.cancel.not_yours");
+				return;
+			}
 
-        SubCommand sub = findSub(initialArgument);
+			int minTime = ConfigManager.getConfig().getInt("general.minimum-cancel-time");
 
-        if (sub != null &&
-            sender.hasPermission(sub.getPermission()) &&
-            (!sub.isPlayerOnly() || sender instanceof Player)) {
-            return sub.onTabComplete(sender, args);
-        }
+			if (current.getAuctionTime() < minTime) {
+				sendPropMessage(p, "command.auction.cancel.too_late");
+				return;
+			}
+		}
 
-        return null;
-    }
+		AuctionCancelEvent event = new AuctionCancelEvent(current, sender);
+		Bukkit.getPluginManager().callEvent(event);
 
+		if (event.isCancelled())
+			return;
 
-    private boolean hasPermission(CommandSender sender) {
-        if (sender.hasPermission(Permission.COMMAND_BASE.toString()))
-            return true;
+		EzAuctions.getAuctionManager().getCurrentRunnable().cancelAuction();
+	}
 
-        sendPropMessage(sender, "command.no_perm");
+	@Subcommand("disable")
+	@CommandPermission("ezauctions.auction.disable")
+	public void disable(CommandSender sender) {
+		boolean enabled = EzAuctions.getAuctionManager().isAuctionsEnabled();
 
-        return false;
-    }
+		String prop;
 
-    private boolean help(CommandSender sender) {
-        boolean player = sender instanceof Player;
+		if (enabled) {
+			prop = "command.auction.disable.success";
+			EzAuctions.getAuctionManager().setAuctionsEnabled(false);
+		} else {
+			prop = "command.auction.disable.already_disabled";
+		}
 
-        MessageUtil.privateMessage(sender, "command.help");
+		sendPropMessage(sender, prop);
+	}
 
-        for (SubCommand sub : subs) {
-            boolean canUse =
-                    player && sub.isPlayerOnly() || player && !sub.isPlayerOnly() || !(!player && sub.isPlayerOnly());
+	@Subcommand("enable")
+	@CommandPermission("ezauctions.auction.enable")
+	public void enable(CommandSender sender) {
+		boolean enabled = EzAuctions.getAuctionManager().isAuctionsEnabled();
 
-            if (sender.hasPermission(sub.getPermission()) && canUse) {
-                MessageUtil.privateMessage(sender, sub.getHelpProperty());
-            }
-        }
+		String prop;
 
-        if (sender.hasPermission(Permission.COMMAND_BID.toString())) {
-            MessageUtil.privateMessage(sender, "command.bid.help");
-        }
+		if (enabled) {
+			prop = "command.auction.enable.already_enabled";
+		} else {
+			prop = "command.auction.enable.success";
+			EzAuctions.getAuctionManager().setAuctionsEnabled(true);
+		}
 
-        return true;
-    }
+		sendPropMessage(sender, prop);
+	}
 
-    private SubCommand findSub(String arg) {
-        for (SubCommand sub : subs)
-            if (sub.matchSub(arg))
-                return sub;
+	@Subcommand("ignoreplayer|ignorep")
+	@CommandPermission("ezauctions.auction.ignore.player")
+	public void ignorePlayer(AuctionsPlayer ap, String targetName) {
+		Player p = ap.getOnlinePlayer();
 
-        return null;
-    }
+		OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
 
-    private void sendPropMessage(CommandSender sender, String property) {
-        String message = Messages.getString(property);
+		if (!target.hasPlayedBefore() && !target.isOnline()) {
+			sendPropMessage(p, "command.auction.ignoreplayer.not_found");
+			return;
+		}
 
-        if (sender instanceof Player)
-            sender.sendMessage(message);
-        else
-            sender.sendMessage(ChatColor.stripColor(message));
-    }
+		if (p.getUniqueId() == target.getUniqueId()) {
+			sendPropMessage(p, "command.auction.ignoreplayer.cannot_ignore_self");
+			return;
+		}
+
+		boolean alreadyIgnoring = ap.getIgnoringPlayers().contains(target.getUniqueId());
+
+		if (alreadyIgnoring) {
+			ap.getIgnoringPlayers().remove(target.getUniqueId());
+			sendPropMessage(p, "command.auction.ignoreplayer.not_ignoring", target.getName());
+		} else {
+			ap.getIgnoringPlayers().add(target.getUniqueId());
+			sendPropMessage(p, "command.auction.ignoreplayer.is_ignoring", target.getName());
+		}
+
+		AuctionsPlayerManager.getInstance().saveIgnored(ap);
+	}
+
+	@Subcommand("ignore")
+	@CommandPermission("ezauctions.auction.ignore")
+	public void ignore(AuctionsPlayer ap) {
+		boolean ignoringAll = ap.isIgnoringAll();
+
+		String prop = "command.auction.ignore." + (ignoringAll ? "disabled" : "enabled");
+
+		sendPropMessage(ap.getOnlinePlayer(), prop);
+		ap.setIgnoringAll(!ignoringAll);
+	}
+
+	@Subcommand("impound")
+	@CommandPermission("ezauctions.auction.impound")
+	public void impound(Player p) {
+		Auction current = EzAuctions.getAuctionManager().getCurrentAuction();
+
+		if (current == null) {
+			sendPropMessage(p, "command.no_current_auction");
+			return;
+		}
+
+		AuctionImpoundEvent event = new AuctionImpoundEvent(current, p);
+		Bukkit.getPluginManager().callEvent(event);
+
+		if (event.isCancelled())
+			return;
+
+		sendPropMessage(p, "command.auction.impound");
+		EzAuctions.getAuctionManager().getCurrentRunnable().impoundAuction(p);
+	}
+
+	@Subcommand("info|i")
+	@CommandPermission("ezauctions.auction.info")
+	public void info(CommandSender sender) {
+		Auction current = EzAuctions.getAuctionManager().getCurrentAuction();
+
+		if (current == null) {
+			sendPropMessage(sender, "command.no_current_auction");
+			return;
+		}
+
+		BaseComponent[] comp = current.getStartingMessage();
+		MessageUtil.privateMessage(sender, comp);
+	}
+
+	@Subcommand("queue|q")
+	@CommandPermission("ezauctions.auction.queue")
+	public void queue(CommandSender sender) {
+		sender.sendMessage(Messages.getString("command.auction.queue.list"));
+
+		if (EzAuctions.getAuctionManager().getQueueSize() == 0) {
+			sender.sendMessage(Messages.getString("command.auction.queue.empty"));
+			return;
+		}
+
+		Iterator<Auction> auctionIterator = EzAuctions.getAuctionManager().getQueue();
+
+		int aucPos = 1;
+
+		while (auctionIterator.hasNext()) {
+			Auction auc = auctionIterator.next();
+
+			BaseComponent[] auctionQueueMessage = getQueueMessage(aucPos++, auc);
+
+			// Get message
+			MessageUtil.privateMessage(sender, auctionQueueMessage);
+		}
+	}
+
+	@Subcommand("reload")
+	@CommandPermission("ezauctions.auction.reload")
+	public void reload(CommandSender sender) {
+		ConfigManager.getInstance().reloadConfiguration();
+		Messages.getInstance().reload();
+		ScoreboardManager.getInstance().reload();
+
+		final EzAuctions plugin = ((EzAuctions) Bukkit.getPluginManager().getPlugin("ezAuctions"));
+
+		AuctionsPlayerManager.getInstance().reloadDataSource(plugin);
+
+		sendPropMessage(sender, "command.auction.reload");
+	}
+
+	@Subcommand("remove|r")
+	@CommandPermission("ezauctions.auction.remove")
+	public void remove(Player p) {
+		Auction auction = EzAuctions.getAuctionManager().removeFromQueue(p.getUniqueId());
+
+		if (auction == null) {
+			sendPropMessage(p, "command.auction.remove.not_in_queue");
+			return;
+		}
+
+		sendPropMessage(p, "command.auction.remove.success");
+		RewardUtil.rewardCancel(auction);
+	}
+
+	@Subcommand("save")
+	@CommandPermission("ezauctions.auction.save")
+	public void save(CommandSender sender) {
+		AuctionsPlayerManager.getInstance().asyncSaveData();
+
+		sendPropMessage(sender, "command.auction.save");
+	}
+
+	@Subcommand("scoreboard|sb")
+	@CommandPermission("ezauctions.auction.scoreboard")
+	public void scoreboard(AuctionsPlayer ap) {
+		Player p = ap.getOnlinePlayer();
+
+		boolean ignoringScoreboard = ap.isIgnoringScoreboard();
+
+		String prop = "command.auction.scoreboard." + (ignoringScoreboard ? "disabled" : "enabled");
+
+		ap.setIgnoringScoreboard(!ignoringScoreboard);
+
+		if (!ignoringScoreboard) {
+			p.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+		}
+
+		sendPropMessage(p, prop);
+	}
+
+	@Subcommand("spam")
+	@CommandPermission("ezauctions.auction.spam")
+	public void spam(AuctionsPlayer ap) {
+		boolean ignoringSpammy = ap.isIgnoringSpammy();
+
+		String prop = "command.auction.spam." + (ignoringSpammy ? "disabled" : "enabled");
+
+		sendPropMessage(ap.getOnlinePlayer(), prop);
+		ap.setIgnoringSpammy(!ignoringSpammy);
+	}
+
+	@Subcommand("start|s")
+	@CommandPermission("ezauctions.auction.start")
+	public void start(AuctionsPlayer ap, String[] args) {
+		startAuction(ap, args, false);
+	}
+
+	@Subcommand("startsealed|ss")
+	@CommandPermission("ezauctions.auction.start.sealed")
+	public void startSealed(AuctionsPlayer ap, String[] args) {
+		if (!ConfigManager.getConfig().getBoolean("sealed-auctions.enabled"))
+			throw new ConditionFailedException(Messages.getString("command.auction.startsealed.disabled"));
+		else
+			startAuction(ap, args, true);
+	}
+
+	private void startAuction(AuctionsPlayer ap, String[] args, boolean sealed) {
+		Player p = ap.getOnlinePlayer();
+		AuctionManager manager = EzAuctions.getAuctionManager();
+
+		String command = sealed ? "startsealed" : "start";
+
+		if (args.length < 2 || args.length > 5) {
+			sendPropMessage(p, "command.auction." + command + ".help");
+			return;
+		}
+
+		if (!manager.isAuctionsEnabled()) {
+			sendPropMessage(p, "command.auction." + command + ".disabled");
+			return;
+		}
+
+		if (manager.getQueueSize() == ConfigManager.getConfig().getInt("general.auction-queue-limit")) {
+			sendPropMessage(p, "command.auction.start.queue_full");
+			return;
+		}
+
+		if (manager.inQueueOrCurrent(p.getUniqueId())) {
+			sendPropMessage(p, "command.auction.start.in_queue");
+			return;
+		}
+
+		if (!hasFee(p)) {
+			sendPropMessage(p, "command.auction.start.lacking_fee");
+			return;
+		}
+
+		Auction auction = AuctionUtil.parseAuction(
+				ap,
+				args[0],
+				args[1],
+				args.length < 3 ? String
+						.valueOf(ConfigManager.getInstance().get("auctions.default.increment")) : args[2],
+				args.length < 4 ? String.valueOf(ConfigManager.getInstance().get("auctions.default.autobuy")) :
+						args[3],
+				args.length < 5 ? String
+						.valueOf(ConfigManager.getConfig().getInt("auctions.default.auction-time")) : args[6],
+				sealed);
+
+		if (auction == null)
+			return;
+
+		AuctionQueueEvent event = new AuctionQueueEvent(auction);
+		Bukkit.getPluginManager().callEvent(event);
+
+		if (event.isCancelled())
+			return;
+
+		removeFee(p);
+
+		ItemUtil.removeItemsFromInv(auction, p);
+
+		if (EzAuctions.getAuctionManager().addToQueue(auction)) {
+			int position = EzAuctions.getAuctionManager().getPositionInQueue(ap);
+			sendPropMessage(p, "command.auction.start.added_to_queue", position);
+		}
+	}
+
+	private BaseComponent[] getQueueMessage(int pos, Auction auc) {
+		String message = Messages.getInstance()
+				.getStringWithoutColoring("command.auction.queue.item",
+						pos, auc.getAmount(), "%item%", auc.getStartingPrice(),
+						auc.getAuctioneer().getOfflinePlayer().getName());
+
+		// Use the auction format message method
+		return auc.formatMessage(message);
+	}
+
+	private boolean hasFee(Player p) {
+		double fee = ConfigManager.getConfig().getDouble("auctions.fees.start-price");
+
+		return EzAuctions.getEcon().has(p, fee);
+	}
+
+	private void removeFee(Player p) {
+		double fee = ConfigManager.getConfig().getDouble("auctions.fees.start-price");
+
+		if (fee > 0) {
+			EzAuctions.getEcon().withdrawPlayer(p, fee);
+		}
+	}
+
+	private void sendPropMessage(CommandSender sender, String property, Object... args) {
+		MessageUtil.privateMessage(sender, property, args);
+	}
 }

@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.logging.Logger;
 
 public class EzAuctions extends JavaPlugin {
 
@@ -36,6 +37,7 @@ public class EzAuctions extends JavaPlugin {
 	private static boolean updateAvailable = false;
 
 	private static File dataDir;
+	private static Logger pluginLogger;
 
 	public static AuctionManager getAuctionManager() {
 		return auctionManager;
@@ -62,6 +64,9 @@ public class EzAuctions extends JavaPlugin {
 		// Set the data directory.
 		// Note: This must be set before anything else (config, data source, etc) is called!!
 		dataDir = getDataFolder();
+
+		// Set logger
+		pluginLogger = getLogger();
 
 		// Establish the data source:
 		// We do this here because we need to inject the plugin into the data source
@@ -204,5 +209,9 @@ public class EzAuctions extends JavaPlugin {
 
 	public static File getDataDirectory() {
 		return dataDir;
+	}
+
+	public static Logger getPluginLogger() {
+		return pluginLogger;
 	}
 }

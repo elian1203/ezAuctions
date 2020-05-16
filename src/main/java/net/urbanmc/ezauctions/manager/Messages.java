@@ -69,10 +69,10 @@ public class Messages {
             return format(bundle.getString(key), true, args);
         } catch (Exception e) {
             if (e instanceof MissingResourceException) {
-                Bukkit.getLogger().severe("[ezAuctions] Missing message in message.properties! Message key: " + key);
+                EzAuctions.getPluginLogger().severe("Missing message in message.properties! Message key: " + key);
             }
             else {
-                Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error fetching key '" + key + "' in message.properties!", e);
+                EzAuctions.getPluginLogger().log(Level.SEVERE, "Error fetching key '" + key + "' in message.properties!", e);
             }
             return key;
         }
@@ -83,10 +83,10 @@ public class Messages {
             return format(bundle.getString(key), false, args);
         } catch (Exception e) {
             if (e instanceof MissingResourceException) {
-                Bukkit.getLogger().severe("[ezAuctions] Missing message in message.properties! Message key: " + key);
+                EzAuctions.getPluginLogger().severe("Missing message in message.properties! Message key: " + key);
             }
             else {
-                Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error fetching key '" + key + "' in message.properties!", e);
+                EzAuctions.getPluginLogger().log(Level.SEVERE, "Error fetching key '" + key + "' in message.properties!", e);
             }
             return key;
         }

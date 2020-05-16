@@ -97,7 +97,7 @@ public abstract class SQLStorage extends DataSource{
 
             statement.close();
         } catch (SQLException e) {
-            Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error creating tables for SQL", e);
+            plugin.getLogger().log(Level.SEVERE, "Error creating tables for SQL", e);
             return false;
         }
 
@@ -161,7 +161,7 @@ public abstract class SQLStorage extends DataSource{
             itemStatement.close();
 
         } catch (SQLException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error saving data for SQL", ex);
+            plugin.getLogger().log(Level.SEVERE, "Error saving data for SQL", ex);
         }
     }
 
@@ -188,7 +188,7 @@ public abstract class SQLStorage extends DataSource{
                 savePlayerStmt.close();
 
             } catch (SQLException ex) {
-                Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error updating SQL player data for player " + player, ex);
+                plugin.getLogger().log(Level.SEVERE, "Error updating SQL player data for player " + player, ex);
             } finally {
                 unlock();
             }
@@ -225,7 +225,7 @@ public abstract class SQLStorage extends DataSource{
                 saveIgnoredStmt.close();
 
             } catch (SQLException ex) {
-                Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error updating SQL ignored player data for player " + player, ex);
+                plugin.getLogger().log(Level.SEVERE, "Error updating SQL ignored player data for player " + player, ex);
             } finally {
                 unlock();
             }
@@ -269,7 +269,7 @@ public abstract class SQLStorage extends DataSource{
                 saveItemsStmt.close();
 
             } catch (SQLException ex) {
-                Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error updating SQL player items data for player " + player, ex);
+                plugin.getLogger().log(Level.SEVERE, "Error updating SQL player items data for player " + player, ex);
             } finally {
                 unlock();
             }
@@ -361,7 +361,7 @@ public abstract class SQLStorage extends DataSource{
             loadQuery.close();
 
         } catch (SQLException | IOException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error loading data for SQL", ex);
+            plugin.getLogger().log(Level.SEVERE, "Error loading data for SQL", ex);
         }
 
         return auctionsPlayers;

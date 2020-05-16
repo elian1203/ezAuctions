@@ -1,5 +1,6 @@
 package net.urbanmc.ezauctions.util;
 
+import net.urbanmc.ezauctions.EzAuctions;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
@@ -22,7 +23,7 @@ public class ReflectionUtil {
             ReflectionUtil.version = Double.parseDouble(dotSplit[0] + "." + dotSplit[1]); // 1.13
         } catch (Exception e) {
             // In case anything goes wrong, assume it's a newer version
-            Bukkit.getLogger().severe("[ezAuctions] Could not determine Bukkit version for reflection. Assuming 1.13+ ...");
+            EzAuctions.getPluginLogger().severe("Could not determine Bukkit version for reflection. Assuming 1.13+ ...");
             version = 1.13;
         }
     }
@@ -48,8 +49,8 @@ public class ReflectionUtil {
                 }
             }
         } catch (Exception ex) {
-            Bukkit.getLogger()
-                    .log(Level.WARNING, "[ezAuctions] Error getting minecraft name for " + is.getType().toString(),
+            EzAuctions.getPluginLogger()
+                    .log(Level.WARNING, "Error getting minecraft name for " + is.getType().toString(),
                             ex);
             return "";
         }
@@ -83,8 +84,8 @@ public class ReflectionUtil {
             else
                 return -1;
         } catch (Exception ex) {
-            Bukkit.getLogger().log(Level.WARNING,
-                    "[ezAuctions] Error getting xp needed for repair for " + is.getType().toString(),
+            EzAuctions.getPluginLogger().log(Level.WARNING,
+                    "Error getting xp needed for repair for " + is.getType().toString(),
                     ex);
             return 0;
         }
@@ -109,8 +110,8 @@ public class ReflectionUtil {
 
             return itemJson;
         } catch (Exception ex) {
-            Bukkit.getLogger().log(Level.WARNING,
-                    "[ezAuctions] Error getting item as json. Item: " + is.getType().toString(),
+            EzAuctions.getPluginLogger().log(Level.WARNING,
+                    "Error getting item as json. Item: " + is.getType().toString(),
                     ex);
             return "";
         }
@@ -120,8 +121,8 @@ public class ReflectionUtil {
         try {
             return getCraftItemStackClass().getMethod("asNMSCopy", ItemStack.class).invoke(null, is);
         } catch (Exception ex) {
-            Bukkit.getLogger().log(Level.WARNING,
-                    "[ezAuctions] Error getting item as NMS copy. Item: " + is.getType().toString(),
+            EzAuctions.getPluginLogger().log(Level.WARNING,
+                    "Error getting item as NMS copy. Item: " + is.getType().toString(),
                     ex);
             return null;
         }

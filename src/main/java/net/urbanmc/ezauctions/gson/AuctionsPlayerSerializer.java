@@ -1,9 +1,9 @@
 package net.urbanmc.ezauctions.gson;
 
 import com.google.gson.*;
+import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.util.ItemUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -76,7 +76,7 @@ public class AuctionsPlayerSerializer implements JsonSerializer<AuctionsPlayer>,
                 ItemStack is = ItemUtil.deserialize(je.getAsString());
                 offlineItems.add(is);
             } catch (IOException e) {
-                Bukkit.getLogger().warning("[ezAuctions] Failed to deserialize an item for player \"" + id + "\"");
+                EzAuctions.getPluginLogger().warning("[ezAuctions] Failed to deserialize an item for player \"" + id + "\"");
             }
         }
 

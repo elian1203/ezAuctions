@@ -75,7 +75,7 @@ public class ScoreboardManager {
             price.setPrefix(priceString);
         } catch (IllegalArgumentException ex) {
             // 1.12 Compatibility
-            Bukkit.getLogger().warning("[ezAuctions] Price String longer than 16 characters! Please shorten in messages.properties!");
+            EzAuctions.getPluginLogger().warning("Price String longer than 16 characters! Please shorten in messages.properties!");
             // Error-values are hardcoded so it's certain that the same exception won't be thrown
             price.setPrefix(auc.isSealed() ?
                     ChatColor.BLUE  + "Bid: " + ChatColor.GOLD + currentPrice :
@@ -86,7 +86,7 @@ public class ScoreboardManager {
             time.setPrefix(Messages.getString("scoreboard.time", auc.getAuctionTime()));
         } catch (IllegalArgumentException ex) {
             // 1.12 Compatibility
-            Bukkit.getLogger().warning("[ezAuctions] Time string longer than 16 characters! Please shorten in messages.properties!");
+            EzAuctions.getPluginLogger().warning("Time string longer than 16 characters! Please shorten in messages.properties!");
             time.setPrefix(ChatColor.BLUE + "Time: " + ChatColor.GOLD + auc.getAuctionTime());
         }
 

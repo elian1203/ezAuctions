@@ -23,13 +23,14 @@ import java.util.logging.Level;
 
 public class JSONStorage extends DataSource {
 
-    private final File FILE = new File("plugins/ezAuctions", "players.json");
+    private final File FILE;
 
     private final Gson gson =
             new GsonBuilder().registerTypeAdapter(AuctionsPlayer.class, new AuctionsPlayerSerializer()).create();
 
     public JSONStorage(EzAuctions plugin) {
         super(plugin);
+        FILE = new File(plugin.getDataFolder(), "players.json");
     }
 
     @Override

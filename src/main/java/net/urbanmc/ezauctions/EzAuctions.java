@@ -20,6 +20,7 @@ import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,6 +34,8 @@ public class EzAuctions extends JavaPlugin {
 	private static Economy econ;
 
 	private static boolean updateAvailable = false;
+
+	private static File dataDir;
 
 	public static AuctionManager getAuctionManager() {
 		return auctionManager;
@@ -55,6 +58,10 @@ public class EzAuctions extends JavaPlugin {
 
 			return;
 		}
+
+		// Set the data directory.
+		// Note: This must be set before anything else (config, data source, etc) is called!!
+		dataDir = getDataFolder();
 
 		// Establish the data source:
 		// We do this here because we need to inject the plugin into the data source
@@ -193,5 +200,9 @@ public class EzAuctions extends JavaPlugin {
 			return -1;
 		}
 		return (int) count;
+	}
+
+	public static File getDataDirectory() {
+		return dataDir;
 	}
 }

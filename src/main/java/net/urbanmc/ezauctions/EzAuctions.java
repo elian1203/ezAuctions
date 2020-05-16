@@ -1,5 +1,9 @@
 package net.urbanmc.ezauctions;
 
+import co.aikar.commands.BukkitCommandIssuer;
+import co.aikar.commands.InvalidCommandArgument;
+import co.aikar.commands.PaperCommandManager;
+import co.aikar.locales.MessageKey;
 import net.milkbowl.vault.economy.Economy;
 import net.urbanmc.ezauctions.command.AuctionCommand;
 import net.urbanmc.ezauctions.command.BidCommand;
@@ -9,6 +13,9 @@ import net.urbanmc.ezauctions.listener.JoinListener;
 import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
+import net.urbanmc.ezauctions.manager.Messages;
+import net.urbanmc.ezauctions.object.Auction;
+import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,151 +24,174 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Locale;
 import java.util.Scanner;
 
 public class EzAuctions extends JavaPlugin {
 
-    private static AuctionManager auctionManager;
-    private static Economy econ;
+	private static AuctionManager auctionManager;
+	private static Economy econ;
 
-    private static boolean updateAvailable = false;
+	private static boolean updateAvailable = false;
 
-    public static AuctionManager getAuctionManager() {
-        return auctionManager;
-    }
+	public static AuctionManager getAuctionManager() {
+		return auctionManager;
+	}
 
-    public static Economy getEcon() {
-        return econ;
-    }
+	public static Economy getEcon() {
+		return econ;
+	}
 
-    public static boolean isUpdateAvailable() {
-        return updateAvailable;
-    }
+	public static boolean isUpdateAvailable() {
+		return updateAvailable;
+	}
 
-    @Override
-    public void onEnable() {
-        if (!setupEconomy()) {
-            getLogger().severe("Vault not detected! Is Vault installed along with a supported economy provider? " +
-                    "Disabling plugin...");
-            setEnabled(false);
+	@Override
+	public void onEnable() {
+		if (!setupEconomy()) {
+			getLogger().severe("Vault not detected! Is Vault installed along with a supported economy provider? " +
+					"Disabling plugin...");
+			setEnabled(false);
 
-            return;
-        }
+			return;
+		}
 
-        // Establish the data source:
-        // We do this here because we need to inject the plugin into the data source
-        // and we also have to make sure the config has already loaded.
-        DataSource dataSource = DataSource.determineDataSource(this);
+		// Establish the data source:
+		// We do this here because we need to inject the plugin into the data source
+		// and we also have to make sure the config has already loaded.
+		DataSource dataSource = DataSource.determineDataSource(this);
 
-        // Check access to the data source
-        if (dataSource == null || !dataSource.testAccess()) {
-            getLogger().severe("Could not load auction player data properly! Please check above messages for more detail.");
-            setEnabled(false);
-            return;
-        }
+		// Check access to the data source
+		if (dataSource == null || !dataSource.testAccess()) {
+			getLogger().severe("Could not load auction player data properly! Please check above messages for more " +
+					"detail.");
+			setEnabled(false);
+			return;
+		}
 
-        AuctionsPlayerManager.getInstance().setDataSource(dataSource);
-        AuctionsPlayerManager.getInstance().loadData();
+		AuctionsPlayerManager.getInstance().setDataSource(dataSource);
+		AuctionsPlayerManager.getInstance().loadData();
 
-        registerListeners();
-        registerCommands();
-        registerAuctionManger();
-        registerMetrics();
+		registerListeners();
+		registerCommands();
+		registerAuctionManger();
+		registerMetrics();
 
-        if (ConfigManager.getConfig().getBoolean("general.check-updates", true)) {
-            getServer().getScheduler().runTaskAsynchronously(this, this::checkUpdateAvailable);
-        }
-    }
+		if (ConfigManager.getConfig().getBoolean("general.check-updates", true)) {
+			getServer().getScheduler().runTaskAsynchronously(this, this::checkUpdateAvailable);
+		}
+	}
 
-    @Override
-    public void onDisable() {
-        getAuctionManager().disabling();
+	@Override
+	public void onDisable() {
+		getAuctionManager().disabling();
 
-        // Save auction player data on the disable
-        AuctionsPlayerManager.getInstance().saveAndDisable();
-    }
+		// Save auction player data on the disable
+		AuctionsPlayerManager.getInstance().saveAndDisable();
+	}
 
-    private boolean setupEconomy() {
-        try {
-            RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+	private boolean setupEconomy() {
+		try {
+			RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
 
-            if (rsp == null)
-                return false;
+			if (rsp == null)
+				return false;
 
-            econ = rsp.getProvider();
-        } catch (Exception ignored) {
-        }
+			econ = rsp.getProvider();
+		} catch (Exception ignored) {
+		}
 
-        return econ != null;
-    }
+		return econ != null;
+	}
 
-    private void registerListeners() {
-        getServer().getPluginManager().registerEvents(new JoinListener(), this);
-        getServer().getPluginManager().registerEvents(new CommandListener(), this);
-    }
+	private void registerListeners() {
+		getServer().getPluginManager().registerEvents(new JoinListener(), this);
+		getServer().getPluginManager().registerEvents(new CommandListener(), this);
+	}
 
-    private void registerCommands() {
-        AuctionCommand aucCmd = new AuctionCommand();
-        getCommand("ezauctions").setExecutor(aucCmd);
-        getCommand("bid").setExecutor(new BidCommand());
+	private void registerCommands() {
+		PaperCommandManager manager = new PaperCommandManager(this);
 
-        registerTabCompletions(aucCmd);
-    }
+		// Replace ACF messages with our own
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied"), Messages.getString("command.no_perm"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied_parameter"), Messages.getString("command.no_perm"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.error_prefix"),
+				Messages.getString("command.error_prefix", "{message}"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.invalid_syntax"),
+										Messages.getString("command.usage", "{command}", "{syntax}"));
 
-    private void registerTabCompletions(AuctionCommand auctionCommand) {
-        // This method is in case in the future, we want to use Paper's async tab-completion
-        getCommand("ezauctions").setTabCompleter(auctionCommand);
-    }
+		manager.getCommandContexts().registerIssuerAwareContext(AuctionsPlayer.class, c -> {
+			BukkitCommandIssuer issuer = c.getIssuer();
 
+			if (!issuer.isPlayer())
+				throw new InvalidCommandArgument("Console may not execute this command.");
 
-    private void registerAuctionManger() {
-        auctionManager = new AuctionManager(this);
-    }
+			return AuctionsPlayerManager.getInstance().getPlayer(issuer.getPlayer().getUniqueId());
+		});
 
-    private void registerMetrics() {
-        new Metrics(this);
-    }
+		manager.getCommandContexts().registerIssuerAwareContext(Auction.class, c -> {
 
-    private void checkUpdateAvailable() {
-        String serverVersion = getDescription().getVersion();
+			Auction current = EzAuctions.getAuctionManager().getCurrentAuction();
 
-        // This is taken from the page: https://www.spigotmc.org/resources/ezauctions.42574/
-        int resourceId = 42574;
+			if (current == null) {
+				throw new InvalidCommandArgument(Messages.getString("command.no_current_auction"), false);
+			}
 
-        try {
-            InputStream input =
-                    new URL("https://api.spigotmc.org/legacy/update.php?resource=" + resourceId).openStream();
+			return current;
+		});
 
-            Scanner scanner = new Scanner(input);
+		manager.registerCommand(new AuctionCommand());
+		manager.registerCommand(new BidCommand());
+	}
 
-            String latestVersion = scanner.nextLine();
+	private void registerAuctionManger() {
+		auctionManager = new AuctionManager(this);
+	}
 
-            if (serverVersion.equalsIgnoreCase(latestVersion))
-                return;
+	private void registerMetrics() {
+		new Metrics(this);
+	}
 
-            scanner.close();
+	private void checkUpdateAvailable() {
+		String serverVersion = getDescription().getVersion();
 
-            updateAvailable = true;
-            getLogger().info("Version " + latestVersion + " is available! You are currently running version " +
-                    serverVersion + ".");
-        } catch (Exception ex) {
-            getLogger().warning("Error checking for updates!");
-        }
-    }
+		// This is taken from the page: https://www.spigotmc.org/resources/ezauctions.42574/
+		int resourceId = 42574;
 
-    public static int copy(InputStream input, OutputStream output)
-            throws IOException {
-        byte[] buffer = new byte[1024 * 4];
-        long count = 0;
-        int n = 0;
-        while (-1 != (n = input.read(buffer))) {
-            output.write(buffer, 0, n);
-            count += n;
-        }
+		try {
+			InputStream input =
+					new URL("https://api.spigotmc.org/legacy/update.php?resource=" + resourceId).openStream();
 
-        if (count > Integer.MAX_VALUE) {
-            return -1;
-        }
-        return (int) count;
-    }
+			Scanner scanner = new Scanner(input);
+
+			String latestVersion = scanner.nextLine();
+
+			if (serverVersion.equalsIgnoreCase(latestVersion))
+				return;
+
+			scanner.close();
+
+			updateAvailable = true;
+			getLogger().info("Version " + latestVersion + " is available! You are currently running version " +
+					serverVersion + ".");
+		} catch (Exception ex) {
+			getLogger().warning("Error checking for updates!");
+		}
+	}
+
+	public static int copy(InputStream input, OutputStream output)
+			throws IOException {
+		byte[] buffer = new byte[1024 * 4];
+		long count = 0;
+		int n = 0;
+		while (-1 != (n = input.read(buffer))) {
+			output.write(buffer, 0, n);
+			count += n;
+		}
+
+		if (count > Integer.MAX_VALUE) {
+			return -1;
+		}
+		return (int) count;
+	}
 }

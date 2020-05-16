@@ -6,14 +6,16 @@ import org.bukkit.ChatColor;
 
 import java.io.*;
 import java.text.MessageFormat;
+import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
 
 public class Messages {
 
     private static Messages instance = new Messages();
 
-    private final File FILE = new File("plugins/ezAuctions", "messages.properties");
+    private final File FILE = new File(EzAuctions.getDataDirectory(), "messages.properties");
 
     private ResourceBundle bundle;
 
@@ -66,7 +68,12 @@ public class Messages {
         try {
             return format(bundle.getString(key), true, args);
         } catch (Exception e) {
-            Bukkit.getLogger().severe("[ezAuctions] Missing message in message.properties! Message key: " + key);
+            if (e instanceof MissingResourceException) {
+                Bukkit.getLogger().severe("[ezAuctions] Missing message in message.properties! Message key: " + key);
+            }
+            else {
+                Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error fetching key '" + key + "' in message.properties!", e);
+            }
             return key;
         }
     }
@@ -75,7 +82,12 @@ public class Messages {
         try {
             return format(bundle.getString(key), false, args);
         } catch (Exception e) {
-            Bukkit.getLogger().severe("[ezAuctions] Missing message in message.properties! Message key: " + key);
+            if (e instanceof MissingResourceException) {
+                Bukkit.getLogger().severe("[ezAuctions] Missing message in message.properties! Message key: " + key);
+            }
+            else {
+                Bukkit.getLogger().log(Level.SEVERE, "[ezAuctions] Error fetching key '" + key + "' in message.properties!", e);
+            }
             return key;
         }
     }

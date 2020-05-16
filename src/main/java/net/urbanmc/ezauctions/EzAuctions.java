@@ -3,6 +3,7 @@ package net.urbanmc.ezauctions;
 import co.aikar.commands.BukkitCommandIssuer;
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.PaperCommandManager;
+import co.aikar.locales.MessageKey;
 import net.milkbowl.vault.economy.Economy;
 import net.urbanmc.ezauctions.command.AuctionCommand;
 import net.urbanmc.ezauctions.command.BidCommand;
@@ -12,6 +13,8 @@ import net.urbanmc.ezauctions.listener.JoinListener;
 import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
+import net.urbanmc.ezauctions.manager.Messages;
+import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -21,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Locale;
 import java.util.Scanner;
 
 public class EzAuctions extends JavaPlugin {
@@ -108,6 +112,14 @@ public class EzAuctions extends JavaPlugin {
 	private void registerCommands() {
 		PaperCommandManager manager = new PaperCommandManager(this);
 
+		// Replace ACF messages with our own
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied"), Messages.getString("command.no_perm"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied_parameter"), Messages.getString("command.no_perm"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.error_prefix"),
+				Messages.getString("command.error_prefix", "{message}"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.invalid_syntax"),
+										Messages.getString("command.usage", "{command}", "{syntax}"));
+
 		manager.getCommandContexts().registerIssuerAwareContext(AuctionsPlayer.class, c -> {
 			BukkitCommandIssuer issuer = c.getIssuer();
 
@@ -115,6 +127,17 @@ public class EzAuctions extends JavaPlugin {
 				throw new InvalidCommandArgument("Console may not execute this command.");
 
 			return AuctionsPlayerManager.getInstance().getPlayer(issuer.getPlayer().getUniqueId());
+		});
+
+		manager.getCommandContexts().registerIssuerAwareContext(Auction.class, c -> {
+
+			Auction current = EzAuctions.getAuctionManager().getCurrentAuction();
+
+			if (current == null) {
+				throw new InvalidCommandArgument(Messages.getString("command.no_current_auction"), false);
+			}
+
+			return current;
 		});
 
 		manager.registerCommand(new AuctionCommand());

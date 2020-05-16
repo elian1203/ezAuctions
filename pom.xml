@@ -79,6 +79,16 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.1</version>
                 <configuration>
+                    <filters>
+                        <filter>
+                            <artifact>co.aikar:acf-paper</artifact>
+                            <includes>
+                                <include>co/aikar/**</include>
+                                <include>acf-core_en.properties</include>
+                                <include>acf-minecraft_en.properties</include>
+                            </includes>
+                        </filter>
+                    </filters>
                     <artifactSet>
                         <includes>
                             <include>org.bstats:*</include>

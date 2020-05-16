@@ -21,26 +21,13 @@ import org.bukkit.entity.Player;
 @Description("Bid on an auction")
 public class BidCommand extends BaseCommand {
 
+	@Syntax("[amount]")
 	@Default
-	public void bid(AuctionsPlayer ap, String[] args) {
+	public void bid(AuctionsPlayer ap, Auction auc, @Default(value = "0") double amount) {
 		Player p = ap.getOnlinePlayer();
-		Auction auc = EzAuctions.getAuctionManager().getCurrentAuction();
 
-		double amount;
-
-		if (args.length == 0) {
-			amount = 0;
-		} else {
-			if (isPositiveDouble(args[0])) {
-				amount = Double.parseDouble(args[0]);
-			} else {
-				sendPropMessage(p, "command.bid.invalid_amount");
-				return;
-			}
-		}
-
-		if (auc == null) {
-			sendPropMessage(p, "command.no_current_auction");
+		if (amount < 0) {
+			sendPropMessage(p, "command.bid.invalid_amount");
 			return;
 		}
 
@@ -155,14 +142,5 @@ public class BidCommand extends BaseCommand {
 
 	private boolean hasAmount(Player p, double amt) {
 		return EzAuctions.getEcon().getBalance(p) >= amt;
-	}
-
-	private boolean isPositiveDouble(String input) {
-		try {
-			double d = Double.parseDouble(input);
-			return d > 0;
-		} catch (NumberFormatException e) {
-			return false;
-		}
 	}
 }

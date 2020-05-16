@@ -1,9 +1,11 @@
 package net.urbanmc.ezauctions.command;
 
 import co.aikar.commands.BaseCommand;
+import co.aikar.commands.CommandManager;
 import co.aikar.commands.ConditionFailedException;
 import co.aikar.commands.RegisteredCommand;
 import co.aikar.commands.annotation.*;
+import co.aikar.locales.MessageKey;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.event.AuctionCancelEvent;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 @CommandAlias("auction|auctions|auc|ezauctions|ezauction")
 @CommandPermission("ezauctions.auction")
@@ -246,6 +249,16 @@ public class AuctionCommand extends BaseCommand {
 	public void reload(CommandSender sender) {
 		ConfigManager.getInstance().reloadConfiguration();
 		Messages.getInstance().reload();
+
+		// Re-inject our messages into ACF locale
+		CommandManager manager = getCurrentCommandManager();
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied"), Messages.getString("command.no_perm"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied_parameter"), Messages.getString("command.no_perm"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.error_prefix"),
+				Messages.getString("command.error_prefix", "{message}"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.invalid_syntax"),
+				Messages.getString("command.usage", "{command}", "{syntax}"));
+
 		ScoreboardManager.getInstance().reload();
 
 		final EzAuctions plugin = ((EzAuctions) Bukkit.getPluginManager().getPlugin("ezAuctions"));

@@ -22,11 +22,12 @@ public class MySQLStorage extends SQLStorage {
                 " VALUES(?, ?, ?, ?)" +
                 " ON DUPLICATE KEY UPDATE" +
                 " ignoringSpam = ?, ignoringAll = ?, ignoringScoreboard = ?";
+        HAS_SETTINGS_TABLE = "SHOW TABLES LIKE 'SETTINGS'";
     }
 
     @Override
     public boolean testAccess() {
-        return establishDB() && createTables();
+        return establishDB() && runVersioning();
     }
 
     private boolean establishDB() {

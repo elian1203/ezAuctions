@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class DataSource {
 
-    EzAuctions plugin;
+    protected EzAuctions plugin;
 
     private final AtomicBoolean lock = new AtomicBoolean(false);
 
@@ -117,6 +117,8 @@ public abstract class DataSource {
                 return new MySQLStorage(plugin);
             case "sqlite":
                 return new SQLiteStorage(plugin);
+            case "external":
+                return new DummySource(plugin);
             default:
                 plugin.getLogger().severe("Invalid data storage type! Please fix data storage type in the config.");
                 return null;

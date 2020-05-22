@@ -36,6 +36,12 @@ public class BidCommand extends BaseCommand {
 			return;
 		}
 
+		// check if player is in the right world of the auction when per-world auctions is enabled
+		if (ConfigManager.getConfig().getBoolean("auctions.per-world-auctions")
+				&& !p.getWorld().getName().equals(auc.getWorld())) {
+			sendPropMessage(p, "command.bid.wrong_world", auc.getWorld());
+		}
+
 		if (auc.getAuctioneer().getUniqueId().equals(p.getUniqueId())) {
 			sendPropMessage(p, "command.bid.self_bid");
 			return;
@@ -127,8 +133,8 @@ public class BidCommand extends BaseCommand {
 		}
 	}
 
-	private void sendPropMessage(CommandSender sender, String property) {
-		String message = Messages.getString(property);
+	private void sendPropMessage(CommandSender sender, String property, String... args) {
+		String message = Messages.getString(property, args);
 
 		if (sender instanceof Player)
 			sender.sendMessage(message);

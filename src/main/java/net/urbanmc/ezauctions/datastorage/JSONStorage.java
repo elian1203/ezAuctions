@@ -30,7 +30,7 @@ public class JSONStorage extends DataSource {
 
     public JSONStorage(EzAuctions plugin) {
         super(plugin);
-        FILE = new File(plugin.getDataFolder(), "players.json");
+        FILE = new File(EzAuctions.getDataDirectory(), "players.json");
     }
 
     @Override

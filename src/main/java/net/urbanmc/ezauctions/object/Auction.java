@@ -26,9 +26,10 @@ public class Auction {
     private double starting, increment, autoBuy;
     private boolean isSealed;
     private BidList bidders;
+    private String world;
 
     public Auction(AuctionsPlayer auctioneer, ItemStack item, int amount, int auctionTime, double starting,
-                   double increment, double autoBuy, boolean isSealed) {
+                   double increment, double autoBuy, boolean isSealed, String world) {
         this.auctioneer = auctioneer;
         this.item = item;
         this.amount = amount;
@@ -37,6 +38,7 @@ public class Auction {
         this.increment = increment;
         this.autoBuy = autoBuy;
         this.isSealed = isSealed;
+        this.world = world;
         bidders = new BidList();
     }
 
@@ -74,6 +76,10 @@ public class Auction {
 
     public boolean isSealed() {
         return isSealed;
+    }
+
+    public String getWorld() {
+        return world;
     }
 
     public void addNewBidder(Bidder b) {

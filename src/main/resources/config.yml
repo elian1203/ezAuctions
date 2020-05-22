@@ -41,6 +41,11 @@ auctions:
   blocked-commands:
     - 'nick'
 
+  # This means you can only place bids in the world where the auction was initiated and you can only
+  # receive items from the world where the auction was initiated
+  # Winnings will be stored in the database until the player re-enters the proper world
+  per-world-auctions: false
+
   # When should we broadcast the time left in the auction?
   broadcast-times: [45, 30, 15, 3, 2, 1]
 

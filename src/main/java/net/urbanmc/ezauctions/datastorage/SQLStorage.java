@@ -100,13 +100,21 @@ public abstract class SQLStorage extends DataSource {
 			}
 
 			ScriptRunner runner = new ScriptRunner(getConnection(), false, true);
+			runner.setPrintLogger(plugin.getLogger());
 
 			// We will loop through all the version scripts until we reach the current database version
 			for (int i = databaseVersion; i < LATEST_DATABASE_VERSION; i++) {
 				InputStream input = getClass().getClassLoader().getResourceAsStream("scripts/" + (i + 1) + ".sql");
-				InputStreamReader reader = new InputStreamReader(input);
-
-				runner.runScript(reader);
+				if (input != null) {
+					// Use try-with-resources
+					try (InputStreamReader reader = new InputStreamReader(input)) {
+						runner.runScript(reader);
+					}
+				}
+				else {
+					Bukkit.getLogger().log(Level.WARNING, "[ezAuctions] Cannot find update script for version " + (i + 1)
+															+ " at resource path: " + "scripts/" + (i + 1) + ".sql");
+				}
 			}
 
 			return true;

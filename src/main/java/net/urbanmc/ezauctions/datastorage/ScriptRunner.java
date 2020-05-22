@@ -4,6 +4,7 @@
  * from the iBATIS Apache project. Only removed dependency on Resource class
  * and a constructor
  * GPSHansl, 06.08.2015: regex for delimiter, rearrange comment/delimiter detection, remove some ide warnings.
+ * EzAuctions (05.21.2020): Remove unneeded log methods. Replace with single output logger with optional debug mode.
  */
 
 /*
@@ -25,7 +26,7 @@ package net.urbanmc.ezauctions.datastorage;
 
 import java.io.*;
 import java.sql.*;
-import java.text.SimpleDateFormat;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,10 +51,9 @@ public class ScriptRunner {
 	private final boolean stopOnError;
 	private final boolean autoCommit;
 
-	@SuppressWarnings("UseOfSystemOutOrSystemErr")
-	private PrintWriter logWriter = null;
-	@SuppressWarnings("UseOfSystemOutOrSystemErr")
-	private PrintWriter errorLogWriter = null;
+	private Logger printLogger;
+
+	private boolean debugMode;
 
 	private String delimiter = DEFAULT_DELIMITER;
 	private boolean fullLineDelimiter = false;
@@ -68,29 +68,6 @@ public class ScriptRunner {
 		this.connection = connection;
 		this.autoCommit = autoCommit;
 		this.stopOnError = stopOnError;
-		File logFile = new File("create_db.log");
-		File errorLogFile = new File("create_db_error.log");
-		try {
-			if (logFile.exists()) {
-				logWriter = new PrintWriter(new FileWriter(logFile, true));
-			} else {
-				logWriter = new PrintWriter(new FileWriter(logFile, false));
-			}
-		} catch (IOException e) {
-			System.err.println("Unable to access or create the db_create log");
-		}
-		try {
-			if (errorLogFile.exists()) {
-				errorLogWriter = new PrintWriter(new FileWriter(errorLogFile, true));
-			} else {
-				errorLogWriter = new PrintWriter(new FileWriter(errorLogFile, false));
-			}
-		} catch (IOException e) {
-			System.err.println("Unable to access or create the db_create error log");
-		}
-		String timeStamp = new SimpleDateFormat("dd/mm/yyyy HH:mm:ss").format(new java.util.Date());
-		println("\n-------\n" + timeStamp + "\n-------\n");
-		printlnError("\n-------\n" + timeStamp + "\n-------\n");
 	}
 
 	public void setDelimiter(String delimiter, boolean fullLineDelimiter) {
@@ -99,21 +76,20 @@ public class ScriptRunner {
 	}
 
 	/**
-	 * Setter for logWriter property
-	 *
-	 * @param logWriter - the new value of the logWriter property
+	 * Set Print Logger
+	 * @param logger
 	 */
-	public void setLogWriter(PrintWriter logWriter) {
-		this.logWriter = logWriter;
+	public void setPrintLogger(Logger logger) {
+		this.printLogger = logger;
 	}
 
 	/**
-	 * Setter for errorLogWriter property
-	 *
-	 * @param errorLogWriter - the new value of the errorLogWriter property
+	 * Enable/disable debug output.
+	 * Depends on a print logger
+	 * @param b
 	 */
-	public void setErrorLogWriter(PrintWriter errorLogWriter) {
-		this.errorLogWriter = errorLogWriter;
+	public void setDebugMode(boolean b) {
+		this.debugMode = b;
 	}
 
 	/**
@@ -177,17 +153,12 @@ public class ScriptRunner {
 				}
 				String trimmedLine = line.trim();
 				final Matcher delimMatch = delimP.matcher(trimmedLine);
-				if (trimmedLine.length() < 1
+				if (trimmedLine.isEmpty() || trimmedLine.startsWith("--")
 						|| trimmedLine.startsWith("//")) {
 					// Do nothing
 				} else if (delimMatch.matches()) {
 					setDelimiter(delimMatch.group(2), false);
-				} else if (trimmedLine.startsWith("--")) {
-					println(trimmedLine);
-				} else if (trimmedLine.length() < 1
-						|| trimmedLine.startsWith("--")) {
-					// Do nothing
-				} else if (!fullLineDelimiter
+				}  else if (!fullLineDelimiter
 						&& trimmedLine.endsWith(getDelimiter())
 						|| fullLineDelimiter
 						&& trimmedLine.equals(getDelimiter())) {
@@ -211,7 +182,6 @@ public class ScriptRunner {
 			throw new IOException(String.format("Error executing '%s': %s", command, e.getMessage()), e);
 		} finally {
 			conn.rollback();
-			flush();
 		}
 	}
 
@@ -241,7 +211,7 @@ public class ScriptRunner {
 
 		Statement statement = conn.createStatement();
 
-		println(command);
+		debug(command.toString());
 
 		boolean hasResults = false;
 		try {
@@ -249,8 +219,7 @@ public class ScriptRunner {
 		} catch (SQLException e) {
 			final String errText = String.format("Error executing '%s' (line %d): %s",
 					command, lineReader.getLineNumber(), e.getMessage());
-			printlnError(errText);
-			System.err.println(errText);
+			outputError(errText);
 			if (stopOnError) {
 				throw new SQLException(errText, e);
 			}
@@ -261,21 +230,24 @@ public class ScriptRunner {
 		}
 
 		ResultSet rs = statement.getResultSet();
-		if (hasResults && rs != null) {
+		// Only run if debug mode is enabled
+		if (debugMode && hasResults && rs != null) {
 			ResultSetMetaData md = rs.getMetaData();
+			StringBuilder textBuilder = new StringBuilder();
 			int cols = md.getColumnCount();
 			for (int i = 1; i <= cols; i++) {
 				String name = md.getColumnLabel(i);
-				print(name + "\t");
+				textBuilder.append(name).append("\t");
 			}
-			println("");
+			textBuilder.append("\n");
 			while (rs.next()) {
 				for (int i = 1; i <= cols; i++) {
 					String value = rs.getString(i);
-					print(value + "\t");
+					textBuilder.append(value).append("\t");
 				}
-				println("");
+				textBuilder.append("\n");
 			}
+			debug(textBuilder.toString());
 		}
 
 		try {
@@ -289,32 +261,17 @@ public class ScriptRunner {
 		return delimiter;
 	}
 
-	@SuppressWarnings("UseOfSystemOutOrSystemErr")
-
-	private void print(Object o) {
-		if (logWriter != null) {
-			logWriter.print(o);
+	private void outputError(String errorMsg) {
+		if (printLogger != null) {
+			printLogger.severe(errorMsg);
 		}
 	}
 
-	private void println(Object o) {
-		if (logWriter != null) {
-			logWriter.println(o);
+	private void debug(String message) {
+		if (debugMode && printLogger != null) {
+			printLogger.info(message);
 		}
 	}
 
-	private void printlnError(Object o) {
-		if (errorLogWriter != null) {
-			errorLogWriter.println(o);
-		}
-	}
 
-	private void flush() {
-		if (logWriter != null) {
-			logWriter.flush();
-		}
-		if (errorLogWriter != null) {
-			errorLogWriter.flush();
-		}
-	}
 }

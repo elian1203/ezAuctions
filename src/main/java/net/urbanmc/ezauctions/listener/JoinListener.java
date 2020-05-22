@@ -28,9 +28,7 @@ public class JoinListener implements Listener {
 			MessageUtil.privateMessage(p, "login.updatemessage");
 		}
 
-		if (ap.getOfflineItems().isEmpty())
-			return;
-
-		RewardUtil.rewardOffline(ap);
+		if (!ap.getOfflineItems().isEmpty())
+			RewardUtil.rewardOffline(ap);
 	}
 }

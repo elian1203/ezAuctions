@@ -10,6 +10,7 @@ import net.urbanmc.ezauctions.command.BidCommand;
 import net.urbanmc.ezauctions.datastorage.DataSource;
 import net.urbanmc.ezauctions.listener.CommandListener;
 import net.urbanmc.ezauctions.listener.JoinListener;
+import net.urbanmc.ezauctions.listener.WorldChangeListener;
 import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
@@ -121,18 +122,21 @@ public class EzAuctions extends JavaPlugin {
 	private void registerListeners() {
 		getServer().getPluginManager().registerEvents(new JoinListener(), this);
 		getServer().getPluginManager().registerEvents(new CommandListener(), this);
+		getServer().getPluginManager().registerEvents(new WorldChangeListener(), this);
 	}
 
 	private void registerCommands() {
 		PaperCommandManager manager = new PaperCommandManager(this);
 
 		// Replace ACF messages with our own
-		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied"), Messages.getString("command.no_perm"));
-		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied_parameter"), Messages.getString("command.no_perm"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied"),
+				Messages.getString("command.no_perm"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied_parameter"),
+				Messages.getString("command.no_perm"));
 		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.error_prefix"),
 				Messages.getString("command.error_prefix", "{message}"));
 		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.invalid_syntax"),
-										Messages.getString("command.usage", "{command}", "{syntax}"));
+				Messages.getString("command.usage", "{command}", "{syntax}"));
 
 		manager.getCommandContexts().registerIssuerAwareContext(AuctionsPlayer.class, c -> {
 			BukkitCommandIssuer issuer = c.getIssuer();

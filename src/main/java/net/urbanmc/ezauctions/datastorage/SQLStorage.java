@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 public abstract class SQLStorage extends DataSource{
 
@@ -32,7 +34,8 @@ public abstract class SQLStorage extends DataSource{
     * Loading:
     *   We cannot join the tables because the ignored table and the items table do not have primary keys. They are
     *   KV lists with duplicate keys and values. Hence, while loading we have to load data from each table separately.
-    *   Thus, we load the ignored players and offline items first and store them in hashmaps. Then we load the boolean auction player
+	 *   Thus, we load the ignored players and offline items first and store them in hashmaps. Then we load the
+	 * boolean auction player
     *   table and create the auction players there.
     *
     * Saving:
@@ -41,19 +44,14 @@ public abstract class SQLStorage extends DataSource{
     *   so it only has to execute three large batch queries at the end.
      */
 
-    // All SQL statements/queries.
+	// Current database version, to be updated whenever the database structure is changed
+	private final int LATEST_DATABASE_VERSION = 1;
 
-    // Create table queries
-    private final String CREATE_PLAYER_TABLE = "CREATE TABLE IF NOT EXISTS AUCTION_PLAYERS " +
-            "( player CHAR(36) NOT NULL PRIMARY KEY," +
-            " ignoringSpam BOOLEAN, ignoringAll BOOLEAN, ignoringScoreboard BOOLEAN)";
+	// All SQL statements/queries.
 
-    // SQL is a relational database storage. We have to create separate tables for list objects
-    private final String CREATE_IGNORED_TABLE = "CREATE TABLE IF NOT EXISTS AUCTION_PLAYERS_IGNORED " +
-            "( player CHAR(36), ignored CHAR(36))";
+	String HAS_SETTINGS_TABLE; // Abstract field set by respective SQLStorages
 
-    private final String CREATE_ITEMS_TABLE = "CREATE TABLE IF NOT EXISTS AUCTION_PLAYERS_ITEMS " +
-            "( player CHAR(36), items TEXT)";
+	private final String GET_VERSION = "SELECT * FROM SETTINGS WHERE property = 'version'";
 
     // Save statements
     String SAVE_PLAYER_STMT; // Abstract field set by respective SQLStorages
@@ -84,25 +82,55 @@ public abstract class SQLStorage extends DataSource{
 
     protected abstract Connection getConnection();
 
-    protected boolean createTables() {
-        try (Connection con = getConnection()) {
+	/**
+	 * Determines current version of database and runs any scripts required to upgrade the database
+	 *
+	 * @return true if all successfully applied, error if any exceptions were thrown
+	 */
+	protected boolean runVersioning() {
+		try (Connection con = getConnection()) {
+			Statement statement = con.createStatement();
 
-            if (con == null) return false;
+			ResultSet rs = statement.executeQuery(HAS_SETTINGS_TABLE);
 
-            Statement statement = con.createStatement();
+			int databaseVersion = -1;
 
-            statement.execute(CREATE_PLAYER_TABLE);
-            statement.execute(CREATE_IGNORED_TABLE);
-            statement.execute(CREATE_ITEMS_TABLE);
+			// if there is a settings table and a version property, we will update the database version
+			if (rs.next()) {
+				rs.close();
+				rs = statement.executeQuery(GET_VERSION);
 
-            statement.close();
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Error creating tables for SQL", e);
-            return false;
-        }
+				if (rs.next()) {
+					databaseVersion = rs.getInt(2);
+				}
 
-        return true;
-    }
+				rs.close();
+			}
+
+			ScriptRunner runner = new ScriptRunner(getConnection(), false, true);
+			runner.setPrintLogger(plugin.getLogger());
+
+			// We will loop through all the version scripts until we reach the current database version
+			for (int i = databaseVersion; i < LATEST_DATABASE_VERSION; i++) {
+				InputStream input = getClass().getClassLoader().getResourceAsStream("scripts/" + (i + 1) + ".sql");
+				if (input != null) {
+					// Use try-with-resources
+					try (InputStreamReader reader = new InputStreamReader(input)) {
+						runner.runScript(reader);
+					}
+				}
+				else {
+					plugin.getLogger().log(Level.WARNING, "Cannot find update script for version " + (i + 1)
+															+ " at resource path: " + "scripts/" + (i + 1) + ".sql");
+				}
+			}
+
+			return true;
+		} catch (SQLException | IOException e) {
+			plugin.getLogger().log(Level.SEVERE, "Error updating database", e);
+			return false;
+		}
+	}
 
     @Override
     public void save(List<AuctionsPlayer> auctionPlayers) {
@@ -234,6 +262,7 @@ public abstract class SQLStorage extends DataSource{
 
     /**
      * Updates offline items for that specific player
+	 *
      * @param list Takes in an auction player list.
      * @param player Takes in an auction player
      */

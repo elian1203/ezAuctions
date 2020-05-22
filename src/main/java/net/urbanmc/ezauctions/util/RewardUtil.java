@@ -87,21 +87,39 @@ public class RewardUtil {
 	public static void rewardCancel(Auction auction) {
 		OfflinePlayer auctioneer = auction.getAuctioneer().getOfflinePlayer();
 
+		returnBidderMoney(auction.getBidList(), true);
+
 		if (auctioneer.isOnline()) {
-			Player p = auction.getAuctioneer().getOnlinePlayer();
+			Player p = auctioneer.getPlayer();
 
-			MessageUtil.privateMessage(p, "reward.returned");
-			ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
-		} else {
-			ItemStack item = auction.getItem().clone();
-			item.setAmount(auction.getAmount());
+			/*
+			if player per-world-auctions is enabled and player is not in right world we will
+			send them a message to notify them that they must return to claim their winnings
+			and then add the item to their offline items
 
-			OfflineItem offlineItem = new OfflineItem(item, auction.getWorld());
-			auction.getAuctioneer().getOfflineItems().add(offlineItem);
-			AuctionsPlayerManager.getInstance().saveItems(auction.getAuctioneer());
+			otherwise, we will give them their item and be done
+			 */
+			if (ConfigManager.getConfig().getBoolean("auctions.per-world-auctions")
+					&& !p.getWorld().getName().equals(auction.getWorld())) {
+				MessageUtil.privateMessage(p, "reward.wrong_world", auction.getWorld());
+			} else if (AuctionUtil.blockedWorld(p)) {
+				MessageUtil.privateMessage(p, "reward.blocked_world");
+			} else {
+				MessageUtil.privateMessage(p, "reward.returned");
+				ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
+
+				return;
+			}
 		}
 
-		returnBidderMoney(auction.getBidList(), true);
+		AuctionsPlayer ap = auction.getAuctioneer();
+
+		ItemStack item = auction.getItem().clone();
+		item.setAmount(auction.getAmount());
+
+		OfflineItem offlineItem = new OfflineItem(item, auction.getWorld());
+		ap.getOfflineItems().add(offlineItem);
+		AuctionsPlayerManager.getInstance().saveItems(ap);
 	}
 
 	public static void rewardImpound(Auction auction, Player impounder) {
@@ -139,7 +157,7 @@ public class RewardUtil {
 			}
 
 			didDrop = true;
-			ap.getOfflineItems().remove(offlineItem);
+			iterator.remove();
 
 			ItemStack item = offlineItem.getItem();
 			boolean b = ItemUtil.addItemToInventory(p, item, item.getAmount(), false);

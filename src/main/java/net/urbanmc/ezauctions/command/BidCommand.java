@@ -40,6 +40,7 @@ public class BidCommand extends BaseCommand {
 		if (ConfigManager.getConfig().getBoolean("auctions.per-world-auctions")
 				&& !p.getWorld().getName().equals(auc.getWorld())) {
 			sendPropMessage(p, "command.bid.wrong_world", auc.getWorld());
+			return;
 		}
 
 		if (auc.getAuctioneer().getUniqueId().equals(p.getUniqueId())) {

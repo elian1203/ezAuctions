@@ -96,7 +96,9 @@ public class EzAuctions extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		getAuctionManager().disabling();
+		// Make sure auction manager is valid
+		if (getAuctionManager() != null)
+			getAuctionManager().disabling();
 
 		// Save auction player data on the disable
 		AuctionsPlayerManager.getInstance().saveAndDisable();

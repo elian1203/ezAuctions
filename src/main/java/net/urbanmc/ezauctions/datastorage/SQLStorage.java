@@ -51,7 +51,7 @@ public abstract class SQLStorage extends DataSource{
 
 	String HAS_SETTINGS_TABLE; // Abstract field set by respective SQLStorages
 
-	private final String GET_VERSION = "SELECT * FROM SETTINGS WHERE property = 'version'";
+	private final String GET_VERSION = "SELECT * FROM EZAUC_SETTINGS WHERE property = 'version'";
 
     // Save statements
     String SAVE_PLAYER_STMT; // Abstract field set by respective SQLStorages

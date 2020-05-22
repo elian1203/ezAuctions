@@ -21,7 +21,7 @@ public class SQLiteStorage extends SQLStorage {
                 " ON CONFLICT(player)" +
                 " DO UPDATE SET ignoringSpam = ?, ignoringAll = ?, ignoringScoreboard = ?";
 
-        HAS_SETTINGS_TABLE = "SELECT * FROM sqlite_master WHERE name ='SETTINGS' and type='table'";
+        HAS_SETTINGS_TABLE = "SELECT * FROM sqlite_master WHERE name ='EZAUC_SETTINGS' and type='table'";
     }
 
     @Override

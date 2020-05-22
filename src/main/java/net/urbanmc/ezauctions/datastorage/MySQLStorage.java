@@ -22,7 +22,7 @@ public class MySQLStorage extends SQLStorage {
                 " VALUES(?, ?, ?, ?)" +
                 " ON DUPLICATE KEY UPDATE" +
                 " ignoringSpam = ?, ignoringAll = ?, ignoringScoreboard = ?";
-        HAS_SETTINGS_TABLE = "SHOW TABLES LIKE 'SETTINGS'";
+        HAS_SETTINGS_TABLE = "SHOW TABLES LIKE 'EZAUC_SETTINGS'";
     }
 
     @Override

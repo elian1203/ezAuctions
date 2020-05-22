@@ -53,6 +53,8 @@ public class RewardUtil {
 			if (ConfigManager.getConfig().getBoolean("auctions.per-world-auctions")
 					&& !p.getWorld().getName().equals(auction.getWorld())) {
 				MessageUtil.privateMessage(p, "reward.wrong_world", auction.getWorld());
+			} else if (AuctionUtil.blockedWorld(p)) {
+				MessageUtil.privateMessage(p, "reward.blocked_world");
 			} else {
 				MessageUtil.privateMessage(p, "reward.received");
 				ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
@@ -129,6 +131,11 @@ public class RewardUtil {
 					MessageUtil.privateMessage(p, "reward.relogged_wrong_world", itemWorld);
 					continue;
 				}
+			}
+
+			if (AuctionUtil.blockedWorld(p)) {
+				MessageUtil.privateMessage(p, "reward.relogged_blocked_world");
+				continue;
 			}
 
 			didDrop = true;

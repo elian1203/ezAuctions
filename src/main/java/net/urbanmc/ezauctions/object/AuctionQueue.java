@@ -210,7 +210,7 @@ public class AuctionQueue {
         // Shift elements towards the anchor index
         // This mean if head is closer, shift the elements to the right.
         // If tail is closer, shift the elements to the left.
-        for (int i = 1; i < distanceFromIndex; i++) {
+        for (int i = 0; i < distanceFromIndex; i++) {
             int currIndex = anchorIndex + (directionFactor * i);
             int propagationIndex = currIndex + directionFactor;
 

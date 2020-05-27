@@ -374,7 +374,7 @@ public class AuctionCommand extends BaseCommand {
 				args.length < 4 ? String.valueOf(ConfigManager.getInstance().get("auctions.default.autobuy")) :
 						args[3],
 				args.length < 5 ? String
-						.valueOf(ConfigManager.getConfig().getInt("auctions.default.auction-time")) : args[6],
+						.valueOf(ConfigManager.getConfig().getInt("auctions.default.auction-time")) : args[4],
 				sealed);
 
 		if (auction == null)

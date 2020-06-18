@@ -5,16 +5,18 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.gson.AuctionsPlayerSerializer;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
-import net.urbanmc.ezauctions.object.AuctionsPlayerList;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,7 +70,7 @@ public class JSONStorage extends DataSource {
                  json = scanner.nextLine();
             }
             else {
-                json = "{\"players\":[]}";
+                json = "[]";
             }
 
             return new JsonParser().parse(json);
@@ -86,19 +88,19 @@ public class JSONStorage extends DataSource {
      * @return a json array of the player data
      */
     private JsonArray getPlayersArray(JsonElement element) {
-        if (element == null || !element.isJsonObject()) {
-            plugin.getLogger().warning("Error loading players json file!");
-            return null;
+        if (element != null) {
+            if (element.isJsonArray()) {
+                return element.getAsJsonArray();
+            } else if (element.isJsonObject()) {
+                JsonObject mainObj = element.getAsJsonObject();
+                if (mainObj.has("players") && mainObj.get("players").isJsonArray()) {
+                    return element.getAsJsonObject().get("players").getAsJsonArray();
+                }
+            }
         }
 
-        JsonArray players = element.getAsJsonObject().get("players").getAsJsonArray();
-
-        if (players == null) {
-            plugin.getLogger().warning("The players json could not be properly casted to an array!");
-            return null;
-        }
-
-        return players;
+        plugin.getLogger().warning("Error loading players json file!");
+        return null;
     }
 
     /**
@@ -142,7 +144,7 @@ public class JSONStorage extends DataSource {
             playersArray.set(index, serializedPlayer);
         }
 
-        writeStringToFile(element.toString());
+        writeStringToFile(playersArray.toString());
     }
 
     private void asyncUpdateAuctionPlayer(final AuctionsPlayer player) {
@@ -174,7 +176,7 @@ public class JSONStorage extends DataSource {
 
     @Override
     public void save(Collection<AuctionsPlayer> auctionPlayers) {
-        writeStringToFile(gson.toJson(new AuctionsPlayerList(auctionPlayers)));
+        writeStringToFile(gson.toJson(auctionPlayers));
     }
 
     private void writeStringToFile(String json) {
@@ -193,7 +195,19 @@ public class JSONStorage extends DataSource {
             if (scanner.hasNext()) {
                 String json = scanner.nextLine();
 
-                Collection<AuctionsPlayer> players = gson.fromJson(json, AuctionsPlayerList.class).getPlayers();
+                Collection<AuctionsPlayer> players = null;
+
+                Type playersArray = new TypeToken<Collection<AuctionsPlayer>>() {}.getType();
+
+                try {
+                    players = gson.fromJson(json, playersArray);
+                } catch (JsonParseException ex) {
+                    // Load old file type
+                    JsonElement jsonEl = new JsonParser().parse(json);
+                    if (jsonEl.isJsonObject() && jsonEl.getAsJsonObject().has("players")) {
+                        players = gson.fromJson(jsonEl.getAsJsonObject().get("players").toString(), playersArray);
+                    }
+                }
                 return players.stream().collect(Collectors.toMap(AuctionsPlayer::getUniqueId, ap -> ap));
             }
         } catch (Exception ex) {

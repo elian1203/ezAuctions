@@ -5,7 +5,9 @@ import net.urbanmc.ezauctions.datastorage.DataSource;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 public class AuctionsPlayerManager {
@@ -14,7 +16,7 @@ public class AuctionsPlayerManager {
 
     private DataSource dataSource;
 
-    private List<AuctionsPlayer> players;
+    private Map<UUID, AuctionsPlayer> players;
 
     public void setDataSource(DataSource source) {
         this.dataSource = source;
@@ -31,7 +33,7 @@ public class AuctionsPlayerManager {
     public void saveAndDisable() {
         if (dataSource != null) {
             if (ConfigManager.getConfig().getBoolean("data.save-on-disable", true))
-                dataSource.syncSave(players);
+                dataSource.syncSave(getPlayers());
 
             dataSource.finish();
         }
@@ -39,23 +41,23 @@ public class AuctionsPlayerManager {
 
     public void syncFullSaveData() {
         if (dataSource != null)
-            dataSource.syncSave(players);
+            dataSource.syncSave(getPlayers());
     }
 
     public void asyncSaveData() {
-        dataSource.asyncSave(players);
+        dataSource.asyncSave(getPlayers());
     }
 
     public void saveBooleans(AuctionsPlayer player) {
-        dataSource.updateBooleanValue(players, player.clone());
+        dataSource.updateBooleanValue(player.clone());
     }
 
     public void saveIgnored(AuctionsPlayer player) {
-        dataSource.updateIgnored(players, player.clone());
+        dataSource.updateIgnored(player.clone());
     }
 
     public void saveItems(AuctionsPlayer player) {
-        dataSource.updateItems(players, player.clone());
+        dataSource.updateItems(player.clone());
     }
 
     public void reloadDataSource(EzAuctions plugin) {
@@ -77,12 +79,7 @@ public class AuctionsPlayerManager {
     }
 
     public AuctionsPlayer getPlayer(UUID id) {
-        for (AuctionsPlayer ap : players) {
-            if (ap.getUniqueId().equals(id))
-                return ap;
-        }
-
-        return null;
+        return players.get(id);
     }
 
     public void createPlayer(UUID id) {
@@ -90,8 +87,12 @@ public class AuctionsPlayerManager {
 
         if (ap == null) {
             ap = new AuctionsPlayer(id, false, false, false, new ArrayList<>(), new ArrayList<>());
-            players.add(ap);
+            players.put(id, ap);
             saveBooleans(ap);
         }
+    }
+
+    public Collection<AuctionsPlayer> getPlayers() {
+        return Collections.unmodifiableCollection(players.values());
     }
 }

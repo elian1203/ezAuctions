@@ -1,12 +1,16 @@
 package net.urbanmc.ezauctions.datastorage;
 
 import net.urbanmc.ezauctions.EzAuctions;
+import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import org.bukkit.Bukkit;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class DataSource {
@@ -19,23 +23,23 @@ public abstract class DataSource {
         this.plugin = plugin;
     }
 
-    protected abstract void save(List<AuctionsPlayer> auctionPlayers);
+    protected abstract void save(Collection<AuctionsPlayer> auctionPlayers);
 
-    public abstract List<AuctionsPlayer> load();
+    public abstract Map<UUID, AuctionsPlayer> load();
 
     public abstract boolean testAccess();
 
     // Default these methods to a full save
-    public void updateIgnored(List<AuctionsPlayer> list, AuctionsPlayer player) {
-        asyncSave(list);
+    public void updateIgnored(AuctionsPlayer player) {
+        asyncSave(AuctionsPlayerManager.getInstance().getPlayers());
     }
 
-    public void updateItems(List<AuctionsPlayer> list, AuctionsPlayer player) {
-        asyncSave(list);
+    public void updateItems(AuctionsPlayer player) {
+        asyncSave(AuctionsPlayerManager.getInstance().getPlayers());
     }
 
-    public void updateBooleanValue(List<AuctionsPlayer> list, AuctionsPlayer player) {
-        asyncSave(list);
+    public void updateBooleanValue(AuctionsPlayer player) {
+        asyncSave(AuctionsPlayerManager.getInstance().getPlayers());
     }
 
     // This is for external custom data sources in order to prevent a creation of a new data source.
@@ -44,7 +48,7 @@ public abstract class DataSource {
     // Method is called when the plugin is disabling or a datasource is changing
     public void finish() {}
 
-    public void asyncSave(final List<AuctionsPlayer> players) {
+    public void asyncSave(final Collection<AuctionsPlayer> players) {
         // Clone array list for thread-safe access
         // Note that this does not mean the inner-reads are thread-safe
         // However, since we lock the writes, it means any changes to the players will be re-saved anyway.
@@ -62,7 +66,7 @@ public abstract class DataSource {
         });
     }
 
-    public void syncSave(final List<AuctionsPlayer> players) {
+    public void syncSave(final Collection<AuctionsPlayer> players) {
         lock();
         try {
             save(players);

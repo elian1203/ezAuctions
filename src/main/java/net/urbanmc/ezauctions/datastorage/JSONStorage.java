@@ -15,11 +15,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.UUID;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class JSONStorage extends DataSource {
 
@@ -59,7 +62,14 @@ public class JSONStorage extends DataSource {
      */
     private JsonElement loadAsJson() {
         try (Scanner scanner = new Scanner(FILE)) {
-            String json = scanner.nextLine();
+            String json;
+
+            if (scanner.hasNext()) {
+                 json = scanner.nextLine();
+            }
+            else {
+                json = "{\"players\":[]}";
+            }
 
             return new JsonParser().parse(json);
         } catch (Exception ex) {
@@ -148,22 +158,22 @@ public class JSONStorage extends DataSource {
 
     // All methods basically swap the stored auction player with the passed in auction player
     @Override
-    public void updateBooleanValue(List<AuctionsPlayer> list, AuctionsPlayer player) {
+    public void updateBooleanValue(AuctionsPlayer player) {
         asyncUpdateAuctionPlayer(player);
     }
 
     @Override
-    public void updateIgnored(List<AuctionsPlayer> list, AuctionsPlayer player) {
+    public void updateIgnored(AuctionsPlayer player) {
         asyncUpdateAuctionPlayer(player);
     }
 
     @Override
-    public void updateItems(List<AuctionsPlayer> list, AuctionsPlayer player) {
+    public void updateItems(AuctionsPlayer player) {
         asyncUpdateAuctionPlayer(player);
     }
 
     @Override
-    public void save(List<AuctionsPlayer> auctionPlayers) {
+    public void save(Collection<AuctionsPlayer> auctionPlayers) {
         writeStringToFile(gson.toJson(new AuctionsPlayerList(auctionPlayers)));
     }
 
@@ -178,17 +188,20 @@ public class JSONStorage extends DataSource {
     }
 
     @Override
-    public List<AuctionsPlayer> load() {
+    public Map<UUID, AuctionsPlayer> load() {
         try (Scanner scanner = new Scanner(FILE)) {
-            String json = scanner.nextLine();
+            if (scanner.hasNext()) {
+                String json = scanner.nextLine();
 
-            return gson.fromJson(json, AuctionsPlayerList.class).getPlayers();
+                Collection<AuctionsPlayer> players = gson.fromJson(json, AuctionsPlayerList.class).getPlayers();
+                return players.stream().collect(Collectors.toMap(AuctionsPlayer::getUniqueId, ap -> ap));
+            }
         } catch (Exception ex) {
             if (!(ex instanceof NoSuchElementException)) {
                 plugin.getLogger().log(Level.SEVERE, "Error loading players!", ex);
             }
-
-            return new ArrayList<>();
         }
+
+        return new HashMap<>();
     }
 }

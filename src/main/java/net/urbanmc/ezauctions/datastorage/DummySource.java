@@ -3,8 +3,10 @@ package net.urbanmc.ezauctions.datastorage;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Temporary DataSource implementation meant for plugins that
@@ -22,13 +24,13 @@ public class DummySource extends DataSource {
     }
 
     @Override
-    protected void save(List<AuctionsPlayer> auctionPlayers) {
+    protected void save(Collection<AuctionsPlayer> auctionPlayers) {
         throw new UnsupportedOperationException("Save operation not supported while using Dummy Data Source!");
     }
 
     @Override
-    public List<AuctionsPlayer> load() {
-        return new ArrayList<>();
+    public Map<UUID, AuctionsPlayer> load() {
+        return Collections.emptyMap();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package net.urbanmc.ezauctions.datastorage;
 
 import net.urbanmc.ezauctions.EzAuctions;
+import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.object.OfflineItem;
 import net.urbanmc.ezauctions.util.ItemUtil;
@@ -124,7 +125,7 @@ public abstract class SQLStorage extends DataSource {
 	}
 
 	@Override
-	public void save(List<AuctionsPlayer> auctionPlayers) {
+	public void save(Collection<AuctionsPlayer> auctionPlayers) {
 		try (Connection con = getConnection()) {
 
 			if (con == null) return;
@@ -186,7 +187,7 @@ public abstract class SQLStorage extends DataSource {
 	}
 
 	@Override
-	public void updateBooleanValue(List<AuctionsPlayer> list, final AuctionsPlayer player) {
+	public void updateBooleanValue(final AuctionsPlayer player) {
 		runAsync(() -> {
 			lock();
 
@@ -216,7 +217,7 @@ public abstract class SQLStorage extends DataSource {
 	}
 
 	@Override
-	public void updateIgnored(List<AuctionsPlayer> list, final AuctionsPlayer player) {
+	public void updateIgnored(final AuctionsPlayer player) {
 		runAsync(() -> {
 			lock();
 
@@ -255,13 +256,11 @@ public abstract class SQLStorage extends DataSource {
 
 	/**
 	 * Updates offline items for that specific player
-	 *
-	 * @param list   Takes in an auction player list.
 	 * @param player Takes in an auction player
 	 */
 
 	@Override
-	public void updateItems(List<AuctionsPlayer> list, final AuctionsPlayer player) {
+	public void updateItems(final AuctionsPlayer player) {
 		runAsync(() -> {
 			lock();
 
@@ -300,12 +299,13 @@ public abstract class SQLStorage extends DataSource {
 	}
 
 	@Override
-	public List<AuctionsPlayer> load() {
-		ArrayList<AuctionsPlayer> auctionsPlayers = new ArrayList<>();
+	public Map<UUID, AuctionsPlayer> load() {
+		Map<UUID, AuctionsPlayer> auctionsPlayers = new HashMap<>();
 
 		try (Connection con = getConnection()) {
 
-			if (con == null) return auctionsPlayers;
+			if (con == null)
+				return auctionsPlayers;
 
 			// We only need one statement for all queries.
 			Statement loadQuery = con.createStatement();
@@ -380,7 +380,7 @@ public abstract class SQLStorage extends DataSource {
 							ignoredPlayers,
 							items);
 
-					auctionsPlayers.add(aP);
+					auctionsPlayers.put(aP.getUniqueId(), aP);
 				}
 			}
 

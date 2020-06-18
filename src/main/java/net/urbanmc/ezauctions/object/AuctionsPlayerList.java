@@ -1,16 +1,16 @@
 package net.urbanmc.ezauctions.object;
 
-import java.util.List;
+import java.util.Collection;
 
 public class AuctionsPlayerList {
 
-	private List<AuctionsPlayer> players;
+	private Collection<AuctionsPlayer> players;
 
-	public AuctionsPlayerList(List<AuctionsPlayer> players) {
+	public AuctionsPlayerList(Collection<AuctionsPlayer> players) {
 		this.players = players;
 	}
 
-	public List<AuctionsPlayer> getPlayers() {
+	public Collection<AuctionsPlayer> getPlayers() {
 		return players;
 	}
 }

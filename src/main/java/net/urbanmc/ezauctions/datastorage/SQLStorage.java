@@ -1,7 +1,6 @@
 package net.urbanmc.ezauctions.datastorage;
 
 import net.urbanmc.ezauctions.EzAuctions;
-import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.object.OfflineItem;
 import net.urbanmc.ezauctions.util.ItemUtil;
@@ -189,8 +188,6 @@ public abstract class SQLStorage extends DataSource {
 	@Override
 	public void updateBooleanValue(final AuctionsPlayer player) {
 		runAsync(() -> {
-			lock();
-
 			try (Connection connection = getConnection()) {
 
 				if (connection == null) return;
@@ -210,8 +207,6 @@ public abstract class SQLStorage extends DataSource {
 
 			} catch (SQLException ex) {
 				plugin.getLogger().log(Level.SEVERE, "Error updating SQL player data for player " + player, ex);
-			} finally {
-				unlock();
 			}
 		});
 	}
@@ -219,8 +214,6 @@ public abstract class SQLStorage extends DataSource {
 	@Override
 	public void updateIgnored(final AuctionsPlayer player) {
 		runAsync(() -> {
-			lock();
-
 			try (Connection connection = getConnection()) {
 				if (connection == null) return;
 
@@ -248,8 +241,6 @@ public abstract class SQLStorage extends DataSource {
 			} catch (SQLException ex) {
 				plugin.getLogger().log(Level.SEVERE, "Error updating SQL ignored player data for player " + player,
 						ex);
-			} finally {
-				unlock();
 			}
 		});
 	}
@@ -262,8 +253,6 @@ public abstract class SQLStorage extends DataSource {
 	@Override
 	public void updateItems(final AuctionsPlayer player) {
 		runAsync(() -> {
-			lock();
-
 			try (Connection connection = getConnection()) {
 
 				if (connection == null) return;
@@ -292,8 +281,6 @@ public abstract class SQLStorage extends DataSource {
 
 			} catch (SQLException ex) {
 				plugin.getLogger().log(Level.SEVERE, "Error updating SQL player items data for player " + player, ex);
-			} finally {
-				unlock();
 			}
 		});
 	}

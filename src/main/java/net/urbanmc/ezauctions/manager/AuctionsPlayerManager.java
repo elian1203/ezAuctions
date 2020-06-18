@@ -33,15 +33,12 @@ public class AuctionsPlayerManager {
     public void saveAndDisable() {
         if (dataSource != null) {
             if (ConfigManager.getConfig().getBoolean("data.save-on-disable", true))
-                dataSource.syncSave(getPlayers());
+                // The reason it is using async save is to push a save task to the executor
+                // which is then blocked by the finish method.
+                dataSource.asyncSave(getPlayers());
 
             dataSource.finish();
         }
-    }
-
-    public void syncFullSaveData() {
-        if (dataSource != null)
-            dataSource.syncSave(getPlayers());
     }
 
     public void asyncSaveData() {
@@ -63,18 +60,20 @@ public class AuctionsPlayerManager {
     public void reloadDataSource(EzAuctions plugin) {
         if (dataSource.preventReload()) return;
 
-        dataSource.waitForFinish();
-
         DataSource newDataSource = DataSource.determineDataSource(plugin);
 
         // A new data source will only be loaded if the new data source is valid, not the same as the old one
         // and can establish proper access.
-        if (newDataSource != null
-                && !dataSource.getClass().isInstance(newDataSource)
-                && newDataSource.testAccess()) {
-
-            dataSource.finish();
-            dataSource = newDataSource;
+        if (newDataSource != null) {
+            if (!dataSource.getClass().isInstance(newDataSource)
+                    && newDataSource.testAccess()) {
+                dataSource.finish();
+                dataSource = newDataSource;
+            }
+            // Properly shutdown the new data source, even if it's invalid.
+            else {
+                newDataSource.finish();
+            }
         }
     }
 

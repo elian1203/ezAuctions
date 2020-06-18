@@ -149,12 +149,7 @@ public class JSONStorage extends DataSource {
 
     private void asyncUpdateAuctionPlayer(final AuctionsPlayer player) {
         runAsync(() -> {
-            lock();
-            try {
-                updateAuctionPlayer(player);
-            } finally {
-                unlock();
-            }
+            updateAuctionPlayer(player);
         });
     }
 

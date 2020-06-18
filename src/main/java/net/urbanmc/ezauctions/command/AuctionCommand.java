@@ -319,6 +319,16 @@ public class AuctionCommand extends BaseCommand {
 		ap.setIgnoringSpammy(!ignoringSpammy);
 	}
 
+	@Subcommand("end")
+	@CommandPermission("ezauctions.auction.end")
+	public void end(Auction auc) {
+		MessageUtil.broadcastRegular(auc.getAuctioneer().getUniqueId(), Messages.getString("auction.end"));
+
+		// Should never be false
+		if (EzAuctions.getAuctionManager().getCurrentRunnable() != null)
+			EzAuctions.getAuctionManager().getCurrentRunnable().endAuction();
+	}
+
 	@Subcommand("start|s")
 	@CommandPermission("ezauctions.auction.start")
 	public void start(AuctionsPlayer ap, String[] args) {

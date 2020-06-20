@@ -5,31 +5,37 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.gson.AuctionsPlayerSerializer;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
-import net.urbanmc.ezauctions.object.AuctionsPlayerList;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.UUID;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class JSONStorage extends DataSource {
 
-    private final File FILE = new File("plugins/ezAuctions", "players.json");
+    private final File FILE;
 
     private final Gson gson =
             new GsonBuilder().registerTypeAdapter(AuctionsPlayer.class, new AuctionsPlayerSerializer()).create();
 
     public JSONStorage(EzAuctions plugin) {
         super(plugin);
+        FILE = new File(EzAuctions.getDataDirectory(), "players.json");
     }
 
     @Override
@@ -58,7 +64,14 @@ public class JSONStorage extends DataSource {
      */
     private JsonElement loadAsJson() {
         try (Scanner scanner = new Scanner(FILE)) {
-            String json = scanner.nextLine();
+            String json;
+
+            if (scanner.hasNext()) {
+                 json = scanner.nextLine();
+            }
+            else {
+                json = "[]";
+            }
 
             return new JsonParser().parse(json);
         } catch (Exception ex) {
@@ -75,19 +88,19 @@ public class JSONStorage extends DataSource {
      * @return a json array of the player data
      */
     private JsonArray getPlayersArray(JsonElement element) {
-        if (element == null || !element.isJsonObject()) {
-            plugin.getLogger().warning("Error loading players json file!");
-            return null;
+        if (element != null) {
+            if (element.isJsonArray()) {
+                return element.getAsJsonArray();
+            } else if (element.isJsonObject()) {
+                JsonObject mainObj = element.getAsJsonObject();
+                if (mainObj.has("players") && mainObj.get("players").isJsonArray()) {
+                    return element.getAsJsonObject().get("players").getAsJsonArray();
+                }
+            }
         }
 
-        JsonArray players = element.getAsJsonObject().get("players").getAsJsonArray();
-
-        if (players == null) {
-            plugin.getLogger().warning("The players json could not be properly casted to an array!");
-            return null;
-        }
-
-        return players;
+        plugin.getLogger().warning("Error loading players json file!");
+        return null;
     }
 
     /**
@@ -131,39 +144,34 @@ public class JSONStorage extends DataSource {
             playersArray.set(index, serializedPlayer);
         }
 
-        writeStringToFile(element.toString());
+        writeStringToFile(playersArray.toString());
     }
 
     private void asyncUpdateAuctionPlayer(final AuctionsPlayer player) {
         runAsync(() -> {
-            lock();
-            try {
-                updateAuctionPlayer(player);
-            } finally {
-                unlock();
-            }
+            updateAuctionPlayer(player);
         });
     }
 
     // All methods basically swap the stored auction player with the passed in auction player
     @Override
-    public void updateBooleanValue(List<AuctionsPlayer> list, AuctionsPlayer player) {
+    public void updateBooleanValue(AuctionsPlayer player) {
         asyncUpdateAuctionPlayer(player);
     }
 
     @Override
-    public void updateIgnored(List<AuctionsPlayer> list, AuctionsPlayer player) {
+    public void updateIgnored(AuctionsPlayer player) {
         asyncUpdateAuctionPlayer(player);
     }
 
     @Override
-    public void updateItems(List<AuctionsPlayer> list, AuctionsPlayer player) {
+    public void updateItems(AuctionsPlayer player) {
         asyncUpdateAuctionPlayer(player);
     }
 
     @Override
-    public void save(List<AuctionsPlayer> auctionPlayers) {
-        writeStringToFile(gson.toJson(new AuctionsPlayerList(auctionPlayers)));
+    public void save(Collection<AuctionsPlayer> auctionPlayers) {
+        writeStringToFile(gson.toJson(auctionPlayers));
     }
 
     private void writeStringToFile(String json) {
@@ -177,17 +185,32 @@ public class JSONStorage extends DataSource {
     }
 
     @Override
-    public List<AuctionsPlayer> load() {
+    public Map<UUID, AuctionsPlayer> load() {
         try (Scanner scanner = new Scanner(FILE)) {
-            String json = scanner.nextLine();
+            if (scanner.hasNext()) {
+                String json = scanner.nextLine();
 
-            return gson.fromJson(json, AuctionsPlayerList.class).getPlayers();
+                Collection<AuctionsPlayer> players = null;
+
+                Type playersArray = new TypeToken<Collection<AuctionsPlayer>>() {}.getType();
+
+                try {
+                    players = gson.fromJson(json, playersArray);
+                } catch (JsonParseException ex) {
+                    // Load old file type
+                    JsonElement jsonEl = new JsonParser().parse(json);
+                    if (jsonEl.isJsonObject() && jsonEl.getAsJsonObject().has("players")) {
+                        players = gson.fromJson(jsonEl.getAsJsonObject().get("players").toString(), playersArray);
+                    }
+                }
+                return players.stream().collect(Collectors.toMap(AuctionsPlayer::getUniqueId, ap -> ap));
+            }
         } catch (Exception ex) {
             if (!(ex instanceof NoSuchElementException)) {
                 plugin.getLogger().log(Level.SEVERE, "Error loading players!", ex);
             }
-
-            return new ArrayList<>();
         }
+
+        return new HashMap<>();
     }
 }

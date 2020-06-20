@@ -41,6 +41,11 @@ auctions:
   blocked-commands:
     - 'nick'
 
+  # This means you can only place bids in the world where the auction was initiated and you can only
+  # receive items from the world where the auction was initiated
+  # Winnings will be stored in the database until the player re-enters the proper world
+  per-world-auctions: false
+
   # When should we broadcast the time left in the auction?
   broadcast-times: [45, 30, 15, 3, 2, 1]
 
@@ -94,6 +99,8 @@ auctions:
     increment: 1
     # The minimum here will be $0
     autobuy: 0
+    # Minimum starting price for an auction. Set to 0 to disable
+    starting-price: -1
 
   maximum:
     auction-time: -1
@@ -101,6 +108,8 @@ auctions:
     autobuy: 10000000
     # How many times can a player bid in a row before someone else bids?
     consecutive-bids: 2
+    # Maximum starting price for an auction. Set to -1 to disable
+    starting-price: -1
 
 # They use the same settings as auctions
 sealed-auctions:

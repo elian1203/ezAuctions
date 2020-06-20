@@ -16,7 +16,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.UUID;
 
 public class AuctionRunnable extends BukkitRunnable {
@@ -24,7 +25,7 @@ public class AuctionRunnable extends BukkitRunnable {
     private Auction auction;
     private UUID auctioneer;
     private int timeLeft;
-    private List<Integer> broadcastTimes = ConfigManager.getConfig().getIntegerList("auctions.broadcast-times");
+    private Collection<Integer> broadcastTimes = new HashSet<>(ConfigManager.getConfig().getIntegerList("auctions.broadcast-times"));
     private int antiSnipeTimesRun = 0;
 
     public AuctionRunnable(Auction auction, EzAuctions plugin) {

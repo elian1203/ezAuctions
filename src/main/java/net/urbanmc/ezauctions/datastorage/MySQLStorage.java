@@ -22,11 +22,12 @@ public class MySQLStorage extends SQLStorage {
                 " VALUES(?, ?, ?, ?)" +
                 " ON DUPLICATE KEY UPDATE" +
                 " ignoringSpam = ?, ignoringAll = ?, ignoringScoreboard = ?";
+        HAS_SETTINGS_TABLE = "SHOW TABLES LIKE 'EZAUC_SETTINGS'";
     }
 
     @Override
     public boolean testAccess() {
-        return establishDB() && createTables();
+        return establishDB() && runVersioning();
     }
 
     private boolean establishDB() {
@@ -67,6 +68,8 @@ public class MySQLStorage extends SQLStorage {
 
     @Override
     public void finish() {
-        if (hikariDS != null) hikariDS.close();
+        super.finish();
+        if (hikariDS != null)
+            hikariDS.close();
     }
 }

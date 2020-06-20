@@ -6,14 +6,6 @@ authors: [Elian, Silverwolfg11]
 description: A simple, text-based auction plugin
 softdepend: [Vault]
 
-commands:
-  auction:
-    description: Auctions command
-    aliases: [ezauctions, ezauction, auctions, auc]
-  bid:
-    description: Bid on an auction
-    aliases: [b]
-
 permissions:
   ezauctions.*:
     default: op
@@ -31,6 +23,7 @@ permissions:
       ezauctions.auction.reload: true
       ezauctions.auction.save: true
       ezauctions.updatemessage: true
+      ezauctions.auction.end: true
   ezauctions.player:
     default: true
     children:
@@ -50,6 +43,8 @@ permissions:
   ezauctions.auction.start:
     default: false
   ezauctions.auction.start.sealed:
+    default: false
+  ezauctions.auction.end:
     default: false
   ezauctions.auction.cancel:
     default: false

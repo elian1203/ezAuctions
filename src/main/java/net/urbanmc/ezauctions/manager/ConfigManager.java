@@ -10,7 +10,7 @@ public class ConfigManager {
 
     private static ConfigManager instance = new ConfigManager();
 
-    private final File FILE = new File("plugins/ezAuctions", "config.yml");
+    private final File FILE = new File(EzAuctions.getDataDirectory(), "config.yml");
 
     private FileConfiguration data;
 

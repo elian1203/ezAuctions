@@ -4,16 +4,14 @@ import net.milkbowl.vault.economy.Economy;
 import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
-import net.urbanmc.ezauctions.object.Auction;
-import net.urbanmc.ezauctions.object.AuctionsPlayer;
-import net.urbanmc.ezauctions.object.BidList;
-import net.urbanmc.ezauctions.object.Bidder;
+import net.urbanmc.ezauctions.object.*;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.Iterator;
 import java.util.List;
 
 public class RewardUtil {
@@ -36,24 +34,41 @@ public class RewardUtil {
 			df.setRoundingMode(RoundingMode.DOWN);
 
 			MessageUtil.privateMessage(auction.getAuctioneer().getOnlinePlayer(),
-			                           "reward.money_given",
-			                           df.format(moneyYield));
+					"reward.money_given",
+					df.format(moneyYield));
 		}
+
+		returnBidderMoney(auction.getBidList(), false);
 
 		if (bidder.isOnline()) {
 			Player p = lastBid.getBidder().getOnlinePlayer();
 
-			MessageUtil.privateMessage(p, "reward.received");
-			ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
-		} else {
-			ItemStack item = auction.getItem().clone();
-			item.setAmount(auction.getAmount());
+			/*
+			if player per-world-auctions is enabled and player is not in right world we will
+			send them a message to notify them that they must return to claim their winnings
+			and then add the item to their offline items
 
-			lastBid.getBidder().getOfflineItems().add(item);
-			AuctionsPlayerManager.getInstance().saveItems(lastBid.getBidder());
+			otherwise, we will give them their item and be done
+			 */
+			if (ConfigManager.getConfig().getBoolean("auctions.per-world-auctions")
+					&& !p.getWorld().getName().equals(auction.getWorld())) {
+				MessageUtil.privateMessage(p, "reward.wrong_world", auction.getWorld());
+			} else if (AuctionUtil.blockedWorld(p)) {
+				MessageUtil.privateMessage(p, "reward.blocked_world");
+			} else {
+				MessageUtil.privateMessage(p, "reward.received");
+				ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
+
+				return;
+			}
 		}
 
-		returnBidderMoney(auction.getBidList(), false);
+		ItemStack item = auction.getItem().clone();
+		item.setAmount(auction.getAmount());
+
+		OfflineItem offlineItem = new OfflineItem(item, auction.getWorld());
+		lastBid.getBidder().getOfflineItems().add(offlineItem);
+		AuctionsPlayerManager.getInstance().saveItems(lastBid.getBidder());
 	}
 
 	private static void returnBidderMoney(List<Bidder> bidders) {
@@ -63,7 +78,8 @@ public class RewardUtil {
 	}
 
 	private static void returnBidderMoney(BidList bidList, boolean allBidders) {
-		bidList.forEach((bidder) -> EzAuctions.getEcon().depositPlayer(bidder.getBidder().getOfflinePlayer(), bidder.getAmount()),
+		bidList.forEach((bidder) -> EzAuctions.getEcon().depositPlayer(bidder.getBidder().getOfflinePlayer(),
+				bidder.getAmount()),
 				0, bidList.size() - (allBidders ? 0 : 1));
 		// Ending position is size - 1 because the last bidder is the winning bidder.
 	}
@@ -71,20 +87,39 @@ public class RewardUtil {
 	public static void rewardCancel(Auction auction) {
 		OfflinePlayer auctioneer = auction.getAuctioneer().getOfflinePlayer();
 
+		returnBidderMoney(auction.getBidList(), true);
+
 		if (auctioneer.isOnline()) {
-			Player p = auction.getAuctioneer().getOnlinePlayer();
+			Player p = auctioneer.getPlayer();
 
-			MessageUtil.privateMessage(p, "reward.returned");
-			ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
-		} else {
-			ItemStack item = auction.getItem().clone();
-			item.setAmount(auction.getAmount());
+			/*
+			if player per-world-auctions is enabled and player is not in right world we will
+			send them a message to notify them that they must return to claim their winnings
+			and then add the item to their offline items
 
-			auction.getAuctioneer().getOfflineItems().add(item);
-			AuctionsPlayerManager.getInstance().saveItems(auction.getAuctioneer());
+			otherwise, we will give them their item and be done
+			 */
+			if (ConfigManager.getConfig().getBoolean("auctions.per-world-auctions")
+					&& !p.getWorld().getName().equals(auction.getWorld())) {
+				MessageUtil.privateMessage(p, "reward.wrong_world", auction.getWorld());
+			} else if (AuctionUtil.blockedWorld(p)) {
+				MessageUtil.privateMessage(p, "reward.blocked_world");
+			} else {
+				MessageUtil.privateMessage(p, "reward.returned");
+				ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
+
+				return;
+			}
 		}
 
-		returnBidderMoney(auction.getBidList(), true);
+		AuctionsPlayer ap = auction.getAuctioneer();
+
+		ItemStack item = auction.getItem().clone();
+		item.setAmount(auction.getAmount());
+
+		OfflineItem offlineItem = new OfflineItem(item, auction.getWorld());
+		ap.getOfflineItems().add(offlineItem);
+		AuctionsPlayerManager.getInstance().saveItems(ap);
 	}
 
 	public static void rewardImpound(Auction auction, Player impounder) {
@@ -95,21 +130,48 @@ public class RewardUtil {
 
 	public static void rewardOffline(AuctionsPlayer ap) {
 		boolean overflow = false;
+		// this is used to know whether or not to send the reward.relogged message
+		boolean didDrop = false;
 
 		Player p = ap.getOnlinePlayer();
 
-		MessageUtil.privateMessage(p, "reward.relogged");
+		Iterator<OfflineItem> iterator = ap.getOfflineItems().iterator();
 
-		for (ItemStack is : ap.getOfflineItems()) {
-			boolean b = ItemUtil.addItemToInventory(p, is, is.getAmount(), false);
+		while (iterator.hasNext()) {
+			OfflineItem offlineItem = iterator.next();
+
+			String playerWorld = p.getWorld().getName(), itemWorld = offlineItem.getWorld();
+
+			// if the offline item has a world stored in it (offline items before 1.5.5 will not have this),
+			// and per-world-auctions is enabled, we will check to see if the player is in the right world
+			if (itemWorld != null && ConfigManager.getConfig().getBoolean("auctions.per-world-auctions")) {
+				if (!playerWorld.equals(itemWorld)) {
+					MessageUtil.privateMessage(p, "reward.relogged_wrong_world", itemWorld);
+					continue;
+				}
+			}
+
+			if (AuctionUtil.blockedWorld(p)) {
+				MessageUtil.privateMessage(p, "reward.relogged_blocked_world");
+				continue;
+			}
+
+			didDrop = true;
+			iterator.remove();
+
+			ItemStack item = offlineItem.getItem();
+			boolean b = ItemUtil.addItemToInventory(p, item, item.getAmount(), false);
 
 			if (b) {
 				overflow = true;
 			}
 		}
 
-		ap.getOfflineItems().clear();
 		AuctionsPlayerManager.getInstance().saveItems(ap);
+
+		if (didDrop) {
+			MessageUtil.privateMessage(p, "reward.relogged");
+		}
 
 		if (overflow) {
 			MessageUtil.privateMessage(p, "reward.full_inventory");

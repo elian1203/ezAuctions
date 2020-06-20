@@ -20,11 +20,13 @@ public class SQLiteStorage extends SQLStorage {
                 " VALUES(?, ?, ?, ?)" +
                 " ON CONFLICT(player)" +
                 " DO UPDATE SET ignoringSpam = ?, ignoringAll = ?, ignoringScoreboard = ?";
+
+        HAS_SETTINGS_TABLE = "SELECT * FROM sqlite_master WHERE name ='EZAUC_SETTINGS' and type='table'";
     }
 
     @Override
     public boolean testAccess() {
-        return createFile() && createTables();
+        return createFile() && runVersioning();
     }
 
     private boolean createFile() {

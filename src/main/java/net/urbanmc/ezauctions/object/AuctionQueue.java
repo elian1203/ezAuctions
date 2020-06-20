@@ -176,52 +176,72 @@ public class AuctionQueue {
     /**
      * Remove a specific index from the queue
      *
-     * @param index A modified index representing the elements position away from the head
+     * @param modifiedIndex A modified index representing the elements position away from the head
      */
-    public void remove(int index) {
-        if (isEmpty() || index < 0 || index >= queue.length)
+    // This remove function is smart.
+    // It will calculate the distance between the head and the remove index
+    // and the tail and the remove index. Then depending on which one is
+    // smaller, it will shift the elements accordingly.
+    // Thus the worst case run time of this method is O(n / 2).
+    public void remove(int modifiedIndex) {
+        // Check if index is valid
+        if (isEmpty() || modifiedIndex < 0 || modifiedIndex >= queue.length)
             return;
 
-        // Shift index appropriately
-        index = head + index;
+        // Determine whether the head or tail is closer to the index
 
-        if (index >= queue.length)
-            index -= queue.length;
+        // Since a modified index is inherently the # of elements
+        // away from the head, we do not have to get that value again.
 
-        // Handle end cases
-        if (index == head) {
-            // Advance head
-            queue[head++] = null;
+        // Get how far away this index is from the tail.
+        int distAwayFromTail = distanceAwayFromHead(tail) - modifiedIndex;
 
-            // Make sure head doesn't go out of bounds.
-            if (head == queue.length)
-                head = 0;
+        // Decide whether head or tail is closer
+        boolean propagateHead = distAwayFromTail > modifiedIndex;
 
-            return;
+        // Find the actual index of the value to remove.
+        int anchorIndex = head + modifiedIndex;
+        if (anchorIndex >= queue.length)
+            anchorIndex -= queue.length;
+
+        int distanceFromIndex = propagateHead ? modifiedIndex : distAwayFromTail;
+        int directionFactor = propagateHead ? -1 : 1;
+
+        // Shift elements towards the anchor index
+        // This mean if head is closer, shift the elements to the right.
+        // If tail is closer, shift the elements to the left.
+        for (int i = 0; i < distanceFromIndex; i++) {
+            int currIndex = anchorIndex + (directionFactor * i);
+            int propagationIndex = currIndex + directionFactor;
+
+            // Handle cylindrical aspect
+            if (currIndex < 0) {
+                currIndex += queue.length;
+                propagationIndex += queue.length;
+            }
+            else if (currIndex >= queue.length) {
+                currIndex -= queue.length;
+                propagationIndex -= queue.length;
+            }
+            else if (propagationIndex < 0)
+                propagationIndex += queue.length;
+            else if (propagationIndex >= queue.length)
+                propagationIndex -= queue.length;
+
+            queue[currIndex] = queue[propagationIndex];
         }
 
+        if (propagateHead)
+            dequeue();
+        else {
+            // Tail is always empty
+            tail--;
+            // Make sure tail is valid
+            if (tail < 0)
+                tail += queue.length;
 
-        if (index != tail) {
-            int shiftTowardsIndex = index;
-
-            // Check if the index is between head and end of the array
-            if (index > head) {
-                // Shift elements from the index
-                System.arraycopy(queue, index + 1, queue, index, queue.length - 1 - index);
-                shiftTowardsIndex = 0;
-            }
-
-            // Check if the queue is not flattened
-            if (tail < head) {
-                // Cycle first element to the last element
-                queue[queue.length - 1] = queue[0];
-
-                // Copy elements from 0 to the tail.
-                System.arraycopy(queue, shiftTowardsIndex + 1, queue, shiftTowardsIndex, tail - shiftTowardsIndex);
-            }
+            queue[tail] = null;
         }
-
-        queue[--tail] = null;
     }
 
     public void forEach(Consumer<Auction> consumer) {

@@ -5,7 +5,9 @@ import net.urbanmc.ezauctions.datastorage.DataSource;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 public class AuctionsPlayerManager {
@@ -14,7 +16,7 @@ public class AuctionsPlayerManager {
 
     private DataSource dataSource;
 
-    private List<AuctionsPlayer> players;
+    private Map<UUID, AuctionsPlayer> players;
 
     public void setDataSource(DataSource source) {
         this.dataSource = source;
@@ -31,58 +33,52 @@ public class AuctionsPlayerManager {
     public void saveAndDisable() {
         if (dataSource != null) {
             if (ConfigManager.getConfig().getBoolean("data.save-on-disable", true))
-                dataSource.syncSave(players);
+                // The reason it is using async save is to push a save task to the executor
+                // which is then blocked by the finish method.
+                dataSource.asyncSave(getPlayers());
 
             dataSource.finish();
         }
     }
 
-    public void syncFullSaveData() {
-        if (dataSource != null)
-            dataSource.syncSave(players);
-    }
-
     public void asyncSaveData() {
-        dataSource.asyncSave(players);
+        dataSource.asyncSave(getPlayers());
     }
 
     public void saveBooleans(AuctionsPlayer player) {
-        dataSource.updateBooleanValue(players, player.clone());
+        dataSource.updateBooleanValue(player.clone());
     }
 
     public void saveIgnored(AuctionsPlayer player) {
-        dataSource.updateIgnored(players, player.clone());
+        dataSource.updateIgnored(player.clone());
     }
 
     public void saveItems(AuctionsPlayer player) {
-        dataSource.updateItems(players, player.clone());
+        dataSource.updateItems(player.clone());
     }
 
     public void reloadDataSource(EzAuctions plugin) {
         if (dataSource.preventReload()) return;
 
-        dataSource.waitForFinish();
-
         DataSource newDataSource = DataSource.determineDataSource(plugin);
 
         // A new data source will only be loaded if the new data source is valid, not the same as the old one
         // and can establish proper access.
-        if (newDataSource != null
-                && !dataSource.getClass().isInstance(newDataSource)
-                && newDataSource.testAccess()) {
-
-            dataSource.finish();
-            dataSource = newDataSource;
+        if (newDataSource != null) {
+            if (!dataSource.getClass().isInstance(newDataSource)
+                    && newDataSource.testAccess()) {
+                dataSource.finish();
+                dataSource = newDataSource;
+            }
+            // Properly shutdown the new data source, even if it's invalid.
+            else {
+                newDataSource.finish();
+            }
         }
     }
 
     public AuctionsPlayer getPlayer(UUID id) {
-        for (AuctionsPlayer ap : players) {
-            if (ap.getUniqueId().equals(id))
-                return ap;
-        }
-
-        return null;
+        return players.get(id);
     }
 
     public void createPlayer(UUID id) {
@@ -90,8 +86,12 @@ public class AuctionsPlayerManager {
 
         if (ap == null) {
             ap = new AuctionsPlayer(id, false, false, false, new ArrayList<>(), new ArrayList<>());
-            players.add(ap);
+            players.put(id, ap);
             saveBooleans(ap);
         }
+    }
+
+    public Collection<AuctionsPlayer> getPlayers() {
+        return Collections.unmodifiableCollection(players.values());
     }
 }

@@ -1,167 +1,223 @@
 package net.urbanmc.ezauctions;
 
+import co.aikar.commands.BukkitCommandIssuer;
+import co.aikar.commands.InvalidCommandArgument;
+import co.aikar.commands.PaperCommandManager;
+import co.aikar.locales.MessageKey;
 import net.milkbowl.vault.economy.Economy;
 import net.urbanmc.ezauctions.command.AuctionCommand;
 import net.urbanmc.ezauctions.command.BidCommand;
 import net.urbanmc.ezauctions.datastorage.DataSource;
 import net.urbanmc.ezauctions.listener.CommandListener;
 import net.urbanmc.ezauctions.listener.JoinListener;
+import net.urbanmc.ezauctions.listener.WorldChangeListener;
 import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
+import net.urbanmc.ezauctions.manager.Messages;
+import net.urbanmc.ezauctions.object.Auction;
+import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Locale;
 import java.util.Scanner;
+import java.util.logging.Logger;
 
 public class EzAuctions extends JavaPlugin {
 
-    private static AuctionManager auctionManager;
-    private static Economy econ;
+	private static AuctionManager auctionManager;
+	private static Economy econ;
 
-    private static boolean updateAvailable = false;
+	private static boolean updateAvailable = false;
 
-    public static AuctionManager getAuctionManager() {
-        return auctionManager;
-    }
+	private static File dataDir;
+	private static Logger pluginLogger;
 
-    public static Economy getEcon() {
-        return econ;
-    }
+	public static AuctionManager getAuctionManager() {
+		return auctionManager;
+	}
 
-    public static boolean isUpdateAvailable() {
-        return updateAvailable;
-    }
+	public static Economy getEcon() {
+		return econ;
+	}
 
-    @Override
-    public void onEnable() {
-        if (!setupEconomy()) {
-            getLogger().severe("Vault not detected! Is Vault installed along with a supported economy provider? " +
-                    "Disabling plugin...");
-            setEnabled(false);
+	public static boolean isUpdateAvailable() {
+		return updateAvailable;
+	}
 
-            return;
-        }
+	@Override
+	public void onEnable() {
+		if (!setupEconomy()) {
+			getLogger().severe("Vault not detected! Is Vault installed along with a supported economy provider? " +
+					"Disabling plugin...");
+			setEnabled(false);
 
-        // Establish the data source:
-        // We do this here because we need to inject the plugin into the data source
-        // and we also have to make sure the config has already loaded.
-        DataSource dataSource = DataSource.determineDataSource(this);
+			return;
+		}
 
-        // Check access to the data source
-        if (dataSource == null || !dataSource.testAccess()) {
-            getLogger().severe("Could not load auction player data properly! Please check above messages for more detail.");
-            setEnabled(false);
-            return;
-        }
+		// Set the data directory.
+		// Note: This must be set before anything else (config, data source, etc) is called!!
+		dataDir = getDataFolder();
 
-        AuctionsPlayerManager.getInstance().setDataSource(dataSource);
-        AuctionsPlayerManager.getInstance().loadData();
+		// Set logger
+		pluginLogger = getLogger();
 
-        registerListeners();
-        registerCommands();
-        registerAuctionManger();
-        registerMetrics();
+		// Establish the data source:
+		// We do this here because we need to inject the plugin into the data source
+		// and we also have to make sure the config has already loaded.
+		DataSource dataSource = DataSource.determineDataSource(this);
 
-        if (ConfigManager.getConfig().getBoolean("general.check-updates", true)) {
-            getServer().getScheduler().runTaskAsynchronously(this, this::checkUpdateAvailable);
-        }
-    }
+		// Check access to the data source
+		if (dataSource == null || !dataSource.testAccess()) {
+			getLogger().severe("Could not load auction player data properly! Please check above messages for more " +
+					"detail.");
+			setEnabled(false);
+			return;
+		}
 
-    @Override
-    public void onDisable() {
-        getAuctionManager().disabling();
+		AuctionsPlayerManager.getInstance().setDataSource(dataSource);
+		AuctionsPlayerManager.getInstance().loadData();
 
-        // Save auction player data on the disable
-        AuctionsPlayerManager.getInstance().saveAndDisable();
-    }
+		registerListeners();
+		registerCommands();
+		registerAuctionManger();
+		registerMetrics();
 
-    private boolean setupEconomy() {
-        try {
-            RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+		if (ConfigManager.getConfig().getBoolean("general.check-updates", true)) {
+			getServer().getScheduler().runTaskAsynchronously(this, this::checkUpdateAvailable);
+		}
+	}
 
-            if (rsp == null)
-                return false;
+	@Override
+	public void onDisable() {
+		// Make sure auction manager is valid
+		if (getAuctionManager() != null)
+			getAuctionManager().disabling();
 
-            econ = rsp.getProvider();
-        } catch (Exception ignored) {
-        }
+		// Save auction player data on the disable
+		AuctionsPlayerManager.getInstance().saveAndDisable();
+	}
 
-        return econ != null;
-    }
+	private boolean setupEconomy() {
+		try {
+			RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
 
-    private void registerListeners() {
-        getServer().getPluginManager().registerEvents(new JoinListener(), this);
-        getServer().getPluginManager().registerEvents(new CommandListener(), this);
-    }
+			if (rsp == null)
+				return false;
 
-    private void registerCommands() {
-        AuctionCommand aucCmd = new AuctionCommand();
-        getCommand("ezauctions").setExecutor(aucCmd);
-        getCommand("bid").setExecutor(new BidCommand());
+			econ = rsp.getProvider();
+		} catch (Exception ignored) {
+		}
 
-        registerTabCompletions(aucCmd);
-    }
+		return econ != null;
+	}
 
-    private void registerTabCompletions(AuctionCommand auctionCommand) {
-        // This method is in case in the future, we want to use Paper's async tab-completion
-        getCommand("ezauctions").setTabCompleter(auctionCommand);
-    }
+	private void registerListeners() {
+		getServer().getPluginManager().registerEvents(new JoinListener(), this);
+		getServer().getPluginManager().registerEvents(new CommandListener(), this);
+		getServer().getPluginManager().registerEvents(new WorldChangeListener(), this);
+	}
 
+	private void registerCommands() {
+		PaperCommandManager manager = new PaperCommandManager(this);
 
-    private void registerAuctionManger() {
-        auctionManager = new AuctionManager(this);
-    }
+		// Replace ACF messages with our own
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied"),
+				Messages.getString("command.no_perm"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied_parameter"),
+				Messages.getString("command.no_perm"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.error_prefix"),
+				Messages.getString("command.error_prefix", "{message}"));
+		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.invalid_syntax"),
+				Messages.getString("command.usage", "{command}", "{syntax}"));
 
-    private void registerMetrics() {
-        new Metrics(this);
-    }
+		manager.getCommandContexts().registerIssuerAwareContext(AuctionsPlayer.class, c -> {
+			BukkitCommandIssuer issuer = c.getIssuer();
 
-    private void checkUpdateAvailable() {
-        String serverVersion = getDescription().getVersion();
+			if (!issuer.isPlayer())
+				throw new InvalidCommandArgument("Console may not execute this command.");
 
-        // This is taken from the page: https://www.spigotmc.org/resources/ezauctions.42574/
-        int resourceId = 42574;
+			return AuctionsPlayerManager.getInstance().getPlayer(issuer.getPlayer().getUniqueId());
+		});
 
-        try {
-            InputStream input =
-                    new URL("https://api.spigotmc.org/legacy/update.php?resource=" + resourceId).openStream();
+		manager.getCommandContexts().registerIssuerAwareContext(Auction.class, c -> {
 
-            Scanner scanner = new Scanner(input);
+			Auction current = EzAuctions.getAuctionManager().getCurrentAuction();
 
-            String latestVersion = scanner.nextLine();
+			if (current == null) {
+				throw new InvalidCommandArgument(Messages.getString("command.no_current_auction"), false);
+			}
 
-            if (serverVersion.equalsIgnoreCase(latestVersion))
-                return;
+			return current;
+		});
 
-            scanner.close();
+		manager.registerCommand(new AuctionCommand());
+		manager.registerCommand(new BidCommand());
+	}
 
-            updateAvailable = true;
-            getLogger().info("Version " + latestVersion + " is available! You are currently running version " +
-                    serverVersion + ".");
-        } catch (Exception ex) {
-            getLogger().warning("Error checking for updates!");
-        }
-    }
+	private void registerAuctionManger() {
+		auctionManager = new AuctionManager(this);
+	}
 
-    public static int copy(InputStream input, OutputStream output)
-            throws IOException {
-        byte[] buffer = new byte[1024 * 4];
-        long count = 0;
-        int n = 0;
-        while (-1 != (n = input.read(buffer))) {
-            output.write(buffer, 0, n);
-            count += n;
-        }
+	private void registerMetrics() {
+		new Metrics(this);
+	}
 
-        if (count > Integer.MAX_VALUE) {
-            return -1;
-        }
-        return (int) count;
-    }
+	private void checkUpdateAvailable() {
+		String serverVersion = getDescription().getVersion();
+
+		// This is taken from the page: https://www.spigotmc.org/resources/ezauctions.42574/
+		int resourceId = 42574;
+
+		try {
+			InputStream input =
+					new URL("https://api.spigotmc.org/legacy/update.php?resource=" + resourceId).openStream();
+
+			Scanner scanner = new Scanner(input);
+
+			String latestVersion = scanner.nextLine();
+
+			if (serverVersion.equalsIgnoreCase(latestVersion))
+				return;
+
+			scanner.close();
+
+			updateAvailable = true;
+			getLogger().info("Version " + latestVersion + " is available! You are currently running version " +
+					serverVersion + ".");
+		} catch (Exception ex) {
+			getLogger().warning("Error checking for updates!");
+		}
+	}
+
+	public static int copy(InputStream input, OutputStream output)
+			throws IOException {
+		byte[] buffer = new byte[1024 * 4];
+		long count = 0;
+		int n = 0;
+		while (-1 != (n = input.read(buffer))) {
+			output.write(buffer, 0, n);
+			count += n;
+		}
+
+		if (count > Integer.MAX_VALUE) {
+			return -1;
+		}
+		return (int) count;
+	}
+
+	public static File getDataDirectory() {
+		return dataDir;
+	}
+
+	public static Logger getPluginLogger() {
+		return pluginLogger;
+	}
 }

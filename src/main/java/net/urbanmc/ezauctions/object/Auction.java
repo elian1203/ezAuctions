@@ -257,6 +257,10 @@ public class Auction {
             if (ConfigManager.getConfig().getBoolean("auctions.toggles.display-custom-name") && getItem().hasItemMeta()
                     && getItem().getItemMeta().hasDisplayName()) {
                 itemName = getItem().getItemMeta().getDisplayName();
+
+                if (ConfigManager.getConfig().getBoolean("auctions.toggles.quotes-around-name")) {
+                    itemName = '"' + itemName + '"';
+                }
             }
 
             BaseComponent[] hover = { new TextComponent(ReflectionUtil.getItemAsJson(getItem())) };

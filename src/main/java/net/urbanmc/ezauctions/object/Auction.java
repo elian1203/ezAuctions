@@ -251,40 +251,38 @@ public class Auction {
 
             BaseComponent lastComp = first[first.length - 1];
 
-            String minecraftItemName = ReflectionUtil.getMinecraftName(getItem());
-            String itemName = minecraftItemName;
+            // Component for the item
+            BaseComponent itemComp;
 
             if (ConfigManager.getConfig().getBoolean("auctions.toggles.display-custom-name") && getItem().hasItemMeta()
                     && getItem().getItemMeta().hasDisplayName()) {
-                itemName = getItem().getItemMeta().getDisplayName();
+                String itemName = ChatColor.stripColor(getItem().getItemMeta().getDisplayName()); // Strip format
 
                 if (ConfigManager.getConfig().getBoolean("auctions.toggles.quotes-around-name")) {
                     itemName = '"' + itemName + '"';
                 }
+
+                itemComp = new TextComponent(itemName);
+            }
+            else {
+                String minecraftItemName = ReflectionUtil.getMinecraftName(getItem());
+                itemComp = new TranslatableComponent(minecraftItemName);
             }
 
             BaseComponent[] hover = { new TextComponent(ReflectionUtil.getItemAsJson(getItem())) };
 
-            BaseComponent item;
+            itemComp.setColor(lastComp.getColor());
+            itemComp.setBold(lastComp.isBold());
+            itemComp.setItalic(lastComp.isItalic());
+            itemComp.setStrikethrough(lastComp.isStrikethrough());
+            itemComp.setUnderlined(lastComp.isUnderlined());
 
-            if (itemName.equals(minecraftItemName)) {
-                item = new TranslatableComponent(itemName);
-            } else {
-                item = new TextComponent(itemName);
-            }
+            itemComp.setHoverEvent(new HoverEvent(Action.SHOW_ITEM, hover));
 
-            item.setColor(lastComp.getColor());
-            item.setBold(lastComp.isBold());
-            item.setItalic(lastComp.isItalic());
-            item.setStrikethrough(lastComp.isStrikethrough());
-            item.setUnderlined(lastComp.isUnderlined());
-
-            item.setHoverEvent(new HoverEvent(Action.SHOW_ITEM, hover));
-
-            List<BaseComponent> list = new ArrayList<>();
+            List<BaseComponent> list = new ArrayList<>(first.length + 1 + second.length);
 
             list.addAll(Arrays.asList(first));
-            list.add(item);
+            list.add(itemComp);
             list.addAll(Arrays.asList(second));
 
             BaseComponent[] combined = new BaseComponent[list.size()];

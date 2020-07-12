@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
 @SuppressWarnings("ConstantConditions")
@@ -104,7 +105,8 @@ public class ReflectionUtil {
             String itemJson = jsonItem.toString();
 
             // Prevent sending a packet that could be mishandled by bungeecord
-            if (itemJson.length() > Short.MAX_VALUE) {
+            if (itemJson.getBytes(StandardCharsets.UTF_8).length > Short.MAX_VALUE) {
+                EzAuctions.getPluginLogger().severe("An item that exceeded max packet length was attempted to be auctioned!");
                 return getItemAsJson(new ItemStack(is.getType(), 1));
             }
 

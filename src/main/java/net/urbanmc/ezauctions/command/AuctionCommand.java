@@ -321,7 +321,16 @@ public class AuctionCommand extends BaseCommand {
 
 	@Subcommand("end")
 	@CommandPermission("ezauctions.auction.end")
-	public void end(Auction auc) {
+	public void end(CommandSender sender, Auction auc) {
+		// Check if player has permission to end other auctions
+		if (!sender.hasPermission("ezauctions.auction.end.others")) {
+			if (sender instanceof Player &&
+					!((Player) sender).getUniqueId().equals(auc.getAuctioneer().getUniqueId())) {
+				sender.sendMessage(Messages.getString("command.auction.end.attempt-others"));
+				return;
+			}
+		}
+
 		MessageUtil.broadcastRegular(auc.getAuctioneer().getUniqueId(), Messages.getString("auction.end"));
 
 		// Should never be false

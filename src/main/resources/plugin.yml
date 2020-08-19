@@ -46,6 +46,8 @@ permissions:
     default: false
   ezauctions.auction.end:
     default: false
+  ezauctions.auction.end.others:
+    default: false
   ezauctions.auction.cancel:
     default: false
   ezauctions.auction.cancel.others:

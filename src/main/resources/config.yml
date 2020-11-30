@@ -64,6 +64,9 @@ auctions:
     # When set to true, the custom item name will be used instead of the minecraft item name when available
     display-custom-name: false
 
+    # Should we put quotes around custom named items i.e. "My Amazing Pick" when auctioning a diamond pickaxe
+    quotes-around-name: true
+
     # Should we broadcast the owner of the head if it is a player head?
     broadcast-head: true
 

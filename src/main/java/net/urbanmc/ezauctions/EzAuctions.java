@@ -138,7 +138,7 @@ public class EzAuctions extends JavaPlugin {
 		manager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.invalid_syntax"),
 				Messages.getString("command.usage", "{command}", "{syntax}"));
 
-		manager.getCommandContexts().registerIssuerAwareContext(AuctionsPlayer.class, c -> {
+		manager.getCommandContexts().registerIssuerOnlyContext(AuctionsPlayer.class, c -> {
 			BukkitCommandIssuer issuer = c.getIssuer();
 
 			if (!issuer.isPlayer())
@@ -147,7 +147,7 @@ public class EzAuctions extends JavaPlugin {
 			return AuctionsPlayerManager.getInstance().getPlayer(issuer.getPlayer().getUniqueId());
 		});
 
-		manager.getCommandContexts().registerIssuerAwareContext(Auction.class, c -> {
+		manager.getCommandContexts().registerIssuerOnlyContext(Auction.class, c -> {
 
 			Auction current = EzAuctions.getAuctionManager().getCurrentAuction();
 

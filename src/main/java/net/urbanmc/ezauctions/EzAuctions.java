@@ -5,6 +5,7 @@ import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.PaperCommandManager;
 import co.aikar.locales.MessageKey;
 import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.permission.Permission;
 import net.urbanmc.ezauctions.command.AuctionCommand;
 import net.urbanmc.ezauctions.command.BidCommand;
 import net.urbanmc.ezauctions.datastorage.DataSource;
@@ -34,6 +35,7 @@ public class EzAuctions extends JavaPlugin {
 
 	private static AuctionManager auctionManager;
 	private static Economy econ;
+	private static Permission perms;
 
 	private static boolean updateAvailable = false;
 
@@ -61,6 +63,8 @@ public class EzAuctions extends JavaPlugin {
 
 			return;
 		}
+
+		setupPerms();
 
 		// Set the data directory.
 		// Note: This must be set before anything else (config, data source, etc) is called!!
@@ -117,6 +121,11 @@ public class EzAuctions extends JavaPlugin {
 		}
 
 		return econ != null;
+	}
+
+	private void setupPerms() {
+		RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
+		perms = rsp.getProvider();
 	}
 
 	private void registerListeners() {
@@ -219,5 +228,9 @@ public class EzAuctions extends JavaPlugin {
 
 	public static Logger getPluginLogger() {
 		return pluginLogger;
+	}
+
+	public static Permission getPerms() {
+		return perms;
 	}
 }

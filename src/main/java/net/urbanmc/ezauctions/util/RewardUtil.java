@@ -17,15 +17,26 @@ import java.util.List;
 public class RewardUtil {
 
 	public static void rewardAuction(Auction auction, Economy econ) {
-		double percentTax = ConfigManager.getConfig().getDouble("auctions.fees.tax-percent");
-		double percentYield = (100 - percentTax) / 100;
-
 		Bidder lastBid = auction.getLastBidder();
-
-		double moneyYield = lastBid.getAmount() * percentYield;
 
 		OfflinePlayer auctioneer = auction.getAuctioneer().getOfflinePlayer();
 		OfflinePlayer bidder = lastBid.getBidder().getOfflinePlayer();
+
+
+		double percentTax = ConfigManager.getConfig().getDouble("auctions.fees.tax-percent");
+		double percentYield = (100 - percentTax) / 100;
+
+		// vault perms not set up, attempt to check player online status
+		// this may result in logged-off players not receiving an exemption even if they have the permission
+		if (EzAuctions.getPerms() == null) {
+			if (auctioneer.isOnline() && auctioneer.getPlayer().hasPermission("ezauctions.taxexempt"))
+				percentYield = 1;
+		} else if (EzAuctions.getPerms().playerHas(auction.getWorld(), auctioneer, "ezauctions.taxexempt")) {
+			// vault permission checked, exempt from taxes
+			percentYield = 1;
+		}
+
+		double moneyYield = lastBid.getAmount() * percentYield;
 
 		econ.depositPlayer(auctioneer, moneyYield);
 

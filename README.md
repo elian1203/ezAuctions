@@ -30,9 +30,9 @@ Repository:
 Dependency:
 ```
 <dependency>
-    <groupId>com.gitlab.elian1203</groupId>
+    <groupId>com.github.elian1203</groupId>
     <artifactId>ezAuctions</artifactId>
-    <version>1.5.5</version>
+    <version>1.5.7</version>
 </dependency>
 ```
 You can view API usage [here](https://gitlab.com/elian1203/ezAuctions/-/wikis/api).

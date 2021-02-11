@@ -15,7 +15,7 @@ Elian, Silverwolfg11
 Made for and used by http://urbanmc.net/
 
 ## Building
-Clone the project from gitlab, then run `mvn clean package` in your terminal at the project directory to build the project.
+Clone the project from github, then run `mvn clean package` in your terminal at the project directory to build the project.
 
 ## API
 To depend on this plugin in your own project, add the following to your maven / gradle project.
@@ -35,4 +35,4 @@ Dependency:
     <version>1.5.7</version>
 </dependency>
 ```
-You can view API usage [here](https://gitlab.com/elian1203/ezAuctions/-/wikis/api).
+You can view API usage [here](https://github.com/elian1203/ezAuctions/wiki/api).

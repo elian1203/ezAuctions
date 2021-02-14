@@ -5,9 +5,9 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ master ]
+    branches: [ '*' ]
   pull_request:
-    branches: [ master ]
+    branches: [ '*' ]
 
 jobs:
   build:
@@ -20,7 +20,6 @@ jobs:
       with:
         java-version: 1.8
     - run: mvn --batch-mode --update-snapshots verify
-    - run: mkdir staging && cp target/ezAuctions*.jar staging
     - uses: actions/upload-artifact@v2
       with:
-        path: staging
+        path: target/ezAuctions*.jar

@@ -172,7 +172,14 @@ public class ScoreboardManager {
         Collections.reverse(list);
 
         for (int i = 0; i < list.size(); i++) {
-            objective.getScore(list.get(i)).setScore(i);
+            String line = list.get(i);
+
+            // if line length greater than 40, truncate to 40 chars
+            // bukkit has a hard length limit of 40 per score
+            if (line.length() > 40)
+                line = line.substring(0, 40);
+
+            objective.getScore(line).setScore(i);
         }
     }
 

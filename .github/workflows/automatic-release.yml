@@ -1,7 +1,7 @@
 name: Automatically create release with artifact on pull request
 
 on:
-  pull-request:
+  pull_request:
     branches: [ 'master' ]
 
 jobs:
@@ -22,13 +22,13 @@ jobs:
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            tag_name: ${{ github.ref }}
-            release_name: ${{ github.ref }}
-            draft: false
-            prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
 
       # Upload previously created jar to release
       - name: Upload Release Asset

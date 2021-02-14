@@ -19,6 +19,7 @@ import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import org.bstats.bukkit.Metrics;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -52,6 +53,22 @@ public class EzAuctions extends JavaPlugin {
 
 	public static boolean isUpdateAvailable() {
 		return updateAvailable;
+	}
+
+	@Override
+	public void onLoad() {
+		// check if there are players during plugin load
+		// if there are players online, the plugin was likely reloaded or loaded by an external plugin
+		// THIS IS NOT SUPPORTED
+
+		if (!Bukkit.getOnlinePlayers().isEmpty()) {
+			getLogger().warning("-------------------------------------------");
+			getLogger().warning("WARNING: We have detected that you have loaded the plugin using /reload or an " +
+					"external plugin! This is NOT supported.  Doing this will likely result in errors during plugin " +
+					"operation. Please do a full server restart for ezAuctions to be properly loaded. " +
+					"If you have restarted the server completely, you may ignore this message.");
+			getLogger().warning("-------------------------------------------");
+		}
 	}
 
 	@Override

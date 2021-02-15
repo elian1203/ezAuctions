@@ -19,23 +19,16 @@ jobs:
 
       # build jar with maven
       - run: mvn --batch-mode --update-snapshots verify
-
-      # create release
+          
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
+        uses: softprops/action-gh-release@master
+        env: 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.head_ref }}
-          release_name: ${{ github.head_ref }}
           draft: false
           prerelease: false
-
-      # Upload previously created jar to release
-      - name: Upload release asset
-        uses: alexellis/upload-assets@0.2.2
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          asset_paths: '["./target/ezAuctions*.jar*"]'
+          # Release name will default to tag name
+          # Tag name will be the name of the branch
+          tag_name: ${{ github.head_ref }}
+          files: "./target/ezAuctions*.jar*"
+          fail_on_unmatched_files: true

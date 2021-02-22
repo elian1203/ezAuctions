@@ -58,7 +58,12 @@ public class AuctionRunnable extends BukkitRunnable {
     private void broadcastStart() {
         BaseComponent[] comp = getAuction().getStartingMessage();
 
-        MessageUtil.broadcastRegular(auctioneer, comp);
+        String worldName = null;
+
+        if (ConfigManager.getConfig().getBoolean("auctions.per-world-broadcast"))
+            worldName = auction.getWorld();
+
+        MessageUtil.broadcastRegular(auctioneer, worldName, comp);
     }
 
     private void broadcastTime() {
@@ -67,7 +72,12 @@ public class AuctionRunnable extends BukkitRunnable {
         String broadcast = Messages.getInstance().getStringWithoutColoring("auction.time_left", timeLeft,
                 "%item%", auction.getAmount(), currentAmount);
 
-        MessageUtil.broadcastSpammy(auctioneer, auction.formatMessage(broadcast));
+        String worldName = null;
+
+        if (ConfigManager.getConfig().getBoolean("auctions.per-world-broadcast"))
+            worldName = auction.getWorld();
+
+        MessageUtil.broadcastSpammy(auctioneer, worldName, auction.formatMessage(broadcast));
     }
 
     public Auction getAuction() {
@@ -86,7 +96,12 @@ public class AuctionRunnable extends BukkitRunnable {
 
         int addTime = data.getInt("antisnipe.time");
 
-        MessageUtil.broadcastSpammy(auctioneer, "auction.antisnipe", addTime);
+        String worldName = null;
+
+        if (ConfigManager.getConfig().getBoolean("auctions.per-world-broadcast"))
+            worldName = auction.getWorld();
+
+        MessageUtil.broadcastSpammy(auctioneer, worldName, "auction.antisnipe", addTime);
         timeLeft += addTime;
 
         antiSnipeTimesRun++;
@@ -114,14 +129,24 @@ public class AuctionRunnable extends BukkitRunnable {
             String broadcast = Messages.getInstance().getStringWithoutColoring("auction.finish", lastBidderName,
                     lastBidAmount, "%item%", auc.getAmount());
 
-            MessageUtil.broadcastRegular(auctioneer, auc.formatMessage(broadcast));
+            String worldName = null;
+
+            if (ConfigManager.getConfig().getBoolean("auctions.per-world-broadcast"))
+                worldName = auction.getWorld();
+
+            MessageUtil.broadcastRegular(auctioneer, worldName, auc.formatMessage(broadcast));
 
             RewardUtil.rewardAuction(auc, econ);
         } else {
             String broadcast = Messages.getInstance().getStringWithoutColoring("auction.finish.no_bids", "%item%",
                     getAuction().getAmount());
 
-            MessageUtil.broadcastRegular(auctioneer, getAuction().formatMessage(broadcast));
+            String worldName = null;
+
+            if (ConfigManager.getConfig().getBoolean("auctions.per-world-broadcast"))
+                worldName = auction.getWorld();
+
+            MessageUtil.broadcastRegular(auctioneer, worldName, getAuction().formatMessage(broadcast));
             RewardUtil.rewardCancel(getAuction());
         }
     }
@@ -131,7 +156,12 @@ public class AuctionRunnable extends BukkitRunnable {
 
         ScoreboardManager.getInstance().removeBoards();
 
-        MessageUtil.broadcastRegular(auctioneer, "auction.cancelled");
+        String worldName = null;
+
+        if (ConfigManager.getConfig().getBoolean("auctions.per-world-broadcast"))
+            worldName = auction.getWorld();
+
+        MessageUtil.broadcastRegular(auctioneer, worldName, "auction.cancelled");
         EzAuctions.getAuctionManager().next();
 
         RewardUtil.rewardCancel(getAuction());
@@ -142,7 +172,12 @@ public class AuctionRunnable extends BukkitRunnable {
 
         ScoreboardManager.getInstance().removeBoards();
 
-        MessageUtil.broadcastRegular(auctioneer, "auction.impounded");
+        String worldName = null;
+
+        if (ConfigManager.getConfig().getBoolean("auctions.per-world-broadcast"))
+            worldName = auction.getWorld();
+
+        MessageUtil.broadcastRegular(auctioneer, worldName, "auction.impounded");
         EzAuctions.getAuctionManager().next();
 
         RewardUtil.rewardImpound(getAuction(), impounder);

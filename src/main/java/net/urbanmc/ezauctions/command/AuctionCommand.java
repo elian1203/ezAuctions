@@ -23,11 +23,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @CommandAlias("auction|auctions|auc|ezauctions|ezauction")
 @CommandPermission("ezauctions.auction")
@@ -331,7 +328,12 @@ public class AuctionCommand extends BaseCommand {
 			}
 		}
 
-		MessageUtil.broadcastRegular(auc.getAuctioneer().getUniqueId(), Messages.getString("auction.end"));
+		String worldName = null;
+
+        if (ConfigManager.getConfig().getBoolean("auctions.per-world-broadcast"))
+            worldName = auc.getWorld();
+
+		MessageUtil.broadcastRegular(auc.getAuctioneer().getUniqueId(), worldName, Messages.getString("auction.end"));
 
 		// Should never be false
 		if (EzAuctions.getAuctionManager().getCurrentRunnable() != null)
@@ -369,12 +371,16 @@ public class AuctionCommand extends BaseCommand {
 			return;
 		}
 
-		if (manager.getQueueSize() == ConfigManager.getConfig().getInt("general.auction-queue-limit")) {
+		if (manager.getQueueSize() >= ConfigManager.getConfig().getInt("general.auction-queue-limit")
+				&& manager.getQueueSize() >=
+				getPermissionLimit(p, "ezauctions\\.auction\\.queuelimit\\.([0-9]+)", 30)) {
 			sendPropMessage(p, "command.auction.start.queue_full");
 			return;
 		}
 
-		if (manager.inQueueOrCurrent(p.getUniqueId())) {
+		if (manager.inQueueOrCurrent(p.getUniqueId())
+				&& manager.getNumberInQueue(ap) >=
+				getPermissionLimit(p, "ezauctions\\.auction\\.currentlimit\\.([0-9]+)", 32)) {
 			sendPropMessage(p, "command.auction.start.in_queue");
 			return;
 		}
@@ -413,6 +419,34 @@ public class AuctionCommand extends BaseCommand {
 			int position = EzAuctions.getAuctionManager().getPositionInQueue(ap);
 			sendPropMessage(p, "command.auction.start.added_to_queue", position);
 		}
+	}
+
+	/**
+	 * Will find permisisons matching a regex of the pattern 'permission.#'
+	 * Must have a # for limit at the end of the permission
+	 * @param p Player to check permission for
+	 * @param regex regex for permission check
+	 * @param substringIndex index to substring to know where to find the limit number
+	 * @return The limit number from the permission or the highest one if multiple are present
+	 */
+	private int getPermissionLimit(Player p, String regex, int substringIndex) {
+		AtomicInteger maxLimit = new AtomicInteger();
+
+		// Go through each permission the player has to locate any queuelimit permissions
+		p.getEffectivePermissions().stream()
+				.map(info -> info.getPermission().toLowerCase())
+				// filter to permissions matching ezauctions.auction.queuelimit.#
+				.filter(permission -> permission.matches(regex))
+				.forEach(permission -> {
+					// substring to get rid of all characters preceding the number of the queuelimit
+					String number = permission.substring(substringIndex);
+					int limit = Integer.parseInt(number);
+
+					if (limit > maxLimit.get())
+						maxLimit.set(limit);
+				});
+
+		return maxLimit.get();
 	}
 
 	private BaseComponent[] getQueueMessage(int pos, Auction auc) {

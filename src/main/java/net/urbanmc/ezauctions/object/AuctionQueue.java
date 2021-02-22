@@ -161,6 +161,18 @@ public class AuctionQueue {
         return -1;
     }
 
+    public int indexOfReverse(AuctionsPlayer player) {
+        for (int i = queue.length - 1; i >= 0; i--) {
+            Auction auction = queue[i];
+
+            if (auction != null && auction.getAuctioneer() == player) {
+                return distanceAwayFromHead(i);
+            }
+        }
+
+        return -1;
+    }
+
     public int indexOf(UUID player) {
         for (int i = 0; i < queue.length; ++i) {
             Auction auction = queue[i];
@@ -171,6 +183,19 @@ public class AuctionQueue {
         }
 
         return -1;
+    }
+
+    public int getNumberInQueue(AuctionsPlayer player) {
+        int numberInQueue = 0;
+
+        for (int i = 0; i < queue.length; ++i) {
+            Auction auction = queue[i];
+
+            if (auction != null && auction.getAuctioneer() == player)
+                numberInQueue++;
+        }
+
+        return numberInQueue;
     }
 
     /**

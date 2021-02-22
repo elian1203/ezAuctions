@@ -58,7 +58,7 @@ public class AuctionManager {
 		if (queue.isEmpty())
 			return -1;
 
-		int index = queue.indexOf(ap);
+		int index = queue.indexOfReverse(ap);
 
 		return index == -1 ? index : index + 1;
 	}
@@ -127,6 +127,10 @@ public class AuctionManager {
 
 	public Iterator<Auction> getQueue() {
 		return queue.iterator();
+	}
+
+	public int getNumberInQueue(AuctionsPlayer player) {
+		return queue.getNumberInQueue(player);
 	}
 
 	public void disabling() {

@@ -173,6 +173,19 @@ public class AuctionQueue {
         return -1;
     }
 
+    public int getNumberInQueue(AuctionsPlayer player) {
+        int numberInQueue = 0;
+
+        for (int i = 0; i < queue.length; ++i) {
+            Auction auction = queue[i];
+
+            if (auction != null && auction.getAuctioneer() == player)
+                numberInQueue++;
+        }
+
+        return numberInQueue;
+    }
+
     /**
      * Remove a specific index from the queue
      *

@@ -129,6 +129,10 @@ public class AuctionManager {
 		return queue.iterator();
 	}
 
+	public int getNumberInQueue(AuctionsPlayer player) {
+		return queue.getNumberInQueue(player);
+	}
+
 	public void disabling() {
 		if (getCurrentRunnable() != null) {
 			getCurrentRunnable().cancelAuction();

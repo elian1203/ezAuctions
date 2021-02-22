@@ -114,7 +114,12 @@ public class Auction {
             String message = Messages.getInstance().getStringWithoutColoring("auction.bid", bidder, amount, "%item%",
                     getAmount(), getAuctionTime());
 
-            MessageUtil.broadcastSpammy(auctioneer.getUniqueId(), formatMessage(message));
+            String worldName = null;
+
+            if (ConfigManager.getConfig().getBoolean("auctions.per-world-broadcast"))
+                worldName = getWorld();
+
+            MessageUtil.broadcastSpammy(auctioneer.getUniqueId(), worldName, formatMessage(message));
         }
 
         FileConfiguration data = ConfigManager.getConfig();

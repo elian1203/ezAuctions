@@ -45,6 +45,9 @@ auctions:
   # receive items from the world where the auction was initiated
   # Winnings will be stored in the database until the player re-enters the proper world
   per-world-auctions: false
+  # This is intended for the per-world-auctions
+  # All auction messages will be limited to players inside the world in which the auction was started
+  per-world-broadcast: false
 
   # When should we broadcast the time left in the auction?
   broadcast-times: [45, 30, 15, 3, 2, 1]

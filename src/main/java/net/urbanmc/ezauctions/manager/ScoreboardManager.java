@@ -35,6 +35,10 @@ public class ScoreboardManager {
         return instance;
     }
 
+    public Scoreboard getBoard() {
+        return board;
+    }
+
     private void createScoreboard() {
         board = Bukkit.getScoreboardManager().getNewScoreboard();
 
@@ -92,6 +96,14 @@ public class ScoreboardManager {
 
         for (Player p : Bukkit.getOnlinePlayers()) {
             AuctionsPlayer ap = AuctionsPlayerManager.getInstance().getPlayer(p.getUniqueId());
+
+            String world = ap.getOnlinePlayer().getWorld().getName();
+
+            if (ConfigManager.getConfig().getStringList("blocked-worlds").contains(world))
+                continue;
+
+            if (ConfigManager.getConfig().getBoolean("per-world-broadcast") && !world.equals(auc.getWorld()))
+                continue;
 
             if (ap.isIgnoringScoreboard() || ap.getIgnoringPlayers().contains(auc.getAuctioneer().getUniqueId()))
                 continue;

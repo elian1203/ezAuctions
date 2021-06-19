@@ -78,11 +78,15 @@ public class AuctionsPlayerManager {
     }
 
     public AuctionsPlayer getPlayer(UUID id) {
+        if (!players.containsKey(id)) {
+            createPlayer(id);
+        }
+
         return players.get(id);
     }
 
     public void createPlayer(UUID id) {
-        AuctionsPlayer ap = getPlayer(id);
+        AuctionsPlayer ap = players.get(id);
 
         if (ap == null) {
             ap = new AuctionsPlayer(id, false, false, false, new ArrayList<>(), new ArrayList<>());

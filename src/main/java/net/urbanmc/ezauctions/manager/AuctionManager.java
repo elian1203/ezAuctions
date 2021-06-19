@@ -9,6 +9,7 @@ import net.urbanmc.ezauctions.runnable.AuctionRunnable;
 import net.urbanmc.ezauctions.util.RewardUtil;
 import org.bukkit.Bukkit;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -19,6 +20,9 @@ public class AuctionManager {
 
 	private AuctionRunnable currentRunnable;
 	private AuctionQueue queue;
+
+	// this map has player uuids mapped to their last auction start time
+	private HashMap<UUID, Long> cooldownMap = new HashMap<>();
 
 	private boolean auctionsEnabled = true, inDelayedTask = false;
 
@@ -45,6 +49,27 @@ public class AuctionManager {
 			queue.enqueue(auction);
 			return true;
 		}
+	}
+
+	public long getTimeSinceLastAuction(UUID auctioneer) {
+		return System.currentTimeMillis() - cooldownMap.get(auctioneer);
+	}
+
+	public boolean hasCooldown(UUID auctioneer) {
+		if (!cooldownMap.containsKey(auctioneer))
+			return false;
+
+		long timeRequiredToWait = ConfigManager.getConfig().getLong("general.queue-cooldown-time");
+
+		if (timeRequiredToWait == 0)
+			return false;
+
+		long timeSinceLastAuction = getTimeSinceLastAuction(auctioneer);
+		return timeSinceLastAuction < timeRequiredToWait * 1000;
+	}
+
+	public void setCooldown(UUID auctioneer) {
+		cooldownMap.put(auctioneer, System.currentTimeMillis());
 	}
 
 	public boolean inQueueOrCurrent(UUID auctioneer) {

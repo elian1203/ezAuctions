@@ -1,6 +1,6 @@
 main: net.urbanmc.ezauctions.EzAuctions
 name: ezAuctions
-version: 1.5.9
+version: 1.6.0
 api-version: 1.13
 authors: [Elian, Silverwolfg11]
 description: A simple, text-based auction plugin
@@ -82,4 +82,6 @@ permissions:
   ezauctions.updatemessage:
     default: false
   ezauctions.taxexempt:
+    default: false
+  ezauctions.cooldownexempt:
     default: false

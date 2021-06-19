@@ -385,6 +385,22 @@ public class AuctionCommand extends BaseCommand {
 			return;
 		}
 
+		if (manager.hasCooldown(p.getUniqueId()) && !p.hasPermission("ezauctions.cooldownexempt")) {
+			long timeRequiredToWait = ConfigManager.getConfig().getLong("general.queue-cooldown-time");
+			long timeSinceLastAuction = manager.getTimeSinceLastAuction(p.getUniqueId());
+			long timeStillNeededToWait = timeRequiredToWait * 1000 - timeSinceLastAuction;
+
+			long minutes = (timeStillNeededToWait / 1000) / 60;
+			long seconds = (timeStillNeededToWait / 1000) % 60;
+
+			if (minutes > 0)
+				sendPropMessage(p, "command.auction.start.cooldown.time_minutes", seconds, minutes);
+			else
+				sendPropMessage(p, "command.auction.start.cooldown.time_seconds", seconds);
+
+			return;
+		}
+
 		if (!hasFee(p)) {
 			sendPropMessage(p, "command.auction.start.lacking_fee");
 			return;
@@ -410,6 +426,8 @@ public class AuctionCommand extends BaseCommand {
 
 		if (event.isCancelled())
 			return;
+
+		manager.setCooldown(p.getUniqueId());
 
 		removeFee(p);
 

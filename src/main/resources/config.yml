@@ -24,6 +24,11 @@ general:
   minimum-cancel-time: 20
   # What is the maximum amount of auctions that can be in the queue
   auction-queue-limit: 3
+  # When putting auctions into the queue, what is the time in seconds that the player must wait before they
+  # are allowed to start an auction again?
+  # Set to 0 to disable
+  # use ezauctions.cooldownexempt permission to bypass this
+  queue-cooldown-time: 0
 
 auctions:
   # Worlds that you cannot start auctions in
@@ -50,7 +55,7 @@ auctions:
   per-world-broadcast: false
 
   # When should we broadcast the time left in the auction?
-  broadcast-times: [45, 30, 15, 3, 2, 1]
+  broadcast-times: [ 45, 30, 15, 3, 2, 1 ]
 
   fees:
     # The price it costs to start an auction (set to 0 for no price)

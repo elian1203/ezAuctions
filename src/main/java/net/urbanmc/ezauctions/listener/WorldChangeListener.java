@@ -5,6 +5,7 @@ import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.ScoreboardManager;
+import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
 import net.urbanmc.ezauctions.util.RewardUtil;
 import org.bukkit.Bukkit;
@@ -13,6 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
 
 import java.util.UUID;
 
@@ -30,13 +32,17 @@ public class WorldChangeListener implements Listener {
 
 		// remove auctions board if moved to wrong world
 
-		String world = player.getWorld().getName();
-		String currentAuctionWorld = EzAuctions.getAuctionManager().getCurrentAuction().getWorld();
+		Auction currentAuction = EzAuctions.getAuctionManager().getCurrentAuction();
 
-		if (ConfigManager.getConfig().getStringList("blocked-worlds").contains(world))
-			player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+		if (currentAuction != null && player.getScoreboard() == ScoreboardManager.getInstance().getBoard()) {
+			String world = player.getWorld().getName();
+			String currentAuctionWorld = currentAuction.getWorld();
 
-		if (ConfigManager.getConfig().getBoolean("per-world-broadcast") && !world.equals(currentAuctionWorld))
-			player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+			if (ConfigManager.getConfig().getStringList("blocked-worlds").contains(world))
+				player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+
+			if (ConfigManager.getConfig().getBoolean("per-world-broadcast") && !world.equals(currentAuctionWorld))
+				player.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+		}
 	}
 }

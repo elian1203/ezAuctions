@@ -138,6 +138,20 @@ public class AuctionManager {
 		return getCurrentRunnable().getAuction();
 	}
 
+	public boolean isParticipatingInAuction(UUID id) {
+		Auction currentAuction = getCurrentAuction();
+		if (currentAuction != null && currentAuction.isParticipant(id))
+			return true;
+
+		// check to see if player is in auction queue
+		for (Auction auction : queue) {
+			if (auction.isParticipant(id))
+				return true;
+		}
+
+		return false;
+	}
+
 	public boolean isAuctionsEnabled() {
 		return auctionsEnabled;
 	}

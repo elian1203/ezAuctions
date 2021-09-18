@@ -5,9 +5,11 @@ import net.urbanmc.ezauctions.EzAuctions;
 import net.urbanmc.ezauctions.manager.AuctionsPlayerManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.object.*;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -17,42 +19,45 @@ import java.util.List;
 public class RewardUtil {
 
 	public static void rewardAuction(Auction auction, Economy econ) {
-		Bidder lastBid = auction.getLastBidder();
+		// run async since we will be calling vault with offline player
+		Plugin plugin = Bukkit.getPluginManager().getPlugin("ezAuctions");
+		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+			Bidder lastBid = auction.getLastBidder();
 
-		OfflinePlayer auctioneer = auction.getAuctioneer().getOfflinePlayer();
-		OfflinePlayer bidder = lastBid.getBidder().getOfflinePlayer();
+			OfflinePlayer auctioneer = auction.getAuctioneer().getOfflinePlayer();
+			OfflinePlayer bidder = lastBid.getBidder().getOfflinePlayer();
 
 
-		double percentTax = ConfigManager.getConfig().getDouble("auctions.fees.tax-percent");
-		double percentYield = (100 - percentTax) / 100;
+			double percentTax = ConfigManager.getConfig().getDouble("auctions.fees.tax-percent");
+			double percentYield = (100 - percentTax) / 100;
 
-		// vault perms not set up, attempt to check player online status
-		// this may result in logged-off players not receiving an exemption even if they have the permission
-		if (EzAuctions.getPerms() == null) {
-			if (auctioneer.isOnline() && auctioneer.getPlayer().hasPermission("ezauctions.taxexempt"))
+			// vault perms not set up, attempt to check player online status
+			// this may result in logged-off players not receiving an exemption even if they have the permission
+			if (EzAuctions.getPerms() == null) {
+				if (auctioneer.isOnline() && auctioneer.getPlayer().hasPermission("ezauctions.taxexempt"))
+					percentYield = 1;
+			} else if (EzAuctions.getPerms().playerHas(auction.getWorld(), auctioneer, "ezauctions.taxexempt")) {
+				// vault permission checked, exempt from taxes
 				percentYield = 1;
-		} else if (EzAuctions.getPerms().playerHas(auction.getWorld(), auctioneer, "ezauctions.taxexempt")) {
-			// vault permission checked, exempt from taxes
-			percentYield = 1;
-		}
+			}
 
-		double moneyYield = lastBid.getAmount() * percentYield;
+			double moneyYield = lastBid.getAmount() * percentYield;
 
-		econ.depositPlayer(auctioneer, moneyYield);
+			econ.depositPlayer(auctioneer, moneyYield);
 
-		if (auctioneer.isOnline()) {
-			DecimalFormat df = new DecimalFormat("#.##");
-			df.setRoundingMode(RoundingMode.DOWN);
+			if (auctioneer.isOnline()) {
+				DecimalFormat df = new DecimalFormat("#.##");
+				df.setRoundingMode(RoundingMode.DOWN);
 
-			MessageUtil.privateMessage(auction.getAuctioneer().getOnlinePlayer(),
-					"reward.money_given",
-					df.format(moneyYield));
-		}
+				MessageUtil.privateMessage(auction.getAuctioneer().getOnlinePlayer(),
+						"reward.money_given",
+						df.format(moneyYield));
+			}
 
-		returnBidderMoney(auction.getBidList(), false);
+			returnBidderMoney(auction.getBidList(), false);
 
-		if (bidder.isOnline()) {
-			Player p = lastBid.getBidder().getOnlinePlayer();
+			if (bidder.isOnline()) {
+				Player p = lastBid.getBidder().getOnlinePlayer();
 
 			/*
 			if player per-world-auctions is enabled and player is not in right world we will
@@ -61,25 +66,26 @@ public class RewardUtil {
 
 			otherwise, we will give them their item and be done
 			 */
-			if (ConfigManager.getConfig().getBoolean("auctions.per-world-auctions")
-					&& !p.getWorld().getName().equals(auction.getWorld())) {
-				MessageUtil.privateMessage(p, "reward.wrong_world", auction.getWorld());
-			} else if (AuctionUtil.blockedWorld(p)) {
-				MessageUtil.privateMessage(p, "reward.blocked_world");
-			} else {
-				MessageUtil.privateMessage(p, "reward.received");
-				ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
+				if (ConfigManager.getConfig().getBoolean("auctions.per-world-auctions")
+						&& !p.getWorld().getName().equals(auction.getWorld())) {
+					MessageUtil.privateMessage(p, "reward.wrong_world", auction.getWorld());
+				} else if (AuctionUtil.blockedWorld(p)) {
+					MessageUtil.privateMessage(p, "reward.blocked_world");
+				} else {
+					MessageUtil.privateMessage(p, "reward.received");
+					ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
 
-				return;
+					return;
+				}
 			}
-		}
 
-		ItemStack item = auction.getItem().clone();
-		item.setAmount(auction.getAmount());
+			ItemStack item = auction.getItem().clone();
+			item.setAmount(auction.getAmount());
 
-		OfflineItem offlineItem = new OfflineItem(item, auction.getWorld());
-		lastBid.getBidder().getOfflineItems().add(offlineItem);
-		AuctionsPlayerManager.getInstance().saveItems(lastBid.getBidder());
+			OfflineItem offlineItem = new OfflineItem(item, auction.getWorld());
+			lastBid.getBidder().getOfflineItems().add(offlineItem);
+			AuctionsPlayerManager.getInstance().saveItems(lastBid.getBidder());
+		});
 	}
 
 	private static void returnBidderMoney(List<Bidder> bidders) {
@@ -89,10 +95,14 @@ public class RewardUtil {
 	}
 
 	private static void returnBidderMoney(BidList bidList, boolean allBidders) {
-		bidList.forEach((bidder) -> EzAuctions.getEcon().depositPlayer(bidder.getBidder().getOfflinePlayer(),
-				bidder.getAmount()),
-				0, bidList.size() - (allBidders ? 0 : 1));
-		// Ending position is size - 1 because the last bidder is the winning bidder.
+		// run async since we will be calling vault with offline player
+		Plugin plugin = Bukkit.getPluginManager().getPlugin("ezAuctions");
+		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+			bidList.forEach((bidder) -> EzAuctions.getEcon().depositPlayer(bidder.getBidder().getOfflinePlayer(),
+							bidder.getAmount()),
+					0, bidList.size() - (allBidders ? 0 : 1));
+			// Ending position is size - 1 because the last bidder is the winning bidder.
+		});
 	}
 
 	public static void rewardCancel(Auction auction) {

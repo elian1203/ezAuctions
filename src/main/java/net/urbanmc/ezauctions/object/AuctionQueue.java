@@ -2,7 +2,6 @@ package net.urbanmc.ezauctions.object;
 
 import java.util.Iterator;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 /**
  * Minimal implementation of a cylindrical Queue backed by an array.
@@ -11,7 +10,7 @@ import java.util.function.Consumer;
  *
  * The polling operation of this queue does not shift any elements hence is very quick.
  */
-public class AuctionQueue {
+public class AuctionQueue implements Iterable<Auction> {
     protected Auction[] queue;
 
     private int head = 0,
@@ -266,15 +265,6 @@ public class AuctionQueue {
                 tail += queue.length;
 
             queue[tail] = null;
-        }
-    }
-
-    public void forEach(Consumer<Auction> consumer) {
-        for (int i = 0; i < queue.length; ++i) {
-            Auction  auction = queue[i];
-
-            if (auction != null)
-                consumer.accept(queue[i]);
         }
     }
 

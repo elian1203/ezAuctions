@@ -1,10 +1,7 @@
 package net.urbanmc.ezauctions.listener;
 
 import net.urbanmc.ezauctions.EzAuctions;
-import net.urbanmc.ezauctions.manager.AuctionManager;
 import net.urbanmc.ezauctions.manager.ConfigManager;
-import net.urbanmc.ezauctions.object.Auction;
-import net.urbanmc.ezauctions.object.Bidder;
 import net.urbanmc.ezauctions.util.MessageUtil;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -17,12 +14,8 @@ public class CommandListener implements Listener {
     @EventHandler
     public void onPlayerCommand(PlayerCommandPreprocessEvent e) {
         UUID id = e.getPlayer().getUniqueId();
-        Auction auction = EzAuctions.getAuctionManager().getCurrentAuction();
 
-        if (auction == null)
-            return;
-
-        if (!auction.isParticipant(id))
+        if (!EzAuctions.getAuctionManager().isParticipatingInAuction(id))
             return;
 
         String command = e.getMessage().split(" ")[0];

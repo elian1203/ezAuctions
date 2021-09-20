@@ -56,8 +56,9 @@ public class RewardUtil {
 
 			returnBidderMoney(auction.getBidList(), false);
 
-			if (bidder.isOnline()) {
-				Player p = lastBid.getBidder().getOnlinePlayer();
+			Bukkit.getScheduler().runTask(plugin, () -> {
+				if (bidder.isOnline()) {
+					Player p = lastBid.getBidder().getOnlinePlayer();
 
 			/*
 			if player per-world-auctions is enabled and player is not in right world we will
@@ -66,25 +67,26 @@ public class RewardUtil {
 
 			otherwise, we will give them their item and be done
 			 */
-				if (ConfigManager.getConfig().getBoolean("auctions.per-world-auctions")
-						&& !p.getWorld().getName().equals(auction.getWorld())) {
-					MessageUtil.privateMessage(p, "reward.wrong_world", auction.getWorld());
-				} else if (AuctionUtil.blockedWorld(p)) {
-					MessageUtil.privateMessage(p, "reward.blocked_world");
-				} else {
-					MessageUtil.privateMessage(p, "reward.received");
-					ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
+					if (ConfigManager.getConfig().getBoolean("auctions.per-world-auctions")
+							&& !p.getWorld().getName().equals(auction.getWorld())) {
+						MessageUtil.privateMessage(p, "reward.wrong_world", auction.getWorld());
+					} else if (AuctionUtil.blockedWorld(p)) {
+						MessageUtil.privateMessage(p, "reward.blocked_world");
+					} else {
+						MessageUtil.privateMessage(p, "reward.received");
+						ItemUtil.addItemToInventory(p, auction.getItem(), auction.getAmount(), true);
 
-					return;
+						return;
+					}
 				}
-			}
 
-			ItemStack item = auction.getItem().clone();
-			item.setAmount(auction.getAmount());
+				ItemStack item = auction.getItem().clone();
+				item.setAmount(auction.getAmount());
 
-			OfflineItem offlineItem = new OfflineItem(item, auction.getWorld());
-			lastBid.getBidder().getOfflineItems().add(offlineItem);
-			AuctionsPlayerManager.getInstance().saveItems(lastBid.getBidder());
+				OfflineItem offlineItem = new OfflineItem(item, auction.getWorld());
+				lastBid.getBidder().getOfflineItems().add(offlineItem);
+				AuctionsPlayerManager.getInstance().saveItems(lastBid.getBidder());
+			});
 		});
 	}
 

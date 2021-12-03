@@ -193,7 +193,8 @@ public class EzAuctions extends JavaPlugin {
 	}
 
 	private void registerMetrics() {
-		new Metrics(this);
+		// 985 is the bstats plugin id
+		new Metrics(this, 985);
 	}
 
 	private void checkUpdateAvailable() {

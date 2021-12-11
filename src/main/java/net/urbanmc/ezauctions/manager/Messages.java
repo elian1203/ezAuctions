@@ -114,9 +114,8 @@ public class Messages {
     }
 
     private void addDefaultKeyToFile(String key) {
-        try {
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("messages.properties")) {
             // open default message file to get default value
-            InputStream input = getClass().getClassLoader().getResourceAsStream("messages.properties");
             ResourceBundle defaultBundle = new PropertyResourceBundle(input);
 
             String value = defaultBundle.getString(key);

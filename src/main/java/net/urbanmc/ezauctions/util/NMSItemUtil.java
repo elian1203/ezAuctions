@@ -5,6 +5,12 @@ import net.minecraft.world.item.ItemStack;
 
 public class NMSItemUtil {
 
+    // Return the specific locale key for an item that's used in TranslatableComponent
+    public static String getItemLocalKey(Object nmsStack) {
+        ItemStack is = (ItemStack) nmsStack;
+        return is.getItem().getDescriptionId(is);
+    }
+
     public static String getItemJson(Object nmsStack) {
         CompoundTag tag = new CompoundTag();
 

@@ -36,6 +36,10 @@ public class ReflectionUtil {
 		try {
 			Object nmsStack = asNMSCopy(is);
 
+			if (version >= 1.18) {
+				return NMSItemUtil.getItemLocalKey(nmsStack);
+			}
+
 			Object item = nmsStack.getClass().getMethod("getItem").invoke(nmsStack);
 
 			// We can do a simple version check like this which should work for future versions

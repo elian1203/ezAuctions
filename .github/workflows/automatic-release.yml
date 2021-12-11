@@ -3,7 +3,7 @@ name: Automatically create release with artifact on pull request
 on:
   pull_request:
     branches: [ 'master' ]
-    types: [closed]
+    types: [ closed ]
 
 jobs:
   build:
@@ -17,12 +17,16 @@ jobs:
         with:
           java-version: 1.8
 
+      # download latest buildtools and get remapped spigot jar
+      - run: wget https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar
+      - run: java -jar BuildTools.jar --rev 1.18 --remapped
+
       # build jar with maven
       - run: mvn --batch-mode --update-snapshots verify
-          
+
       - name: Create Release
         uses: softprops/action-gh-release@master
-        env: 
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           draft: false

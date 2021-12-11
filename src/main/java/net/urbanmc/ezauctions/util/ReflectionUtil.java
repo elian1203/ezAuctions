@@ -19,23 +19,26 @@ public class ReflectionUtil {
 		try {
 			String version = Bukkit.getVersion(); // "git-Paper-153 MC: 1.13.2"
 			String[] spaceSplit = version.split(" "); // { "git-Paper-153", "MC:", "1.13.2" }
-			String numberVersion = spaceSplit[2]; // "1.13.2"
+			String numberVersion = spaceSplit[2].replace("(", "").replace(")", ""); // "1.13.2"
 			String[] dotSplit = numberVersion.split("\\."); // { "1", "13", "2" }
 			ReflectionUtil.version = Double.parseDouble(dotSplit[0] + "." + dotSplit[1]); // 1.13
 
 			bannerClass = getItemBannerClass();
 		} catch (Exception e) {
 			// In case anything goes wrong, assume it's a newer version
-			EzAuctions.getPluginLogger().severe("Could not determine Bukkit version for reflection. Assuming 1.13+ ." +
-					"." +
-					".");
-			version = 1.13;
+			EzAuctions.getPluginLogger().severe("Could not determine Bukkit version for reflection. " +
+					"Assuming 1.18.");
+			version = 1.18;
 		}
 	}
 
 	public static String getMinecraftName(ItemStack is) {
 		try {
 			Object nmsStack = asNMSCopy(is);
+
+			if (version >= 1.18) {
+				return NMSItemUtil.getItemLocalKey(nmsStack);
+			}
 
 			Object item = nmsStack.getClass().getMethod("getItem").invoke(nmsStack);
 
@@ -68,6 +71,10 @@ public class ReflectionUtil {
 		try {
 			Object nmsStack = asNMSCopy(is);
 
+			if (version >= 1.18) {
+				return NMSItemUtil.getXPForRepair(nmsStack);
+			}
+
 			boolean hasTag = (boolean) nmsStack.getClass().getMethod("hasTag").invoke(nmsStack);
 
 			if (!hasTag)
@@ -99,6 +106,10 @@ public class ReflectionUtil {
 	public static String getItemAsJson(ItemStack is) {
 		try {
 			Object nmsStack = asNMSCopy(is);
+
+			if (version >= 1.18) {
+				return NMSItemUtil.getItemJson(nmsStack);
+			}
 
 			Class<?> nbtTagCompoundClazz = getNBTTagCompoundClass();
 			Method saveMethod = nmsStack.getClass().getMethod("save", nbtTagCompoundClazz);

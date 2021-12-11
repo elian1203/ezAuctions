@@ -34,5 +34,5 @@ jobs:
           # Release name will default to tag name
           # Tag name will be the name of the branch
           tag_name: ${{ github.head_ref }}
-          files: "./target/ezAuctions*.jar*"
+          files: "./target/ezAuctions*-SNAPSHOT.jar"
           fail_on_unmatched_files: true

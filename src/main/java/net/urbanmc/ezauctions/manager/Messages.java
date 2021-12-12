@@ -74,6 +74,7 @@ public class Messages {
                         + " Attempting to add automatically...");
                 addDefaultKeyToFile(key);
                 EzAuctions.getPluginLogger().info("Successfully added key " + key);
+                return format(bundle.getString(key), true, args);
             }
             else {
                 EzAuctions.getPluginLogger().log(Level.SEVERE, "Error fetching key '" + key + "' in message.properties!", e);
@@ -91,6 +92,7 @@ public class Messages {
                 + " Attempting to add automatically...");
                 addDefaultKeyToFile(key);
                 EzAuctions.getPluginLogger().info("Successfully added key " + key);
+                return format(bundle.getString(key), false, args);
             }
             else {
                 EzAuctions.getPluginLogger().log(Level.SEVERE, "Error fetching key '" + key + "' in message.properties!", e);

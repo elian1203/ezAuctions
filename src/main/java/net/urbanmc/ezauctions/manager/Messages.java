@@ -131,6 +131,8 @@ public class Messages {
             writer.write(line);
             writer.flush();
             writer.close();
+
+            loadBundle();
         } catch (IOException e) {
             EzAuctions.getPluginLogger().severe("Error updating messages.properties with missing key!");
             e.printStackTrace();

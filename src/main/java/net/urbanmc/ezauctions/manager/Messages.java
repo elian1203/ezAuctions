@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
@@ -13,7 +14,7 @@ import java.util.logging.Level;
 
 public class Messages {
 
-    private static Messages instance = new Messages();
+    private static final Messages instance = new Messages();
 
     private final File FILE = new File(EzAuctions.getDataDirectory(), "messages.properties");
 
@@ -54,7 +55,7 @@ public class Messages {
     private void loadBundle() {
         try {
             InputStream input = new FileInputStream(FILE);
-            Reader reader = new InputStreamReader(input, "UTF-8");
+            Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8);
 
             bundle = new PropertyResourceBundle(reader);
 
@@ -69,7 +70,11 @@ public class Messages {
             return format(bundle.getString(key), true, args);
         } catch (Exception e) {
             if (e instanceof MissingResourceException) {
-                EzAuctions.getPluginLogger().severe("Missing message in message.properties! Message key: " + key);
+                EzAuctions.getPluginLogger().warning("Missing message in message.properties! Message key: " + key
+                        + " Attempting to add automatically...");
+                addDefaultKeyToFile(key);
+                EzAuctions.getPluginLogger().info("Successfully added key " + key);
+                return format(bundle.getString(key), true, args);
             }
             else {
                 EzAuctions.getPluginLogger().log(Level.SEVERE, "Error fetching key '" + key + "' in message.properties!", e);
@@ -83,7 +88,11 @@ public class Messages {
             return format(bundle.getString(key), false, args);
         } catch (Exception e) {
             if (e instanceof MissingResourceException) {
-                EzAuctions.getPluginLogger().severe("Missing message in message.properties! Message key: " + key);
+                EzAuctions.getPluginLogger().warning("Missing message in message.properties! Message key: " + key
+                + " Attempting to add automatically...");
+                addDefaultKeyToFile(key);
+                EzAuctions.getPluginLogger().info("Successfully added key " + key);
+                return format(bundle.getString(key), false, args);
             }
             else {
                 EzAuctions.getPluginLogger().log(Level.SEVERE, "Error fetching key '" + key + "' in message.properties!", e);
@@ -104,6 +113,32 @@ public class Messages {
         }
 
         return message;
+    }
+
+    private void addDefaultKeyToFile(String key) {
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("messages.properties")) {
+            // open default message file to get default value
+            ResourceBundle defaultBundle = new PropertyResourceBundle(input);
+
+            String value = defaultBundle.getString(key);
+
+            // open printwriter in append mode to add to end of file
+            PrintWriter writer = new PrintWriter(new FileOutputStream(FILE, true));
+
+            // ensure we are printing on the next line
+            writer.write("\n");
+
+            String line = String.format("%s=%s\n", key, value);
+
+            writer.write(line);
+            writer.flush();
+            writer.close();
+
+            loadBundle();
+        } catch (IOException e) {
+            EzAuctions.getPluginLogger().severe("Error updating messages.properties with missing key!");
+            e.printStackTrace();
+        }
     }
 
     public void reload() {

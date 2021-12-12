@@ -107,6 +107,8 @@ public class ReflectionUtil {
     }
 
     public static String getItemAsJson(ItemStack is) {
+        String itemJson;
+
         try {
             Object nmsStack = asNMSCopy(is);
 
@@ -126,30 +128,30 @@ public class ReflectionUtil {
 
                 Object emptyTag = nbtTagCompoundClass.getConstructor().newInstance();
                 Object savedTag = nmsStackSaveMethod.invoke(nmsStack, emptyTag);
-                return savedTag.toString();
+                itemJson = savedTag.toString();
+            } else {
+                Class<?> nbtTagCompoundClazz = getNBTTagCompoundClass();
+                Method saveMethod = nmsStack.getClass().getMethod("save", nbtTagCompoundClazz);
+
+                Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().newInstance();
+                Object jsonItem = saveMethod.invoke(nmsStack, nmsNbtTagCompoundObj);
+
+                itemJson = jsonItem.toString();
             }
-
-            Class<?> nbtTagCompoundClazz = getNBTTagCompoundClass();
-            Method saveMethod = nmsStack.getClass().getMethod("save", nbtTagCompoundClazz);
-
-            Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().newInstance();
-            Object jsonItem = saveMethod.invoke(nmsStack, nmsNbtTagCompoundObj);
-
-            String itemJson = jsonItem.toString();
-
-            // Prevent sending a packet that could be mishandled by bungeecord
-            if (itemJson.getBytes(StandardCharsets.UTF_8).length > Short.MAX_VALUE) {
-                EzAuctions.getPluginLogger().severe("An item that exceeded max packet length was attempted to be " +
-                        "auctioned!");
-                return getItemAsJson(new ItemStack(is.getType(), 1));
-            }
-
-            return itemJson;
         } catch (Exception ex) {
-            EzAuctions.getPluginLogger().log(Level.WARNING,
+            EzAuctions.getPluginLogger().log(Level.SEVERE,
                     "Error getting item as json. Item: " + is.getType(), ex);
             return "";
         }
+
+        // Prevent sending a packet that could be mishandled by bungeecord
+        if (itemJson.getBytes(StandardCharsets.UTF_8).length > Short.MAX_VALUE) {
+            EzAuctions.getPluginLogger().severe("An item that exceeded max packet length was attempted to be " +
+                    "auctioned!");
+            itemJson = getItemAsJson(new ItemStack(is.getType(), 1));
+        }
+
+        return itemJson;
     }
 
     private static Object asNMSCopy(ItemStack is) {

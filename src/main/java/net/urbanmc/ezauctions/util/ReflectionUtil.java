@@ -154,21 +154,10 @@ public class ReflectionUtil {
 
     private static Object asNMSCopy(ItemStack is) {
         try {
-            return getCraftItemStackClass().getMethod("asNMSCopy", ItemStack.class).invoke(null, is);
+            return is.getClass().getMethod("asNMSCopy", ItemStack.class).invoke(null, is);
         } catch (Exception ex) {
             EzAuctions.getPluginLogger().log(Level.WARNING,
                     "Error getting item as NMS copy. Item: " + is.getType(), ex);
-            return null;
-        }
-    }
-
-    private static Class<?> getCraftItemStackClass() {
-        String version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-
-        try {
-            return Class.forName("org.bukkit.craftbukkit." + version + ".inventory.CraftItemStack");
-        } catch (ClassNotFoundException ex) {
-            ex.printStackTrace();
             return null;
         }
     }

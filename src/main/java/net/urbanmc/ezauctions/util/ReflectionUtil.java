@@ -1,15 +1,10 @@
 package net.urbanmc.ezauctions.util;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import net.urbanmc.ezauctions.EzAuctions;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
@@ -18,6 +13,7 @@ import java.util.logging.Level;
 public class ReflectionUtil {
 
     private static Class<?> bannerClass;
+    private static Method nmsStackSaveMethod = null;
     private static double version;
 
     // Put the version into a double
@@ -40,12 +36,12 @@ public class ReflectionUtil {
 
     public static String getMinecraftName(ItemStack is) {
         try {
-            Object nmsStack = asNMSCopy(is);
-
             if (version >= 1.18) {
                 Material material = is.getType();
-                return (material.isBlock() ? "block": "item") + ".minecraft." + material.toString().toLowerCase();
+                return (material.isBlock() ? "block" : "item") + ".minecraft." + material.toString().toLowerCase();
             }
+
+            Object nmsStack = asNMSCopy(is);
 
             Object item = nmsStack.getClass().getMethod("getItem").invoke(nmsStack);
 
@@ -65,8 +61,7 @@ public class ReflectionUtil {
             }
         } catch (Exception ex) {
             EzAuctions.getPluginLogger()
-                    .log(Level.WARNING, "Error getting minecraft name for " + is.getType().toString(),
-                            ex);
+                    .log(Level.WARNING, "Error getting minecraft name for " + is.getType(), ex);
             return "";
         }
     }
@@ -106,8 +101,7 @@ public class ReflectionUtil {
                 return -1;
         } catch (Exception ex) {
             EzAuctions.getPluginLogger().log(Level.WARNING,
-                    "Error getting xp needed for repair for " + is.getType().toString(),
-                    ex);
+                    "Error getting xp needed for repair for " + is.getType(), ex);
             return 0;
         }
     }
@@ -116,14 +110,29 @@ public class ReflectionUtil {
         try {
             Object nmsStack = asNMSCopy(is);
 
+            // loop through methods until we find the save method, identified by a return type and input parameter
+            // of NBTTagCompound
             if (version >= 1.18) {
-                return NMSItemUtil.getItemJson(nmsStack);
+                Class<?> nbtTagCompoundClass = getNBTTagCompoundClass();
+                if (nmsStackSaveMethod == null) {
+                    for (Method method : nmsStack.getClass().getMethods()) {
+                        if (method.getReturnType().equals(nbtTagCompoundClass) && method.getParameterCount() == 1
+                                && method.getParameterTypes()[0].equals(nbtTagCompoundClass)) {
+                            nmsStackSaveMethod = method;
+                            break;
+                        }
+                    }
+                }
+
+                Object emptyTag = nbtTagCompoundClass.getConstructor().newInstance();
+                Object savedTag = nmsStackSaveMethod.invoke(nmsStack, emptyTag);
+                return savedTag.toString();
             }
 
             Class<?> nbtTagCompoundClazz = getNBTTagCompoundClass();
             Method saveMethod = nmsStack.getClass().getMethod("save", nbtTagCompoundClazz);
 
-            Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.newInstance();
+            Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().newInstance();
             Object jsonItem = saveMethod.invoke(nmsStack, nmsNbtTagCompoundObj);
 
             String itemJson = jsonItem.toString();
@@ -138,8 +147,7 @@ public class ReflectionUtil {
             return itemJson;
         } catch (Exception ex) {
             EzAuctions.getPluginLogger().log(Level.WARNING,
-                    "Error getting item as json. Item: " + is.getType().toString(),
-                    ex);
+                    "Error getting item as json. Item: " + is.getType(), ex);
             return "";
         }
     }
@@ -149,8 +157,7 @@ public class ReflectionUtil {
             return getCraftItemStackClass().getMethod("asNMSCopy", ItemStack.class).invoke(null, is);
         } catch (Exception ex) {
             EzAuctions.getPluginLogger().log(Level.WARNING,
-                    "Error getting item as NMS copy. Item: " + is.getType().toString(),
-                    ex);
+                    "Error getting item as NMS copy. Item: " + is.getType(), ex);
             return null;
         }
     }
@@ -183,8 +190,8 @@ public class ReflectionUtil {
         if (version >= 1.17) {
             try {
                 return Class.forName("net.minecraft.nbt.NBTTagCompound");
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+            } catch (ClassNotFoundException ex) {
+                EzAuctions.getPluginLogger().log(Level.SEVERE, "Cannot get NBTTagCompoundClass!", ex);
                 return null;
             }
         } else {

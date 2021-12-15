@@ -20,8 +20,7 @@ public class RewardUtil {
 
 	public static void rewardAuction(Auction auction, Economy econ) {
 		// run async since we will be calling vault with offline player
-		Plugin plugin = Bukkit.getPluginManager().getPlugin("ezAuctions");
-		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+		EzAuctions.getScheduler().runAsyncTask( () -> {
 			Bidder lastBid = auction.getLastBidder();
 
 			OfflinePlayer auctioneer = auction.getAuctioneer().getOfflinePlayer();
@@ -56,7 +55,7 @@ public class RewardUtil {
 
 			returnBidderMoney(auction.getBidList(), false);
 
-			Bukkit.getScheduler().runTask(plugin, () -> {
+			EzAuctions.getScheduler().runSyncTask( () -> {
 				if (bidder.isOnline()) {
 					Player p = lastBid.getBidder().getOnlinePlayer();
 
@@ -98,8 +97,7 @@ public class RewardUtil {
 
 	private static void returnBidderMoney(BidList bidList, boolean allBidders) {
 		// run async since we will be calling vault with offline player
-		Plugin plugin = Bukkit.getPluginManager().getPlugin("ezAuctions");
-		Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+		EzAuctions.getScheduler().runAsyncTask( () -> {
 			bidList.forEach((bidder) -> EzAuctions.getEcon().depositPlayer(bidder.getBidder().getOfflinePlayer(),
 							bidder.getAmount()),
 					0, bidList.size() - (allBidders ? 0 : 1));

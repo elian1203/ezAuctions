@@ -120,7 +120,7 @@ public class AuctionManager {
 
 			inDelayedTask = true;
 
-			Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+			EzAuctions.getScheduler().runSyncDelayedTask( () -> {
 				currentRunnable = new AuctionRunnable(auction, plugin);
 				inDelayedTask = false;
 			}, delay);

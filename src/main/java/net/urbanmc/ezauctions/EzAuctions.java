@@ -18,6 +18,7 @@ import net.urbanmc.ezauctions.manager.ConfigManager;
 import net.urbanmc.ezauctions.manager.Messages;
 import net.urbanmc.ezauctions.object.Auction;
 import net.urbanmc.ezauctions.object.AuctionsPlayer;
+import net.urbanmc.ezauctions.object.TaskScheduler;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -34,25 +35,28 @@ import java.util.logging.Logger;
 
 public class EzAuctions extends JavaPlugin {
 
-	private static AuctionManager auctionManager;
-	private static Economy econ;
-	private static Permission perms;
+	private static EzAuctions instance;
 
-	private static boolean updateAvailable = false;
+	private AuctionManager auctionManager;
+	private Economy econ;
+	private Permission perms;
+	private TaskScheduler scheduler;
 
-	private static File dataDir;
-	private static Logger pluginLogger;
+	private boolean updateAvailable = false;
+
+	private File dataDir;
+	private Logger pluginLogger;
 
 	public static AuctionManager getAuctionManager() {
-		return auctionManager;
+		return instance.auctionManager;
 	}
 
 	public static Economy getEcon() {
-		return econ;
+		return instance.econ;
 	}
 
 	public static boolean isUpdateAvailable() {
-		return updateAvailable;
+		return instance.updateAvailable;
 	}
 
 	@Override
@@ -80,6 +84,11 @@ public class EzAuctions extends JavaPlugin {
 
 			return;
 		}
+
+		// Assign singleton instance
+		instance = this;
+
+		scheduler = new TaskScheduler(this);
 
 		setupPerms();
 
@@ -112,18 +121,20 @@ public class EzAuctions extends JavaPlugin {
 		registerMetrics();
 
 		if (ConfigManager.getConfig().getBoolean("general.check-updates", true)) {
-			getServer().getScheduler().runTaskAsynchronously(this, this::checkUpdateAvailable);
+			scheduler.runAsyncTask(this::checkUpdateAvailable);
 		}
 	}
 
 	@Override
 	public void onDisable() {
+		scheduler.markShutdown();
 		// Make sure auction manager is valid
 		if (getAuctionManager() != null)
 			getAuctionManager().disabling();
 
 		// Save auction player data on the disable
 		AuctionsPlayerManager.getInstance().saveAndDisable();
+		instance = null;
 	}
 
 	private boolean setupEconomy() {
@@ -241,14 +252,16 @@ public class EzAuctions extends JavaPlugin {
 	}
 
 	public static File getDataDirectory() {
-		return dataDir;
+		return instance.dataDir;
 	}
 
 	public static Logger getPluginLogger() {
-		return pluginLogger;
+		return instance.pluginLogger;
 	}
 
 	public static Permission getPerms() {
-		return perms;
+		return instance.perms;
 	}
+
+	public static TaskScheduler getScheduler() { return instance.scheduler; }
 }

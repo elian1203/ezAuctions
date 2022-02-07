@@ -11,9 +11,6 @@ This plugin requires your server to have `Vault` installed. If you do not have i
 ## Developers
 Elian, Silverwolfg11
 
-## Website / Server
-Made for and used by http://urbanmc.net/
-
 ## Building
 Clone the project from github, then run `mvn clean package` in your terminal at the project directory to build the project.
 

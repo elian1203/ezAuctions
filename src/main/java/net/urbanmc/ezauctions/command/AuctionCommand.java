@@ -333,7 +333,7 @@ public class AuctionCommand extends BaseCommand {
         if (ConfigManager.getConfig().getBoolean("auctions.per-world-broadcast"))
             worldName = auc.getWorld();
 
-		MessageUtil.broadcastRegular(auc.getAuctioneer().getUniqueId(), worldName, Messages.getString("auction.end"));
+		MessageUtil.broadcastRegular(auc.getAuctioneer().getUniqueId(), worldName, "auction.end");
 
 		// Should never be false
 		if (EzAuctions.getAuctionManager().getCurrentRunnable() != null)

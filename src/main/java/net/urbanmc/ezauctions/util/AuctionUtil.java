@@ -90,7 +90,7 @@ public class AuctionUtil {
 			return null;
 		}
 
-		if (!isPositiveDouble(time)) {
+		if (!isPositiveInt(time)) {
 			message(p, "command.auction.start.invalid-time");
 			return null;
 		}
@@ -106,7 +106,7 @@ public class AuctionUtil {
 
 		int total = getTotalItems(p, item);
 
-		if (isPositiveDouble(amount)) {
+		if (isPositiveInt(amount)) {
 			finalAmount = Integer.parseInt(amount);
 
 			if (finalAmount > total)
@@ -162,10 +162,20 @@ public class AuctionUtil {
 		return d;
 	}
 
+	private static boolean isPositiveInt(String input) {
+		try {
+			// parseInt only parses decimal-represented numbers.
+			return Integer.parseInt(input) > 0;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
+
 	private static boolean isPositiveDouble(String input) {
 		try {
+			// parseDouble can accept various number representations: decimal, binary, hex, "NaN", and "Infinity"
 			double d = Double.parseDouble(input);
-			return d > 0;
+			return !Double.isNaN(d) && d > 0;
 		} catch (NumberFormatException e) {
 			return false;
 		}

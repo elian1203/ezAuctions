@@ -127,6 +127,11 @@ public class EzAuctions extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+		// if the scheduler is null, the plugin did not initialize due to vault/econ provider missing
+		// do not need to do any disable logic
+		if (scheduler == null)
+			return;
+
 		scheduler.markShutdown();
 		// Make sure auction manager is valid
 		if (getAuctionManager() != null)

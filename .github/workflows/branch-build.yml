@@ -13,10 +13,6 @@ jobs:
         with:
           java-version: 1.17
 
-      # download latest buildtools and get remapped spigot jar
-      - run: wget https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar
-      - run: java -jar BuildTools.jar --rev 1.18 --remapped
-
       - run: mvn --batch-mode --update-snapshots verify
       - uses: actions/upload-artifact@v2
         with:

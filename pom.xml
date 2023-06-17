@@ -63,12 +63,21 @@
 
     <build>
         <resources>
+            <!-- Apply version replacement in plugin.yml -->
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
                 <includes>
                     <include>plugin.yml</include>
                 </includes>
+            </resource>
+            <!-- Include other resource files -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>plugin.yml</exclude>
+                </excludes>
             </resource>
         </resources>
         <plugins>

@@ -250,8 +250,9 @@ public class Auction {
     public BaseComponent[] formatMessage(String message) {
         if (message.contains("%item%")) {
             String[] split = message.split("%item%");
-            BaseComponent[] first = TextComponent.fromLegacyText(Messages.translateAllColors(split[0]));
-            BaseComponent[] second = TextComponent.fromLegacyText(Messages.translateAllColors(split[1]));
+            BaseComponent[] first = TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', split[0])),
+                    second = TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&',
+                            split[1]));
 
             BaseComponent lastComp = first[first.length - 1];
 
@@ -294,7 +295,7 @@ public class Auction {
 
             return combined;
         } else {
-            return TextComponent.fromLegacyText(Messages.translateAllColors(message));
+            return TextComponent.fromLegacyText(ChatColor.translateAlternateColorCodes('&', message));
         }
     }
 }

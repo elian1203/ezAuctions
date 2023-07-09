@@ -21,7 +21,6 @@ import net.urbanmc.ezauctions.util.RewardUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -39,8 +38,15 @@ public class AuctionCommand extends BaseCommand {
 		List<String> display = new ArrayList<>();
 
 		for (RegisteredCommand sub : subs) {
-			Set<?> set = sub.getRequiredPermissions();
-			if (set.stream().anyMatch(s -> !sender.hasPermission((String)s)))
+			Iterator<String> perms = sub.getRequiredPermissions().iterator();
+			perms.next();
+
+			if (!perms.hasNext())
+				continue;
+
+			String permission = perms.next();
+
+			if (!sender.hasPermission(permission))
 				continue;
 
 			String[] split = sub.getCommand().split(" ");
@@ -53,42 +59,18 @@ public class AuctionCommand extends BaseCommand {
 				display.add(subCommand);
 		}
 
-		if (sender.hasPermission("ezauctions.bid")) {
-			display.add("bid");
-		}
+		Collections.sort(display);
 
 		sendPropMessage(sender, "command.help");
 
-		display = getCommandOrder(display);
-
 		for (String command : display) {
-			if (command.equals("bid")) {
-				sendPropMessage(sender, "command.bid.help");
-			} else {
-				String message = "command.auction." + command + ".help";
-				sendPropMessage(sender, message);
-			}
-		}
-	}
-
-	/**
-	 * Returns the subcommands in the order specified from the config help section
-	 * @param allowedCommands list of commands that the sender has access to
-	 */
-	private List<String> getCommandOrder(List<String> allowedCommands) {
-		ConfigurationSection helpSection = ConfigManager.getConfig().getConfigurationSection("help");
-
-		// using old config version, just display the help page in the order it used to: sorted, and bid at the end
-		if (helpSection == null) {
-			allowedCommands.remove("bid");
-			Collections.sort(allowedCommands);
-			allowedCommands.add("bid");
-			return allowedCommands;
+			String message = "command.auction." + command + ".help";
+			sendPropMessage(sender, message);
 		}
 
-		List<String> ordered = helpSection.getStringList("order");
-		ordered.removeIf(command -> !allowedCommands.contains(command));
-		return ordered;
+		if (sender.hasPermission("ezauctions.bid")) {
+			sendPropMessage(sender, "command.bid.help");
+		}
 	}
 
 	@Subcommand("cancel|c")

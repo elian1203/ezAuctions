@@ -1,8 +1,8 @@
 package net.urbanmc.ezauctions.manager;
 
+import net.md_5.bungee.api.ChatColor;
 import net.urbanmc.ezauctions.EzAuctions;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import net.urbanmc.ezauctions.util.ReflectionUtil;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -11,10 +11,13 @@ import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Messages {
 
     private static final Messages instance = new Messages();
+    private static final Pattern HEX_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
 
     private final File FILE = new File(EzAuctions.getDataDirectory(), "messages.properties");
 
@@ -109,7 +112,7 @@ public class Messages {
         }
 
         if (color) {
-            message = ChatColor.translateAlternateColorCodes('&', message);
+            message = translateAllColors(message);
         }
 
         return message;
@@ -139,6 +142,31 @@ public class Messages {
             EzAuctions.getPluginLogger().severe("Error updating messages.properties with missing key!");
             e.printStackTrace();
         }
+    }
+
+    public static String translateAllColors(String message) {
+        String hexReplaced = replaceHexColors(message);
+        return ChatColor.translateAlternateColorCodes('&', hexReplaced);
+    }
+
+    private static String replaceHexColors(String message) {
+        // if not supported, return now
+        if (ReflectionUtil.getVersion() < 1.16)
+            return message;
+
+        Matcher matcher = HEX_PATTERN.matcher(message);
+        String replaced = message;
+
+        while (matcher.find()) {
+            // this will look like $#FF0000
+            String pattern = message.substring(matcher.start(), matcher.end());
+            // this will look like #FF00000
+            String color = pattern.substring(1);
+            // replace the pattern with the color's string value
+            replaced = replaced.replace(pattern, ChatColor.of(color).toString());
+        }
+
+        return replaced;
     }
 
     public void reload() {

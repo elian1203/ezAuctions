@@ -21,6 +21,7 @@ import net.urbanmc.ezauctions.util.RewardUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -59,18 +60,42 @@ public class AuctionCommand extends BaseCommand {
 				display.add(subCommand);
 		}
 
-		Collections.sort(display);
+		if (sender.hasPermission("ezauctions.bid")) {
+			display.add("bid");
+		}
 
 		sendPropMessage(sender, "command.help");
 
+		display = getCommandOrder(display);
+
 		for (String command : display) {
-			String message = "command.auction." + command + ".help";
-			sendPropMessage(sender, message);
+			if (command.equals("bid")) {
+				sendPropMessage(sender, "command.bid.help");
+			} else {
+				String message = "command.auction." + command + ".help";
+				sendPropMessage(sender, message);
+			}
+		}
+	}
+
+	/**
+	 * Returns the subcommands in the order specified from the config help section
+	 * @param allowedCommands list of commands that the sender has access to
+	 */
+	private List<String> getCommandOrder(List<String> allowedCommands) {
+		ConfigurationSection helpSection = ConfigManager.getConfig().getConfigurationSection("help");
+
+		// using old config version, just display the help page in the order it used to: sorted, and bid at the end
+		if (helpSection == null) {
+			allowedCommands.remove("bid");
+			Collections.sort(allowedCommands);
+			allowedCommands.add("bid");
+			return allowedCommands;
 		}
 
-		if (sender.hasPermission("ezauctions.bid")) {
-			sendPropMessage(sender, "command.bid.help");
-		}
+		List<String> ordered = helpSection.getStringList("order");
+		ordered.removeIf(command -> !allowedCommands.contains(command));
+		return ordered;
 	}
 
 	@Subcommand("cancel|c")

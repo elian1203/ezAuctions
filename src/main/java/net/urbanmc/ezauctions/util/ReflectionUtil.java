@@ -34,6 +34,10 @@ public class ReflectionUtil {
         }
     }
 
+    public static double getVersion() {
+        return version;
+    }
+
     public static String getMinecraftName(ItemStack is) {
         try {
             if (version >= 1.18) {
@@ -71,13 +75,13 @@ public class ReflectionUtil {
      */
     public static int getXPForRepair(ItemStack is) {
         try {
-            Object nmsStack = asNMSCopy(is);
-
             if (version >= 1.18) {
                 int cost = (int) is.getItemMeta().serialize().getOrDefault("repair-cost", 0);
                 boolean repairable = cost <= 40;
                 return repairable ? cost : -1;
             }
+
+            Object nmsStack = asNMSCopy(is);
 
             boolean hasTag = (boolean) nmsStack.getClass().getMethod("hasTag").invoke(nmsStack);
 

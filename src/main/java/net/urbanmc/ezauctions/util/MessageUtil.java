@@ -75,6 +75,10 @@ public class MessageUtil {
 	public static void privateMessage(CommandSender sender, String prop, Object... args) {
 		String message = Messages.getString(prop, args);
 
+		// ignore if message empty
+		if (message.isEmpty())
+			return;
+
 		if (sender instanceof Player) {
 			sender.sendMessage(message);
 		} else {

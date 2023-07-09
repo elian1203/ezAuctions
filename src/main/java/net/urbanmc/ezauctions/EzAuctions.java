@@ -143,6 +143,9 @@ public class EzAuctions extends JavaPlugin {
 	}
 
 	private boolean setupEconomy() {
+		if (getServer().getPluginManager().getPlugin("Vault") == null)
+			return false;
+
 		try {
 			RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
 

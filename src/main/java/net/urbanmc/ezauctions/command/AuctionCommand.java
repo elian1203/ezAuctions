@@ -39,15 +39,8 @@ public class AuctionCommand extends BaseCommand {
 		List<String> display = new ArrayList<>();
 
 		for (RegisteredCommand sub : subs) {
-			Iterator<String> perms = sub.getRequiredPermissions().iterator();
-			perms.next();
-
-			if (!perms.hasNext())
-				continue;
-
-			String permission = perms.next();
-
-			if (!sender.hasPermission(permission))
+			Set<?> set = sub.getRequiredPermissions();
+			if (set.stream().anyMatch(s -> !sender.hasPermission((String)s)))
 				continue;
 
 			String[] split = sub.getCommand().split(" ");

@@ -1,10 +1,11 @@
-main: net.urbanmc.ezauctions.EzAuctions
+main: me.elian.ezauctions.EzAuctions
 name: ezAuctions
 version: ${project.version}
-api-version: 1.13
+api-version: 1.20
 authors: [Elian, Silverwolfg11]
 description: A simple, text-based auction plugin
 softdepend: [Vault]
+folia-supported: true
 
 permissions:
   ezauctions.*:
@@ -21,7 +22,6 @@ permissions:
       ezauctions.auction.enable: true
       ezauctions.auction.disable: true
       ezauctions.auction.reload: true
-      ezauctions.auction.save: true
       ezauctions.updatemessage: true
       ezauctions.auction.end: true
   ezauctions.player:
@@ -74,8 +74,6 @@ permissions:
   ezauctions.auction.disable:
     default: false
   ezauctions.auction.reload:
-    default: false
-  ezauctions.auction.save:
     default: false
   ezauctions.bid:
     default: false

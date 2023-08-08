@@ -1,4 +1,6 @@
 # ezAuctions
+[![build status](https://github.com/elian1203/ezAuctions/actions/workflows/build.yml/badge.svg)](https://github.com/elian1203/ezAuctions/actions/workflows/build.yml)
+[![CodeFactor](https://www.codefactor.io/repository/github/elian1203/ezauctions/badge/develop)](https://www.codefactor.io/repository/github/elian1203/ezauctions/overview/develop)  
 Spigot Page: [https://www.spigotmc.org/resources/ezauctions.42574/](https://www.spigotmc.org/resources/ezauctions.42574/)
 
 A simple, text-based auction plugin <br> <br>
@@ -12,7 +14,7 @@ This plugin requires your server to have `Vault` installed. If you do not have i
 Elian, Silverwolfg11
 
 ## Building
-Clone the project from github, then run `mvn clean package` in your terminal at the project directory to build the project.
+Clone the project from GitHub, then run `mvn clean package` in your terminal at the project directory to build the project.
 
 ## API
 To depend on this plugin in your own project, add the following to your maven / gradle project.
@@ -29,7 +31,7 @@ Dependency:
 <dependency>
     <groupId>com.github.elian1203</groupId>
     <artifactId>ezAuctions</artifactId>
-    <version>1.5.7</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 You can view API usage [here](https://github.com/elian1203/ezAuctions/wiki/api).

@@ -5,7 +5,7 @@ import co.aikar.commands.RegisteredCommand;
 import co.aikar.commands.annotation.*;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.elian.ezauctions.PluginLogger;
+import me.elian.ezauctions.Logger;
 import me.elian.ezauctions.controller.*;
 import me.elian.ezauctions.data.Database;
 import me.elian.ezauctions.event.AuctionCancelEvent;
@@ -46,7 +46,7 @@ public class AuctionCommand extends BaseCommand {
 	private static final Pattern CURRENT_LIMIT_PERM_PATTERN = Pattern.compile("ezauctions\\.auction\\.currentlimit\\" +
 			".([0-9]+)");
 	private final Plugin plugin;
-	private final PluginLogger logger;
+	private final Logger logger;
 	private final Economy economy;
 	private final AuctionController auctionController;
 	private final AuctionPlayerController playerController;
@@ -57,7 +57,7 @@ public class AuctionCommand extends BaseCommand {
 	private final TaskScheduler scheduler;
 
 	@Inject
-	public AuctionCommand(Plugin plugin, PluginLogger logger, Economy economy, AuctionController auctionController,
+	public AuctionCommand(Plugin plugin, Logger logger, Economy economy, AuctionController auctionController,
 	                      AuctionPlayerController playerController, ConfigController config,
 	                      MessageController messages, ScoreboardController scoreboard,
 	                      Database database, TaskScheduler scheduler) {

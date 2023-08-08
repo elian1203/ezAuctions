@@ -1,6 +1,6 @@
 package me.elian.ezauctions.scheduler;
 
-import me.elian.ezauctions.PluginLogger;
+import me.elian.ezauctions.Logger;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -12,12 +12,12 @@ import java.util.List;
 
 public abstract class TaskSchedulerBase implements TaskScheduler {
 	private final Plugin plugin;
-	private final PluginLogger logger;
+	private final Logger logger;
 	private final List<Player> executingCommands = new ArrayList<>();
 	private final HashMap<Player, List<Runnable>> queuedCommands = new HashMap<>();
 	private boolean shuttingDown;
 
-	protected TaskSchedulerBase(@NotNull Plugin plugin, @NotNull PluginLogger logger) {
+	protected TaskSchedulerBase(@NotNull Plugin plugin, @NotNull Logger logger) {
 		this.plugin = plugin;
 		this.logger = logger;
 	}

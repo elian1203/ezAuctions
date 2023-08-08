@@ -1,6 +1,6 @@
 package me.elian.ezauctions.controller;
 
-import me.elian.ezauctions.PluginLogger;
+import me.elian.ezauctions.Logger;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -9,11 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 abstract class FileHandler {
-	private final PluginLogger logger;
+	private final Logger logger;
 	private final String resourceName;
 	private final Path path;
 
-	protected FileHandler(Plugin plugin, PluginLogger logger, String resourceName) {
+	protected FileHandler(Plugin plugin, Logger logger, String resourceName) {
 		this.logger = logger;
 		this.resourceName = resourceName;
 

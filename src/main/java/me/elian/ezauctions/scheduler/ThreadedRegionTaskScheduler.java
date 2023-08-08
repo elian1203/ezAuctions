@@ -3,7 +3,7 @@ package me.elian.ezauctions.scheduler;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
-import me.elian.ezauctions.PluginLogger;
+import me.elian.ezauctions.Logger;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class ThreadedRegionTaskScheduler extends TaskSchedulerBase {
 	@Inject
-	public ThreadedRegionTaskScheduler(@NotNull Plugin plugin, @NotNull PluginLogger logger) {
+	public ThreadedRegionTaskScheduler(@NotNull Plugin plugin, @NotNull Logger logger) {
 		super(plugin, logger);
 	}
 

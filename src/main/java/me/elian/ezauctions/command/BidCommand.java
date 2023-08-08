@@ -7,7 +7,7 @@ import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Description;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.elian.ezauctions.PluginLogger;
+import me.elian.ezauctions.Logger;
 import me.elian.ezauctions.controller.AuctionController;
 import me.elian.ezauctions.controller.AuctionPlayerController;
 import me.elian.ezauctions.controller.ConfigController;
@@ -36,13 +36,13 @@ public class BidCommand extends BaseCommand {
 	private final ConfigController config;
 	private final MessageController messages;
 	private final Plugin plugin;
-	private final PluginLogger logger;
+	private final Logger logger;
 	private final Economy economy;
 	private final TaskScheduler scheduler;
 
 	@Inject
 	public BidCommand(AuctionController auctionController, AuctionPlayerController playerController,
-	                  ConfigController config, MessageController messages, Plugin plugin, PluginLogger logger,
+	                  ConfigController config, MessageController messages, Plugin plugin, Logger logger,
 	                  Economy economy, TaskScheduler scheduler) {
 		this.auctionController = auctionController;
 		this.playerController = playerController;

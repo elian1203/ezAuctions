@@ -2,7 +2,7 @@ package me.elian.ezauctions.scheduler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.elian.ezauctions.PluginLogger;
+import me.elian.ezauctions.Logger;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 public class BukkitTaskScheduler extends TaskSchedulerBase {
 
 	@Inject
-	public BukkitTaskScheduler(@NotNull Plugin plugin, @NotNull PluginLogger logger) {
+	public BukkitTaskScheduler(@NotNull Plugin plugin, @NotNull Logger logger) {
 		super(plugin, logger);
 	}
 

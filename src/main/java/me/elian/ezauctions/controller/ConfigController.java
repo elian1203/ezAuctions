@@ -2,7 +2,7 @@ package me.elian.ezauctions.controller;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.elian.ezauctions.PluginLogger;
+import me.elian.ezauctions.Logger;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -17,7 +17,7 @@ public class ConfigController extends FileHandler {
 	private FileConfiguration fileConfiguration;
 
 	@Inject
-	public ConfigController(Plugin plugin, PluginLogger logger) {
+	public ConfigController(Plugin plugin, Logger logger) {
 		super(plugin, logger, RESOURCE_NAME);
 
 		try {

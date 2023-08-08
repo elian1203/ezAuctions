@@ -7,7 +7,7 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import me.elian.ezauctions.PluginLogger;
+import me.elian.ezauctions.Logger;
 import me.elian.ezauctions.controller.ConfigController;
 import me.elian.ezauctions.model.AuctionPlayer;
 import me.elian.ezauctions.model.AuctionPlayerIgnore;
@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutionException;
 
 @Singleton
 public class OrmLiteDatabase implements Database {
-	private final PluginLogger logger;
+	private final Logger logger;
 	private final TaskScheduler scheduler;
 	private final ConfigController config;
 	private final Object connectingMonitor = new Object();
@@ -31,7 +31,7 @@ public class OrmLiteDatabase implements Database {
 	private Dao<AuctionPlayer, UUID> auctionPlayerDao;
 
 	@Inject
-	public OrmLiteDatabase(PluginLogger logger, ConfigController config, TaskScheduler scheduler) {
+	public OrmLiteDatabase(Logger logger, ConfigController config, TaskScheduler scheduler) {
 		this.logger = logger;
 		this.config = config;
 		this.scheduler = scheduler;

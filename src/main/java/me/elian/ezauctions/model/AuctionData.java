@@ -1,6 +1,6 @@
 package me.elian.ezauctions.model;
 
-import me.elian.ezauctions.PluginLogger;
+import me.elian.ezauctions.Logger;
 import me.elian.ezauctions.controller.ConfigController;
 import me.elian.ezauctions.controller.MessageController;
 import me.elian.ezauctions.helper.ItemHelper;
@@ -107,7 +107,7 @@ public final class AuctionData {
 		return customName;
 	}
 
-	public void gatherAdditionalData(PluginLogger logger) {
+	public void gatherAdditionalData(Logger logger) {
 		if (item == null || item.getType() == Material.AIR)
 			return;
 
@@ -227,7 +227,7 @@ public final class AuctionData {
 			return true;
 		}
 
-		if (startingPrice > min) {
+		if (startingPrice > min && autoBuyPrice != 0) {
 			min = startingPrice;
 		}
 

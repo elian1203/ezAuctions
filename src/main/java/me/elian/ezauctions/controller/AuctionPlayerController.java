@@ -2,7 +2,7 @@ package me.elian.ezauctions.controller;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.elian.ezauctions.PluginLogger;
+import me.elian.ezauctions.Logger;
 import me.elian.ezauctions.data.Database;
 import me.elian.ezauctions.helper.ItemHelper;
 import me.elian.ezauctions.model.AuctionPlayer;
@@ -28,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Singleton
 public class AuctionPlayerController implements Listener {
-	private final PluginLogger logger;
+	private final Logger logger;
 	private final Database database;
 	private final TaskScheduler scheduler;
 	private final ConfigController config;
@@ -39,7 +39,7 @@ public class AuctionPlayerController implements Listener {
 	private boolean updateAvailable;
 
 	@Inject
-	public AuctionPlayerController(Plugin plugin, PluginLogger logger, Database database, TaskScheduler scheduler,
+	public AuctionPlayerController(Plugin plugin, Logger logger, Database database, TaskScheduler scheduler,
 	                               ConfigController config, MessageController messages,
 	                               ScoreboardController scoreboard) {
 		this.logger = logger;

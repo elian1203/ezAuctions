@@ -4,7 +4,7 @@ import co.aikar.commands.PaperCommandManager;
 import co.aikar.locales.MessageKey;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.elian.ezauctions.PluginLogger;
+import me.elian.ezauctions.Logger;
 import me.elian.ezauctions.model.*;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
@@ -42,14 +42,14 @@ public class MessageController extends FileHandler {
 	private static final Pattern UNREPAIRABLE_PATTERN = Pattern.compile("<unrepairable>(.*)</unrepairable>",
 			Pattern.DOTALL);
 	private final Plugin plugin;
-	private final PluginLogger logger;
+	private final Logger logger;
 	private final PaperCommandManager commandManager;
 	private final ConfigController config;
 	private ResourceBundle bundle;
 	private BukkitAudiences audiences;
 
 	@Inject
-	public MessageController(Plugin plugin, PluginLogger logger, PaperCommandManager commandManager,
+	public MessageController(Plugin plugin, Logger logger, PaperCommandManager commandManager,
 	                         ConfigController config) {
 		super(plugin, logger, RESOURCE_NAME);
 		this.plugin = plugin;

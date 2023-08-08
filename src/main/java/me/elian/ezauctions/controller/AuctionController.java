@@ -3,6 +3,7 @@ package me.elian.ezauctions.controller;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import me.elian.ezauctions.Logger;
 import me.elian.ezauctions.model.Auction;
 import me.elian.ezauctions.model.AuctionData;
 import me.elian.ezauctions.model.AuctionPlayer;
@@ -18,6 +19,7 @@ import java.util.*;
 
 @Singleton
 public class AuctionController implements Listener {
+	private final Logger logger;
 	private final TaskScheduler scheduler;
 	private final ConfigController config;
 	private final MessageController messages;
@@ -30,8 +32,9 @@ public class AuctionController implements Listener {
 	private long lastAuctionEndTimeMillis;
 
 	@Inject
-	public AuctionController(Plugin plugin, TaskScheduler scheduler, ConfigController config,
+	public AuctionController(Plugin plugin, Logger logger, TaskScheduler scheduler, ConfigController config,
 	                         MessageController messages, Provider<Auction> auctionProvider) {
+		this.logger = logger;
 		this.scheduler = scheduler;
 		this.config = config;
 		this.messages = messages;
@@ -104,6 +107,7 @@ public class AuctionController implements Listener {
 		for (AuctionData data : auctionQueue) {
 			if (data.getAuctioneer().getUniqueId().equals(auctionPlayer.getUniqueId())) {
 				auctionQueue.remove(data);
+				logItemMessage(data, "Item removed from auction queue. Auctioneer: %s Amount: %d Item: %s NBT: %s");
 				return data;
 			}
 		}
@@ -143,6 +147,8 @@ public class AuctionController implements Listener {
 	public boolean queueAuction(@NotNull AuctionData auctionData) {
 		if (hasActiveAuction() || auctionQueue.size() != 0) {
 			auctionQueue.add(auctionData);
+			logItemMessage(auctionData,
+					"Item added to auction queue. Auctioneer: %s Amount: %d Item: %s NBT: %s");
 			return true;
 		}
 
@@ -150,6 +156,8 @@ public class AuctionController implements Listener {
 		long timeSinceLastAuction = System.currentTimeMillis() - lastAuctionEndTimeMillis;
 		if (timeSinceLastAuction < delay * 1000L) {
 			auctionQueue.add(auctionData);
+			logItemMessage(auctionData,
+					"Item added to auction queue. Auctioneer: %s Amount: %d Item: %s NBT: %s");
 			pullNextAuctionFromQueue();
 			return true;
 		}
@@ -157,6 +165,7 @@ public class AuctionController implements Listener {
 		Auction auction = auctionProvider.get();
 		activeAuction = auction;
 		auction.startAuction(auctionData, this::handleAuctionCompleted);
+		logItemMessage(auctionData, "Item starting in auction. Auctioneer: %s Amount: %d Item: %s NBT: %s");
 		return false;
 	}
 
@@ -202,5 +211,18 @@ public class AuctionController implements Listener {
 		Auction nextAuction = auctionProvider.get();
 		activeAuction = nextAuction;
 		nextAuction.startAuction(nextAuctionData, this::handleAuctionCompleted);
+		logItemMessage(nextAuctionData, "Item starting in auction. Auctioneer: %s Amount: %d Item: %s NBT: %s");
+	}
+
+	private void logItemMessage(AuctionData data, String message) {
+		if (!config.getConfig().getBoolean("general.log-items-to-console"))
+			return;
+
+		logger.info(String.format(
+				message,
+				data.getAuctioneer().getOfflinePlayer().getName(),
+				data.getAmount(),
+				data.getItem().getType(),
+				data.getItemNbt()));
 	}
 }

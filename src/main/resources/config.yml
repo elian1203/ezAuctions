@@ -29,6 +29,10 @@ general:
   # Set to 0 to disable
   # use ezauctions.cooldownexempt permission to bypass this
   queue-cooldown-time: 0
+  # when true, an info line containing the item and NBT will be logged to console whenever
+  # an auction enters/leaves queue or starts
+  # this can be used to restore items to user's in the event of a server crash
+  log-items-to-console: true
 
 auctions:
   # Worlds that you cannot start auctions in

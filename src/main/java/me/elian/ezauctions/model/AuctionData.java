@@ -227,6 +227,10 @@ public final class AuctionData {
 			return true;
 		}
 
+		if (startingPrice > min) {
+			min = startingPrice;
+		}
+
 		if (autoBuyPrice < 0 || autoBuyPrice < min || (autoBuyPrice > max && max != 0)) {
 			messages.sendMessage(player, "command.auction.start.invalid-buyout",
 					Formatter.number("min", min),

@@ -1,8 +1,8 @@
-name: Automatically create release with artifact on pull request
+name: automatic-release
 
 on:
   pull_request:
-    branches: [ 'master' ]
+    branches: [ 'main' ]
     types: [ closed ]
 
 jobs:

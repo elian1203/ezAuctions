@@ -2,18 +2,18 @@
 #################################
 
 data:
-  # Should the data be saved again when the plugin disables?
-  save-on-disable: true
-  # What format should the auction player data be stored in?
-  storage-type: json # Three Types: JSON, MySQL, SQLite
-  # Fill out the information below if you're using MySQL
-  mysql:
-    host: 'host'
-    port: 3306
-    database: 'auctions'
-    username: 'user'
-    password: 'pass'
-    useSSL: false
+  # Out of the box support for MySQL, MariaDB, and SQLite
+  # You can add support for Postgres, Microsoft SQL Server, H2, Derby, HSQLDB by including the appropriate drivers
+  # in your server
+  # If using something other than SQLite you must specify an EXISTING database
+  # example sqlite connection string 'jdbc:sqlite:plugins/ezAuctions/sqlite.db'
+  # example mysql connection string jdbc:mysql://host:port/database?useSSL=false
+  #                                 jdbc:mysql://localhost:3306/production?useSSL=false
+  #                   for mariadb:  jdbc:mariadb://localhost:3306/production?useSSL=false
+  connection-string: 'jdbc:sqlite:plugins/ezAuctions/sqlite.db'
+  # leave blank if using sqlite
+  username: ''
+  password: ''
 
 general:
   # Should we check for updates and notify players on join? Permission is ezauctions.updatemessage
@@ -69,30 +69,17 @@ auctions:
     # Should we deny players in creative mode from starting auctions?
     deny-creative: false
 
-    # When set to true, the custom item name will be used instead of the minecraft item name when available
-    display-custom-name: false
-
-    # Should we put quotes around custom named items i.e. "My Amazing Pick" when auctioning a diamond pickaxe
-    quotes-around-name: true
-
-    # Should we broadcast the owner of the head if it is a player head?
-    broadcast-head: true
-
-    # Should we broadcast how much xp it costs to repair an auctioned item?
-    broadcast-repair: true
-
-    # Should we allow players to specify autobuys?
-    autobuy: true
-
     # Should we restrict players to start auctions with items that are damaged?
     restrict-damaged: false
 
-    # Should we allow decimals in these prices? Ex: $5.64
-    decimal:
-      starting-price: false
-      increment: false
-      autobuy: false
-      bid: false
+  # the number of digits allowed in each price
+  # ex: 0 -> $5, 1 -> $5.1, 2 -> 5.13
+  # recommend either leaving as 0 or setting to 2, but your economy structure may be different
+  decimal:
+    starting-price: 0
+    increment: 0
+    autobuy: 0
+    bid: 0
 
   # Default uses for commands if players specify nothing
   default:
@@ -111,7 +98,7 @@ auctions:
     # The minimum here will be $0
     autobuy: 0
     # Minimum starting price for an auction. Set to 0 to disable
-    starting-price: -1
+    starting-price: 0
 
   maximum:
     auction-time: -1
@@ -119,8 +106,8 @@ auctions:
     autobuy: 10000000
     # How many times can a player bid in a row before someone else bids?
     consecutive-bids: 2
-    # Maximum starting price for an auction. Set to -1 to disable
-    starting-price: -1
+    # Maximum starting price for an auction. 0 means any amount
+    starting-price: 0
 
 # They use the same settings as auctions
 sealed-auctions:
@@ -142,13 +129,26 @@ antisnipe:
 # Scoreboard for auctions. Auto-updating
 scoreboard:
   enabled: true
-  # If the player has another scoreboard visible should we still attempt to display the auction scoreboard?
-  overlap: false
-  # Available options are skull, repair, autobuy, and sealed
-  # These are extra details about the item. For example if it's a skull it will display the skull name. Same as in the
-  # broadcast. Feel free to move these around or completely remove them as you wish
-  meta:
-    - autobuy
-    - skull
-    - repair
-    - sealed
+
+help:
+  # this allows you to set the order in which commands appear when the auction help page is shown
+  # if the player does not have permission for the command, it will not be shown
+  # removing these will stop the help from showing for that command.
+  order:
+    - cancel
+    - disable
+    - enable
+    - end
+    - ignore
+    - ignoreplayer
+    - impound
+    - info
+    - queue
+    - reload
+    - remove
+    - save
+    - scoreboard
+    - spam
+    - start
+    - startsealed
+    - bid

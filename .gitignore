@@ -15,9 +15,11 @@ tmp/**/*
 
 #IntelliJ
 out/
-.idea/
+.idea/*
 *.iml
 *.iws
+# include code style files
+!.idea/codeStyles
 
 # Eclipse
 .classpath

@@ -31,6 +31,7 @@ jobs:
           prerelease: false
           # Release name will default to tag name
           # Tag name will be the name of the branch
-          tag_name: ${{ github.head_ref }}
-          files: "./target/ezAuctions*.jar"
+          tag_name: ${{ github.event.pull_request.title }}
+          body: ${{ github.event.pull_request.body }}
+          files: "./target/ezAuctions.jar"
           fail_on_unmatched_files: true

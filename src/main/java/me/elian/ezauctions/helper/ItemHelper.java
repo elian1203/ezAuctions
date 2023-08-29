@@ -124,7 +124,7 @@ public class ItemHelper {
 			if (is == null || !itemStack.isSimilar(is))
 				continue;
 
-			amountInInventory += itemStack.getAmount();
+			amountInInventory += is.getAmount();
 		}
 
 		return amountInInventory;

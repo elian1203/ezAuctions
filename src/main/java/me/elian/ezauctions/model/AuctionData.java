@@ -42,7 +42,7 @@ public final class AuctionData {
 	                   String world) {
 		this.auctioneer = auctioneer;
 		this.item = item;
-		this.amountString = amountString;
+		this.amountString = amountString == null ? "" : amountString.toLowerCase();
 		this.startingAuctionTime = startingAuctionTime;
 		this.startingPrice = startingPrice;
 		this.incrementPrice = incrementPrice;

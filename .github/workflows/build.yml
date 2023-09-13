@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # We need to checkout all tags for the version to be calculated correctly
-      - name: Checkout main with all tags
+      - name: Checkout with all tags
         uses: actions/checkout@v4
         with:
           fetch-depth: 0

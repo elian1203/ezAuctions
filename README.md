@@ -1,6 +1,6 @@
 # ezAuctions
 [![build status](https://github.com/elian1203/ezAuctions/actions/workflows/build.yml/badge.svg)](https://github.com/elian1203/ezAuctions/actions/workflows/build.yml)
-[![CodeFactor](https://www.codefactor.io/repository/github/elian1203/ezauctions/badge/develop)](https://www.codefactor.io/repository/github/elian1203/ezauctions/overview/develop)
+[![CodeFactor](https://www.codefactor.io/repository/github/elian1203/ezauctions/badge/main)](https://www.codefactor.io/repository/github/elian1203/ezauctions/overview/main)
 [![](https://jitpack.io/v/elian1203/ezauctions.svg)](https://jitpack.io/#elian1203/ezauctions)  
 Spigot Page: [https://www.spigotmc.org/resources/ezauctions.42574/](https://www.spigotmc.org/resources/ezauctions.42574/)
 

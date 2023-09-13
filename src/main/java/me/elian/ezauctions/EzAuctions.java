@@ -1,6 +1,10 @@
 package me.elian.ezauctions;
 
 import co.aikar.commands.PaperCommandManager;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -18,20 +22,12 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.w3c.dom.Document;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.lang.module.ModuleDescriptor;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,13 +53,14 @@ public class EzAuctions extends JavaPlugin {
 	                                               AuctionPlayerController playerController,
 	                                               String serverVersionString) {
 		try {
-			InputStream inputStream = new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8));
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			Document doc = dBuilder.parse(inputStream);
+			JsonElement element = JsonParser.parseString(response);
+			JsonArray array = element.getAsJsonArray();
+			if (array.size() == 0)
+				return;
 
-			XPath xpath = XPathFactory.newInstance().newXPath();
-			String latestVersionString = xpath.evaluate("/project/version", doc);
+			JsonElement latestTag = array.get(0);
+			JsonObject object = latestTag.getAsJsonObject();
+			String latestVersionString = object.get("name").getAsString();
 			var latestVersion = ModuleDescriptor.Version.parse(latestVersionString);
 			var serverVersion = ModuleDescriptor.Version.parse(serverVersionString);
 
@@ -195,7 +192,7 @@ public class EzAuctions extends JavaPlugin {
 		AuctionPlayerController playerController = injector.getInstance(AuctionPlayerController.class);
 		String serverVersion = getDescription().getVersion();
 
-		String url = "https://raw.githubusercontent.com/elian1203/ezAuctions/main/pom.xml";
+		String url = "https://api.github.com/repos/elian1203/ezAuctions/tags";
 		HttpClient client = HttpClient.newHttpClient();
 		HttpRequest request = HttpRequest.newBuilder(URI.create(url)).build();
 

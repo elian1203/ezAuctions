@@ -1,0 +1,37 @@
+name: upload-release-artifact
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    permissions: write-all
+    runs-on: ubuntu-latest
+
+    steps:
+      # We need to checkout the main branch with all tags for the version to be calculated correctly
+      - name: Checkout main with all tags
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # set up jdk 1.17
+      - name: Setup JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      # build jar with maven
+      - name: Build Project
+        run: mvn --batch-mode --update-snapshots verify
+
+      # Upload jar to newly created release
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run:
+          gh release upload ${{ github.event.release.tag_name }} target/ezAuctions.jar

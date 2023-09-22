@@ -36,8 +36,6 @@ public class AuctionPlayerController implements Listener {
 	private final ScoreboardController scoreboard;
 	private final List<AuctionPlayer> onlinePlayers = new ArrayList<>();
 
-	private boolean updateAvailable;
-
 	@Inject
 	public AuctionPlayerController(Plugin plugin, Logger logger, Database database, TaskScheduler scheduler,
 	                               ConfigController config, MessageController messages,
@@ -89,10 +87,6 @@ public class AuctionPlayerController implements Listener {
 				scoreboard.addPlayer(p);
 				returnSavedItems(ap);
 			});
-
-			if (updateAvailable && p.hasPermission("ezauctions.updatemessage")) {
-				messages.sendMessage(p, "login.updatemessage");
-			}
 		});
 	}
 
@@ -115,10 +109,6 @@ public class AuctionPlayerController implements Listener {
 			Player player = e.getPlayer();
 			getPlayer(player).thenAccept(this::returnSavedItems);
 		});
-	}
-
-	public void setUpdateAvailable() {
-		this.updateAvailable = true;
 	}
 
 	private void returnSavedItems(AuctionPlayer ap) {

@@ -6,6 +6,8 @@ import com.google.inject.ImplementedBy;
 public interface Logger {
 	void info(String message);
 
+	void warning(String message);
+
 	void warning(String message, Exception exception);
 
 	void severe(String message);

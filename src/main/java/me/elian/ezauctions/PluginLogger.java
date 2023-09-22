@@ -21,6 +21,11 @@ public class PluginLogger implements Logger {
 	}
 
 	@Override
+	public void warning(String message) {
+		plugin.getLogger().warning(message);
+	}
+
+	@Override
 	public void warning(String message, Exception exception) {
 		plugin.getLogger().log(Level.WARNING, message, exception);
 	}

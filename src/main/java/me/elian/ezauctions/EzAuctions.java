@@ -1,16 +1,15 @@
 package me.elian.ezauctions;
 
 import co.aikar.commands.PaperCommandManager;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import me.elian.ezauctions.command.AuctionCommand;
 import me.elian.ezauctions.command.BidCommand;
-import me.elian.ezauctions.controller.*;
+import me.elian.ezauctions.controller.AuctionController;
+import me.elian.ezauctions.controller.MessageController;
+import me.elian.ezauctions.controller.ScoreboardController;
+import me.elian.ezauctions.controller.UpdateController;
 import me.elian.ezauctions.data.Database;
 import me.elian.ezauctions.scheduler.BukkitTaskScheduler;
 import me.elian.ezauctions.scheduler.TaskScheduler;
@@ -23,14 +22,6 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.lang.module.ModuleDescriptor;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 public class EzAuctions extends JavaPlugin {
 	private TaskScheduler scheduler;
 	private Database database;
@@ -38,6 +29,7 @@ public class EzAuctions extends JavaPlugin {
 	private AuctionController auctionController;
 	private MessageController messageController;
 	private ScoreboardController scoreboardController;
+	private UpdateController updateController;
 	private Injector injector;
 
 	private static Class<? extends TaskScheduler> getSchedulerType() {
@@ -46,32 +38,6 @@ public class EzAuctions extends JavaPlugin {
 			return ThreadedRegionTaskScheduler.class;
 		} catch (ClassNotFoundException e) {
 			return BukkitTaskScheduler.class;
-		}
-	}
-
-	private static void checkLatestVersionResponse(String response, Logger logger,
-	                                               AuctionPlayerController playerController,
-	                                               String serverVersionString) {
-		try {
-			JsonElement element = JsonParser.parseString(response);
-			JsonArray array = element.getAsJsonArray();
-			if (array.size() == 0)
-				return;
-
-			JsonElement latestTag = array.get(0);
-			JsonObject object = latestTag.getAsJsonObject();
-			String latestVersionString = object.get("name").getAsString();
-			var latestVersion = ModuleDescriptor.Version.parse(latestVersionString);
-			var serverVersion = ModuleDescriptor.Version.parse(serverVersionString);
-
-			if (serverVersion.compareTo(latestVersion) >= 0)
-				return;
-
-			logger.info("Version " + latestVersion + " is available! You are currently running " +
-					"version " + serverVersion + ".");
-			playerController.setUpdateAvailable();
-		} catch (Exception e) {
-			logger.log(Level.WARNING, "Error while checking latest release of plugin.", e);
 		}
 	}
 
@@ -99,7 +65,8 @@ public class EzAuctions extends JavaPlugin {
 		scoreboardController = injector.getInstance(ScoreboardController.class);
 		metrics = new Metrics(this, 985);
 
-		checkLatestVersion(injector);
+		updateController = injector.getInstance(UpdateController.class);
+		updateController.checkForUpdates();
 	}
 
 	@Override
@@ -119,6 +86,10 @@ public class EzAuctions extends JavaPlugin {
 
 		if (scoreboardController != null) {
 			scoreboardController.shutdown();
+		}
+
+		if (updateController != null) {
+			updateController.shutdown();
 		}
 
 		// database must be shut down last in case saved items need to be added
@@ -182,27 +153,5 @@ public class EzAuctions extends JavaPlugin {
 
 		manager.registerCommand(auctionCommand);
 		manager.registerCommand(bidCommand);
-	}
-
-	private void checkLatestVersion(Injector injector) {
-		ConfigController config = injector.getInstance(ConfigController.class);
-		if (!config.getConfig().getBoolean("general.check-updates"))
-			return;
-
-		AuctionPlayerController playerController = injector.getInstance(AuctionPlayerController.class);
-		String serverVersion = getDescription().getVersion();
-
-		String url = "https://api.github.com/repos/elian1203/ezAuctions/tags";
-		HttpClient client = HttpClient.newHttpClient();
-		HttpRequest request = HttpRequest.newBuilder(URI.create(url)).build();
-
-		client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-				.thenApply(HttpResponse::body)
-				.exceptionallyAsync(t -> {
-					getLogger().log(Level.WARNING, "Error while checking latest release of plugin.", t);
-					return null;
-				})
-				.thenAccept(response -> checkLatestVersionResponse(response, getLogger(), playerController,
-						serverVersion));
 	}
 }

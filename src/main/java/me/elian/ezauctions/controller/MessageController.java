@@ -303,7 +303,7 @@ public class MessageController extends FileHandler {
 		try {
 			return bundle.getString(key);
 		} catch (MissingResourceException resourceException) {
-			logger.severe("Missing message key in messages file! (" + key + ") " +
+			logger.warning("Missing message key in messages file! (" + key + ") " +
 					"Loading from default messages.properties. This will make the plugin slower!", resourceException);
 			try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(RESOURCE_NAME)) {
 				if (inputStream == null)

@@ -53,6 +53,7 @@ public class AuctionCommand extends BaseCommand {
 	private final ConfigController config;
 	private final MessageController messages;
 	private final ScoreboardController scoreboard;
+	private final UpdateController updateController;
 	private final Database database;
 	private final TaskScheduler scheduler;
 
@@ -60,7 +61,7 @@ public class AuctionCommand extends BaseCommand {
 	public AuctionCommand(Plugin plugin, Logger logger, Economy economy, AuctionController auctionController,
 	                      AuctionPlayerController playerController, ConfigController config,
 	                      MessageController messages, ScoreboardController scoreboard,
-	                      Database database, TaskScheduler scheduler) {
+	                      UpdateController updateController, Database database, TaskScheduler scheduler) {
 		this.plugin = plugin;
 		this.logger = logger;
 		this.economy = economy;
@@ -69,6 +70,7 @@ public class AuctionCommand extends BaseCommand {
 		this.config = config;
 		this.messages = messages;
 		this.scoreboard = scoreboard;
+		this.updateController = updateController;
 		this.database = database;
 		this.scheduler = scheduler;
 	}
@@ -555,6 +557,41 @@ public class AuctionCommand extends BaseCommand {
 			}
 
 			messages.sendMessage(sender, "command.auction.reload");
+		});
+	}
+
+	@Subcommand("update")
+	@CommandPermission("ezauctions.auction.update")
+	public void update(CommandSender sender) {
+		scheduler.runAsyncTask(() -> {
+			messages.sendMessage(sender, "command.auction.update.checking");
+			try {
+				updateController.fetchLatestSupportedVersion();
+				String latestVersion = updateController.getLatestSupportedPluginVersion();
+				String serverVersion = updateController.getServerPluginVersion();
+				if (latestVersion == null || latestVersion.equals(serverVersion)) {
+					if (latestVersion == null) {
+						latestVersion = serverVersion;
+					}
+
+					messages.sendMessage(sender, "command.auction.update.already_up_to_date",
+							Placeholder.unparsed("latestversion", latestVersion),
+							Placeholder.unparsed("serverversion", serverVersion));
+					return;
+				}
+
+				messages.sendMessage(sender, "command.auction.update.latest_version",
+						Placeholder.unparsed("latestversion", latestVersion),
+						Placeholder.unparsed("serverversion", serverVersion));
+
+				updateController.downloadLatestSupportedVersion();
+				messages.sendMessage(sender, "command.auction.update.downloaded",
+						Placeholder.unparsed("latestversion", latestVersion),
+						Placeholder.unparsed("serverversion", serverVersion));
+			} catch (Exception e) {
+				logger.warning("Error while updating plugin", e);
+				messages.sendMessage(sender, "command.auction.update.error");
+			}
 		});
 	}
 

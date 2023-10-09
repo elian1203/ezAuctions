@@ -24,6 +24,7 @@ permissions:
       ezauctions.auction.reload: true
       ezauctions.updatemessage: true
       ezauctions.auction.end: true
+      ezauctions.auction.update: true
   ezauctions.player:
     default: true
     children:
@@ -74,6 +75,8 @@ permissions:
   ezauctions.auction.disable:
     default: false
   ezauctions.auction.reload:
+    default: false
+  ezauctions.auction.update:
     default: false
   ezauctions.bid:
     default: false

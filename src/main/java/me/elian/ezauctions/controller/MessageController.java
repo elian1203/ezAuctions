@@ -24,6 +24,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -49,6 +51,7 @@ public class MessageController extends FileHandler {
 	private final ConfigController config;
 	private ResourceBundle bundle;
 	private BukkitAudiences audiences;
+	private String prefixRaw;
 
 	@Inject
 	public MessageController(Plugin plugin, Logger logger, PaperCommandManager commandManager,
@@ -285,11 +288,35 @@ public class MessageController extends FileHandler {
 
 	private @Nullable String getRawMessage(String key) {
 		try {
-			String message = bundle.getString(key);
-			return message.replace("{prefix}", bundle.getString("prefix"));
-		} catch (MissingResourceException e) {
-			logger.severe("Missing message key in messages file! " + key, e);
+			String message = getStringFromBundle(key);
+			if (message == null)
+				return null;
+
+			return message.replace("{prefix}", prefixRaw);
+		} catch (Exception e) {
+			logger.severe("Exception when attempting to get message! " + key);
 			return null;
+		}
+	}
+
+	private String getStringFromBundle(String key) {
+		try {
+			return bundle.getString(key);
+		} catch (MissingResourceException resourceException) {
+			logger.severe("Missing message key in messages file! (" + key + ") " +
+					"Loading from default messages.properties. This will make the plugin slower!", resourceException);
+			try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(RESOURCE_NAME)) {
+				if (inputStream == null)
+					throw new IOException();
+
+				try (Reader reader = new InputStreamReader(inputStream)) {
+					ResourceBundle defaultBundle = new PropertyResourceBundle(reader);
+					return defaultBundle.getString(key);
+				}
+			} catch (IOException e) {
+				logger.severe("Critical error when loading default messages.properties!", e);
+				return null;
+			}
 		}
 	}
 
@@ -299,7 +326,7 @@ public class MessageController extends FileHandler {
 				!data.getCustomName().equals(data.getMinecraftName()));
 		replaced = replaceAuctionPattern(replaced, NO_CUSTOM_NAME_PATTERN,
 				data.getCustomName().equals(data.getMinecraftName()));
-		replaced = replaceAuctionPattern(replaced, SKULL_PATTERN, !data.getSkullOwner().equals(""));
+		replaced = replaceAuctionPattern(replaced, SKULL_PATTERN, !data.getSkullOwner().isEmpty());
 		replaced = replaceAuctionPattern(replaced, AUTOBUY_PATTERN, data.getAutoBuyPrice() != 0);
 		replaced = replaceAuctionPattern(replaced, SEALED_PATTERN, data.isSealed());
 		replaced = replaceAuctionPattern(replaced, REPAIR_PATTERN, data.getRepairPrice() > 0);
@@ -353,6 +380,12 @@ public class MessageController extends FileHandler {
 					getLegacyMessage("command.error_prefix"));
 			commandManager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.invalid_syntax"),
 					getLegacyMessage("command.usage"));
+
+			// load the prefix once rather than every time a message is sent
+			prefixRaw = getStringFromBundle("prefix");
+			if (prefixRaw == null) {
+				prefixRaw = "";
+			}
 		} catch (IOException e) {
 			logger.severe("Could not load resource " + RESOURCE_NAME + "! Check file permissions.");
 		}

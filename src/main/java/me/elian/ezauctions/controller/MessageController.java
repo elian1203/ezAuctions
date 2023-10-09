@@ -370,6 +370,12 @@ public class MessageController extends FileHandler {
 		try {
 			bundle = new PropertyResourceBundle(reader);
 
+			// load the prefix once rather than every time a message is sent
+			prefixRaw = getStringFromBundle("prefix");
+			if (prefixRaw == null) {
+				prefixRaw = "";
+			}
+
 			// Replace ACF messages with our own
 			commandManager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.permission_denied"),
 					getLegacyMessage("command.no_perm"));
@@ -380,12 +386,6 @@ public class MessageController extends FileHandler {
 					getLegacyMessage("command.error_prefix"));
 			commandManager.getLocales().addMessage(Locale.ENGLISH, MessageKey.of("acf-core.invalid_syntax"),
 					getLegacyMessage("command.usage"));
-
-			// load the prefix once rather than every time a message is sent
-			prefixRaw = getStringFromBundle("prefix");
-			if (prefixRaw == null) {
-				prefixRaw = "";
-			}
 		} catch (IOException e) {
 			logger.severe("Could not load resource " + RESOURCE_NAME + "! Check file permissions.");
 		}

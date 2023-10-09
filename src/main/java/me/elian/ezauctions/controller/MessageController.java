@@ -310,7 +310,7 @@ public class MessageController extends FileHandler {
 		replaced = replaced.replace("<itemamount>", Integer.toString(data.getAmount()));
 		replaced = replaced.replace("<minecraftname>", data.getMinecraftName());
 		replaced = replaced.replace("<customname>", data.getCustomName());
-		replaced = replaced.replace("<itemnbt>", data.getItemNbt());
+		replaced = replaced.replace("<itemnbt>", "");
 		return replaced;
 	}
 

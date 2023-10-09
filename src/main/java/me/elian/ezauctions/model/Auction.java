@@ -189,7 +189,11 @@ public class Auction implements Runnable {
 
 	private void cancelRepeatingTask() {
 		running = false;
-		repeatingTask.cancel();
+
+		if (repeatingTask != null) {
+			repeatingTask.cancel();
+		}
+
 		scoreboard.remove();
 		completedRunnable.run();
 	}

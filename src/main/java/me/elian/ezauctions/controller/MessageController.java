@@ -6,8 +6,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.elian.ezauctions.Logger;
 import me.elian.ezauctions.model.*;
+import net.kyori.adventure.nbt.api.BinaryTagHolder;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -177,12 +179,40 @@ public class MessageController extends FileHandler {
 		Component parsed;
 		try {
 			parsed = MiniMessage.miniMessage().deserialize(message, mergedResolvers);
+			parsed = reconstructAuctionComponentRecursive(parsed, data);
 		} catch (Exception e) {
 			logger.severe("Error parsing message! Auction broadcast will not work correctly!\n" + rawMessage, e);
 			parsed = LegacyComponentSerializer.legacyAmpersand().deserialize(message);
 		}
 
 		return parsed;
+	}
+
+	private Component reconstructAuctionComponentRecursive(Component component, AuctionData data) {
+		Component returnComponent = component;
+
+		List<Component> childrenUnmodifiable = component.children();
+		if (!childrenUnmodifiable.isEmpty()) {
+			List<Component> children = new ArrayList<>(childrenUnmodifiable.size());
+			for (Component child : childrenUnmodifiable) {
+				children.add(reconstructAuctionComponentRecursive(child, data));
+			}
+
+			returnComponent = returnComponent.children(children);
+		}
+
+		HoverEvent<?> hoverEvent = component.hoverEvent();
+		if (hoverEvent != null && hoverEvent.action().type() == HoverEvent.ShowItem.class) {
+			HoverEvent.ShowItem showItem = (HoverEvent.ShowItem) hoverEvent.value();
+			if (showItem.item().compareTo(data.getItemKey()) == 0
+					&& (showItem.nbt() == null || showItem.nbt().string().isEmpty())) {
+				HoverEvent<HoverEvent.ShowItem> newHoverEvent = HoverEvent.showItem(data.getItemKey(),
+						data.getAmount(), BinaryTagHolder.binaryTagHolder(data.getItemNbt()));
+				returnComponent = returnComponent.hoverEvent(newHoverEvent);
+			}
+		}
+
+		return returnComponent;
 	}
 
 	private TagResolver[] getAuctionTagResolvers(AuctionData data, BidList bidList, int remainingSeconds) {
@@ -216,7 +246,6 @@ public class MessageController extends FileHandler {
 				Placeholder.unparsed("minecraftname", data.getMinecraftName()),
 				Placeholder.unparsed("customname", data.getCustomName()),
 				Placeholder.unparsed("materialtype", item.getType().toString().toLowerCase()),
-				Placeholder.unparsed("itemnbt", data.getItemNbt()),
 				Formatter.number("startingprice", data.getStartingPrice()),
 				Formatter.number("highestbidamount", highestBidAmount),
 				Placeholder.unparsed("highestbidder", highestBidderName),

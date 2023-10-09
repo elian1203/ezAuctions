@@ -5,6 +5,7 @@ import me.elian.ezauctions.controller.ConfigController;
 import me.elian.ezauctions.controller.MessageController;
 import me.elian.ezauctions.helper.ItemHelper;
 import me.elian.ezauctions.scheduler.TaskScheduler;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
@@ -12,6 +13,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -36,6 +38,7 @@ public final class AuctionData {
 	private String itemNbt;
 	private String minecraftName;
 	private String customName;
+	private Key itemKey;
 
 	public AuctionData(AuctionPlayer auctioneer, ItemStack item, String amountString, int startingAuctionTime,
 	                   double startingPrice, double incrementPrice, double autoBuyPrice, boolean isSealed,
@@ -107,6 +110,10 @@ public final class AuctionData {
 		return customName;
 	}
 
+	public Key getItemKey() {
+		return itemKey;
+	}
+
 	public void gatherAdditionalData(Logger logger) {
 		if (item == null || item.getType() == Material.AIR)
 			return;
@@ -128,6 +135,9 @@ public final class AuctionData {
 			itemNbt = "";
 			logger.severe("Could not get item NBT! Item hover will not work correctly!", e);
 		}
+
+		NamespacedKey typeKey = item.getType().getKey();
+		itemKey = Key.key(typeKey.getNamespace(), typeKey.getKey());
 
 		minecraftName = ItemHelper.getMinecraftName(item);
 		customName = minecraftName;

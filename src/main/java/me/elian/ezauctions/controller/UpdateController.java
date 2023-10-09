@@ -34,6 +34,9 @@ import java.util.concurrent.ExecutionException;
 @Singleton
 public class UpdateController implements Listener {
 	private static final String GITHUB_REPO = "elian1203/ezAuctions";
+	// these two fields need to be static if the plugin is reloaded using /reload or PlugMan at runtime
+	private static Thread shutdownHook;
+	private static Path downloadedFilePath;
 
 	private final Plugin plugin;
 	private final TaskScheduler scheduler;
@@ -42,11 +45,9 @@ public class UpdateController implements Listener {
 	private final MessageController messages;
 	private final String serverMinecraftVersion;
 	private final String serverPluginVersion;
+	private final HttpClient client;
 
-	private HttpClient client;
 	private String latestSupportedPluginVersion;
-
-	private Path downloadedFilePath;
 
 	@Inject
 	public UpdateController(Plugin plugin, TaskScheduler scheduler, Logger logger, ConfigController config,
@@ -59,6 +60,15 @@ public class UpdateController implements Listener {
 
 		serverMinecraftVersion = getServerMinecraftVersion();
 		serverPluginVersion = plugin.getDescription().getVersion();
+		client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
+	}
+
+	public String getServerPluginVersion() {
+		return serverPluginVersion;
+	}
+
+	public String getLatestSupportedPluginVersion() {
+		return latestSupportedPluginVersion;
 	}
 
 	private String getServerMinecraftVersion() {
@@ -78,10 +88,8 @@ public class UpdateController implements Listener {
 			return;
 
 		scheduler.runAsyncTask(() -> {
-			client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
-
 			try {
-				latestSupportedPluginVersion = getLatestSupportedVersion();
+				fetchLatestSupportedVersion();
 
 				if (latestSupportedPluginVersion == null || latestSupportedPluginVersion.equals(serverPluginVersion))
 					return;
@@ -116,7 +124,7 @@ public class UpdateController implements Listener {
 		return newVersionParsed.compareTo(oldVersionParsed) >= 0;
 	}
 
-	private String getLatestSupportedVersion() throws ExecutionException, InterruptedException {
+	public void fetchLatestSupportedVersion() throws ExecutionException, InterruptedException {
 		String url = "https://api.github.com/repos/" + GITHUB_REPO + "/tags";
 		HttpRequest request = HttpRequest.newBuilder(URI.create(url)).build();
 
@@ -136,13 +144,14 @@ public class UpdateController implements Listener {
 			String tagName = object.get("name").getAsString();
 
 			if (versionIsEqualOrNewer(serverPluginVersion, tagName) && isTagSupported(tagName)) {
-				return tagName;
+				latestSupportedPluginVersion = tagName;
+				return;
 			}
 
 			index++;
 		}
 
-		return null;
+		latestSupportedPluginVersion = null;
 	}
 
 	private boolean isTagSupported(String tagName) throws ExecutionException, InterruptedException {
@@ -162,7 +171,11 @@ public class UpdateController implements Listener {
 		return versionIsEqualOrNewer(apiVersion, serverMinecraftVersion);
 	}
 
-	private void downloadLatestSupportedVersion() throws ExecutionException, InterruptedException {
+	public void downloadLatestSupportedVersion() throws ExecutionException, InterruptedException {
+		if (downloadedFilePath != null) {
+			downloadedFilePath.toFile().delete();
+		}
+
 		logger.info("Downloading plugin update...");
 		String releaseUrl =
 				"https://api.github.com/repos/" + GITHUB_REPO + "/releases/tags/" + latestSupportedPluginVersion;
@@ -213,11 +226,15 @@ public class UpdateController implements Listener {
 	}
 
 	private void moveDownloadedUpdateToPluginsDir() {
+		if (shutdownHook != null) {
+			Runtime.getRuntime().removeShutdownHook(shutdownHook);
+		}
+
 		if (downloadedFilePath == null)
 			return;
 
 		// use shutdown hook to wait until lock on jar is released
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+		shutdownHook = new Thread(() -> {
 			Path newFilePath = Path.of(plugin.getDataFolder().getParentFile().getAbsolutePath(),
 					downloadedFilePath.toFile().getName());
 			try {
@@ -233,7 +250,9 @@ public class UpdateController implements Listener {
 			} catch (IOException e) {
 				logger.severe("Could not move new jar file!", e);
 			}
-		}));
+		});
+
+		Runtime.getRuntime().addShutdownHook(shutdownHook);
 	}
 
 	@EventHandler

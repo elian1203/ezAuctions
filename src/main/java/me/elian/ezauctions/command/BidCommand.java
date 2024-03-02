@@ -160,6 +160,10 @@ public class BidCommand extends BaseCommand {
 		economy.withdrawPlayer(auctionPlayer.getOfflinePlayer(), amountToRemove);
 		bidList.placeBid(bid);
 		messages.sendAuctionMessage(player, "command.bid.placed", activeAuction);
-		messages.broadcastAuctionMessage(playerController.getOnlinePlayers(), activeAuction, true, "auction.bid");
+
+		// only broadcast bid if not a sealed auction
+		if (!activeAuction.getAuctionData().isSealed()) {
+			messages.broadcastAuctionMessage(playerController.getOnlinePlayers(), activeAuction, true, "auction.bid");
+		}
 	}
 }

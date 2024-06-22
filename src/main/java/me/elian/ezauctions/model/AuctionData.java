@@ -35,7 +35,6 @@ public final class AuctionData {
 	private int amount;
 	private String skullOwner;
 	private int repairPrice;
-	private String itemNbt;
 	private String minecraftName;
 	private String customName;
 	private Key itemKey;
@@ -98,10 +97,6 @@ public final class AuctionData {
 		return repairPrice;
 	}
 
-	public String getItemNbt() {
-		return itemNbt;
-	}
-
 	public String getMinecraftName() {
 		return minecraftName;
 	}
@@ -128,13 +123,6 @@ public final class AuctionData {
 		}
 
 		repairPrice = ItemHelper.getXPForRepair(item);
-
-		try {
-			itemNbt = ItemHelper.getItemNbt(item).replace("minecraft:", "");
-		} catch (Exception e) {
-			itemNbt = "";
-			logger.severe("Could not get item NBT! Item hover will not work correctly!", e);
-		}
 
 		NamespacedKey typeKey = item.getType().getKey();
 		itemKey = Key.key(typeKey.getNamespace(), typeKey.getKey());

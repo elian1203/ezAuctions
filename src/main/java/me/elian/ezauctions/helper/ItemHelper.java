@@ -1,15 +1,21 @@
 package me.elian.ezauctions.helper;
 
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.nbt.api.BinaryTagHolder;
+import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -19,8 +25,16 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 public class ItemHelper {
+	// Memoize reflection operations
+	// Valid because both methods are Server API so
+	// the values will not change during runtime.
+	private static Optional<Boolean> hasAsHoverEvent = Optional.empty();
+	private static Optional<Boolean> hasItemMetaAsString = Optional.empty();
+
 	public static byte[] serialize(@NotNull ItemStack item) throws IllegalStateException {
 		try (var outputStream = new ByteArrayOutputStream();
 		     var dataOutput = new BukkitObjectOutputStream(outputStream)) {
@@ -130,7 +144,75 @@ public class ItemHelper {
 		return amountInInventory;
 	}
 
-	public static @NotNull String getItemNbt(@NotNull ItemStack itemStack) throws NoSuchMethodException,
+	private static boolean hasAsHoverEventMethod() {
+		if (hasAsHoverEvent.isPresent()) {
+			return hasAsHoverEvent.get();
+		}
+
+		Boolean methodExists = Boolean.FALSE;
+		try {
+			// Check if ItemStack has asHoverEvent method exists
+			ItemStack.class.getMethod("asHoverEvent", UnaryOperator.class);
+			methodExists = Boolean.TRUE;
+		} catch (NoSuchMethodException ignored) {
+		}
+		hasAsHoverEvent = Optional.of(methodExists);
+		return methodExists;
+	}
+
+	@Nullable
+	public static HoverEvent<HoverEvent.ShowItem> getItemHover(@NotNull ItemStack itemStack,
+	                                                           UnaryOperator<HoverEvent.ShowItem> transform) {
+		// Supported by PaperMC (and forks) servers
+		if (hasAsHoverEventMethod()) {
+			return itemStack.asHoverEvent(transform);
+		}
+
+		// Try to get NBT
+		String itemNBT = null;
+		try {
+			itemNBT = getItemNBT(itemStack).replace("minecraft:", "");
+		} catch (Exception e) {
+		}
+
+		if (itemNBT == null) {
+			return null;
+		}
+
+		NamespacedKey typeKey = itemStack.getType().getKey();
+		Key itemKey = Key.key(typeKey.getNamespace(), typeKey.getKey());
+		return HoverEvent.showItem(itemKey, itemStack.getAmount(),
+						BinaryTagHolder.binaryTagHolder(itemNBT))
+				.asHoverEvent(transform);
+	}
+
+	private static boolean hasItemMetaGetAsStringMethod() {
+		if (hasItemMetaAsString.isPresent()) {
+			return hasItemMetaAsString.get();
+		}
+
+		Boolean methodExists = Boolean.FALSE;
+		try {
+			// Check if ItemStack has asHoverEvent method exists
+			ItemMeta.class.getMethod("getAsString");
+			methodExists = Boolean.TRUE;
+		} catch (NoSuchMethodException ignored) {
+		}
+		hasItemMetaAsString = Optional.of(methodExists);
+		return methodExists;
+	}
+
+	public static @NotNull String getItemNBT(@NotNull ItemStack itemStack)
+			throws Exception {
+		// Supported by Spigot 1.18+
+		if (hasItemMetaGetAsStringMethod()) {
+			return itemStack.hasItemMeta() ? itemStack.getItemMeta().getAsString() : "{}";
+		}
+
+		return getItemNbtNms(itemStack);
+	}
+
+	private static @NotNull String getItemNbtNms(@NotNull ItemStack itemStack) throws NoSuchMethodException,
 			InvocationTargetException, IllegalAccessException, ClassNotFoundException, InstantiationException {
 		Class<? extends ItemStack> itemStackClass = itemStack.getClass();
 		Class<?> nbtTagCompoundClass = Class.forName("net.minecraft.nbt.NBTTagCompound");

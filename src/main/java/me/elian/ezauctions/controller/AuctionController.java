@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.elian.ezauctions.Logger;
+import me.elian.ezauctions.helper.ItemHelper;
 import me.elian.ezauctions.model.Auction;
 import me.elian.ezauctions.model.AuctionData;
 import me.elian.ezauctions.model.AuctionPlayer;
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.UnaryOperator;
 
 @Singleton
 public class AuctionController implements Listener {
@@ -218,11 +220,19 @@ public class AuctionController implements Listener {
 		if (!config.getConfig().getBoolean("general.log-items-to-console"))
 			return;
 
+		String itemNbt;
+		try {
+			itemNbt = ItemHelper.getItemNBT(data.getItem());
+		} catch (Exception e) {
+			logger.warning("Unable to get auction item's NBT! Exception: " + e);
+			itemNbt = "{}";
+		}
+
 		logger.info(String.format(
 				message,
 				data.getAuctioneer().getOfflinePlayer().getName(),
 				data.getAmount(),
 				data.getItem().getType(),
-				data.getItemNbt()));
+				itemNbt));
 	}
 }

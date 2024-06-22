@@ -5,8 +5,8 @@ import co.aikar.locales.MessageKey;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.elian.ezauctions.Logger;
+import me.elian.ezauctions.helper.ItemHelper;
 import me.elian.ezauctions.model.*;
-import net.kyori.adventure.nbt.api.BinaryTagHolder;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -209,8 +209,9 @@ public class MessageController extends FileHandler {
 			HoverEvent.ShowItem showItem = (HoverEvent.ShowItem) hoverEvent.value();
 			if (showItem.item().compareTo(data.getItemKey()) == 0
 					&& (showItem.nbt() == null || showItem.nbt().string().isEmpty())) {
-				HoverEvent<HoverEvent.ShowItem> newHoverEvent = HoverEvent.showItem(data.getItemKey(),
-						data.getAmount(), BinaryTagHolder.binaryTagHolder(data.getItemNbt()));
+				HoverEvent<HoverEvent.ShowItem> newHoverEvent = ItemHelper.getItemHover(data.getItem(),
+						initialEvent -> initialEvent.item(data.getItemKey())
+										.count(data.getAmount()));
 				returnComponent = returnComponent.hoverEvent(newHoverEvent);
 			}
 		}

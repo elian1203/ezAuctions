@@ -172,7 +172,7 @@ public class ItemHelper {
 		String itemNBT = null;
 		try {
 			itemNBT = getItemNBT(itemStack).replace("minecraft:", "");
-		} catch (Exception e) {
+		} catch (Exception ignored) {
 		}
 
 		if (itemNBT == null) {

@@ -120,18 +120,21 @@ public class AuctionPlayer {
 		double corner2Y = config.getDouble("boundary.corner2.y");
 		double corner2Z = config.getDouble("boundary.corner2.z");
 
-		if (!(playerX >= corner1X && playerX <= corner2X) && !(playerX >= corner2X && playerX <= corner1X)) {
-			return false;
-		}
-		
-		if (!(playerY >= corner1Y && playerY <= corner2Y) && !(playerY >= corner2Y && playerY <= corner1Y)) {
-			return false;
-		}
-		
-		if (!(playerZ >= corner1Z && playerZ <= corner2Z) && !(playerZ >= corner2Z && playerZ <= corner1Z)) {
-			return false;
-		}
+		// ensure player is within ranges on x, y, and z
+		return valueWithinRange(playerX, corner1X, corner2X)
+				&& valueWithinRange(playerY, corner1Y, corner2Y)
+				&& valueWithinRange(playerZ, corner1Z, corner2Z);
+	}
 
-		return true;
+	/**
+	 * Determines whether a value is within two bounds.
+	 * @param bound1 first boundary, can be greater than or less than bound2
+	 * @param bound2 second boundary, can be greater than or less than bound1
+	 * @param value value to check if in between
+	 * @return
+	 */
+	private boolean valueWithinRange(double bound1, double bound2, double value) {
+		// bound1 can be greater or less than bound2 so need to check both ways
+		return (value >= bound1 && value <= bound2) || (value >= bound2 && value <= bound1);
 	}
 }

@@ -170,6 +170,15 @@ public class AuctionCommand extends BaseCommand {
 					return;
 				}
 
+				try {
+					AuctionPlayer auctionPlayer = playerController.getPlayer(player).get();
+					if (!auctionPlayer.withinBoundary(config)) {
+						messages.sendMessage(player, "command.auction.cancel.outside_boundary");
+						return;
+					}
+				} catch (InterruptedException | ExecutionException ignored) {
+				}
+
 				int minTime = config.getConfig().getInt("general.minimum-cancel-time");
 
 				if (current.getRemainingSeconds() < minTime) {
@@ -487,6 +496,11 @@ public class AuctionCommand extends BaseCommand {
 	                          int time, boolean sealed) {
 		if (!auctionController.isAuctionsEnabled()) {
 			messages.sendMessage(player, "command.auction.start.disabled");
+			return;
+		}
+
+		if (!auctionPlayer.withinBoundary(config)) {
+			messages.sendMessage(player, "command.auction.start.outside_boundary");
 			return;
 		}
 

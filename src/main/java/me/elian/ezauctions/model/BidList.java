@@ -15,6 +15,10 @@ public class BidList {
 		return highestBid;
 	}
 
+	public boolean hasNoBids() {
+		return bids.isEmpty();
+	}
+
 	public void withSync(Runnable runnable) {
 		synchronized (this) {
 			runnable.run();

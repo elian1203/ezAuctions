@@ -37,6 +37,7 @@ public class Auction implements Runnable {
 
 	private boolean started;
 	private boolean running;
+	private int autoCancelTime;
 	private int remainingSeconds;
 	private int antiSnipeRunTimes;
 
@@ -89,6 +90,8 @@ public class Auction implements Runnable {
 			completedRunnable.run();
 			return;
 		}
+
+		autoCancelTime = config.getConfig().getInt("auctions.auto-cancel-no-bids", 0);
 
 		loadAuctionData(auctionData);
 		messages.broadcastAuctionMessage(playerController.getOnlinePlayers(),
@@ -171,6 +174,14 @@ public class Auction implements Runnable {
 				return;
 
 			remainingSeconds -= 1;
+
+			// automatically cancel auction after a set number of seconds with no bids
+			if (autoCancelTime != 0
+					&& auctionData.getStartingAuctionTime() - remainingSeconds >= autoCancelTime
+					&& bidList.hasNoBids()) {
+				cancelAuction(false);
+			}
+
 			scoreboard.updateForAuction(this);
 
 			if (remainingSeconds == 0) {

@@ -142,6 +142,24 @@ antisnipe:
 scoreboard:
   enabled: true
 
+# define a simple boundary with 2 corners that players are required to be in when starting auctions or placing bids
+# this is useful if you have a specific auction house location/building where you want players to gather to interact in auctions
+# this will mean you can only start/cancel auctions in a specific world! this does not prevent you from receiving
+# your items in other worlds. you can use per-world-auctions to achieve that
+boundary:
+  enabled: false
+  world: world
+  # enter x y z coordinates for corners 1 and 2
+  # in the example below player x and z must be between -5 and 5 and the y between 0 and 255
+  corner1:
+    x: -5
+    y: 0
+    z: -5
+  corner2:
+    x: 5
+    y: 255
+    z: 5
+
 help:
   # this allows you to set the order in which commands appear when the auction help page is shown
   # if the player does not have permission for the command, it will not be shown

@@ -90,6 +90,12 @@ public class BidCommand extends BaseCommand {
 
 			try {
 				AuctionPlayer auctionPlayer = playerController.getPlayer(player).get();
+
+				if (!auctionPlayer.withinBoundary(config)) {
+					messages.sendAuctionMessage(player, "command.bid.outside_boundary", activeAuction);
+					return;
+				}
+
 				activeAuction.getBidList().withSync(() -> tryPlaceBid(player,
 						auctionPlayer, activeAuction, amount));
 			} catch (InterruptedException | ExecutionException e) {

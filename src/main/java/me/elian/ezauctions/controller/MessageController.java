@@ -15,6 +15,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.milkbowl.vault.economy.Economy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -49,18 +50,20 @@ public class MessageController extends FileHandler {
 	private final Logger logger;
 	private final PaperCommandManager commandManager;
 	private final ConfigController config;
+	private final Economy economy;
 	private ResourceBundle bundle;
 	private BukkitAudiences audiences;
 	private String prefixRaw;
 
 	@Inject
 	public MessageController(Plugin plugin, Logger logger, PaperCommandManager commandManager,
-	                         ConfigController config) {
+	                         ConfigController config, Economy economy) {
 		super(plugin, logger, RESOURCE_NAME);
 		this.plugin = plugin;
 		this.logger = logger;
 		this.commandManager = commandManager;
 		this.config = config;
+		this.economy = economy;
 
 		try {
 			reload();
@@ -262,6 +265,8 @@ public class MessageController extends FileHandler {
 				Placeholder.unparsed("skullowner", data.getSkullOwner()),
 				Formatter.number("repairprice", data.getRepairPrice()),
 				Formatter.number("antisnipetime", config.getConfig().getInt("antisnipe.time")),
+				Placeholder.unparsed("currencynameplural", economy.currencyNamePlural()),
+				Placeholder.unparsed("currencynamesingular", economy.currencyNameSingular()),
 		};
 	}
 

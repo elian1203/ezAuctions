@@ -211,8 +211,7 @@ public class MessageController extends FileHandler {
 					&& (showItem.nbt() == null || showItem.nbt().string().isEmpty())) {
 				HoverEvent<HoverEvent.ShowItem> newHoverEvent = ItemHelper.getItemHover(data.getItem(),
 						initialEvent -> initialEvent.item(data.getItemKey())
-								.count(1));
-//										.count(data.getAmount()));
+													.count(Math.min(data.getAmount(), data.getItem().getMaxStackSize()))); // if amount greater than max stack size, use max stack size to prevent error
 				returnComponent = returnComponent.hoverEvent(newHoverEvent);
 			}
 		}

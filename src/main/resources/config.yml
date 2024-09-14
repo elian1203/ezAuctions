@@ -63,6 +63,12 @@ auctions:
   # When should we broadcast the time left in the auction?
   broadcast-times: [ 45, 30, 15, 3, 2, 1 ]
 
+  # automatically cancel the auction after this many seconds have passed if there are no bids
+  # ex: auction time is 60 seconds from start, the value below is set to 40. If there are 20 seconds remaining with
+  # no bids, the auction will automatically cancel.
+  # set to 0 to never automatically cancel the auction
+  auto-cancel-no-bids: 0
+
   fees:
     # The price it costs to start an auction (set to 0 for no price)
     start-price: 10

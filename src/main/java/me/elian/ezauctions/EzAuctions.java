@@ -67,6 +67,10 @@ public class EzAuctions extends JavaPlugin {
 
 		updateController = injector.getInstance(UpdateController.class);
 		updateController.checkForUpdates();
+
+		if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+			injector.getInstance(EzAuctionsPlaceholderExpansion.class).register();
+		}
 	}
 
 	@Override

@@ -60,8 +60,6 @@ public class EzAuctionsPlaceholderExpansion extends PlaceholderExpansion {
 
 		AuctionData data = auction.getAuctionData();
 
-		ItemStack item = data.getItem();
-
 		String auctioneerName = data.getAuctioneer().getOfflinePlayer().getName();
 		if (auctioneerName == null) {
 			auctioneerName = "";
@@ -84,9 +82,15 @@ public class EzAuctionsPlaceholderExpansion extends PlaceholderExpansion {
 			highestBidderName = "";
 		}
 
-		int remainingSeconds = auction.getRemainingSeconds();
-
 		String placeholder = params.toLowerCase();
+		return getAuctionPlaceholderValue(placeholder, data, auctioneerName, highestBidderName, highestBidAmount,
+				highestBidderUniqueId, auction.getRemainingSeconds());
+	}
+
+	private String getAuctionPlaceholderValue(String placeholder, AuctionData data, String auctioneerName,
+	                                          String highestBidderName, double highestBidAmount,
+	                                          String highestBidderUniqueId, int remainingSeconds) {
+		ItemStack item = data.getItem();
 		return switch (placeholder) {
 			case "auctioneer" -> auctioneerName;
 			case "auctioneeruuid" -> data.getAuctioneer().getUniqueId().toString();

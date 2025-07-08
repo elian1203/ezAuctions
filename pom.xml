@@ -193,6 +193,10 @@
                             <pattern>net.megavex.scoreboardlibrary</pattern>
                             <shadedPattern>me.elian.ezauctions.scoreboardlibrary</shadedPattern>
                         </relocation>
+                        <relocation>
+                            <pattern>com.j256.ormlite</pattern>
+                            <shadedPattern>me.elian.ezauctions.ormlite</shadedPattern>
+                        </relocation>
                     </relocations>
                 </configuration>
                 <executions>

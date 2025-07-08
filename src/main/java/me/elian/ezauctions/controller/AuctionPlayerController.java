@@ -73,7 +73,7 @@ public class AuctionPlayerController implements Listener {
 	}
 
 	public @NotNull List<AuctionPlayer> getOnlinePlayers() {
-		return Collections.unmodifiableList(onlinePlayers);
+		return new ArrayList<>(onlinePlayers);
 	}
 
 	@EventHandler

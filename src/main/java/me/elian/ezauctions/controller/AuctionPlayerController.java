@@ -1,5 +1,6 @@
 package me.elian.ezauctions.controller;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.elian.ezauctions.Logger;
@@ -20,10 +21,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
@@ -34,7 +32,7 @@ public class AuctionPlayerController implements Listener {
 	private final ConfigController config;
 	private final MessageController messages;
 	private final ScoreboardController scoreboard;
-	private final List<AuctionPlayer> onlinePlayers = new ArrayList<>();
+	private final Set<AuctionPlayer> onlinePlayers = Sets.newConcurrentHashSet();
 
 	@Inject
 	public AuctionPlayerController(Plugin plugin, Logger logger, Database database, TaskScheduler scheduler,
@@ -72,8 +70,8 @@ public class AuctionPlayerController implements Listener {
 		scheduler.runAsyncTask(() -> database.saveAuctionPlayer(auctionPlayer));
 	}
 
-	public @NotNull List<AuctionPlayer> getOnlinePlayers() {
-		return new ArrayList<>(onlinePlayers);
+	public @NotNull Set<AuctionPlayer> getOnlinePlayers() {
+		return Collections.unmodifiableSet(onlinePlayers);
 	}
 
 	@EventHandler

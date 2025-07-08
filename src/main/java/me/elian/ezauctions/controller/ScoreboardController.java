@@ -18,6 +18,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Set;
 
 @Singleton
 public class ScoreboardController implements Listener {
@@ -43,7 +44,7 @@ public class ScoreboardController implements Listener {
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
 
-	public void createForAuction(@NotNull Auction auction, @NotNull List<AuctionPlayer> onlinePlayers) {
+	public void createForAuction(@NotNull Auction auction, @NotNull Set<AuctionPlayer> onlinePlayers) {
 		if (!config.getConfig().getBoolean("scoreboard.enabled"))
 			return;
 
@@ -106,7 +107,7 @@ public class ScoreboardController implements Listener {
 		scoreboardLibrary.close();
 	}
 
-	private void createSidebar(@NotNull List<AuctionPlayer> onlinePlayers) {
+	private void createSidebar(@NotNull Set<AuctionPlayer> onlinePlayers) {
 		sidebar = scoreboardLibrary.createSidebar();
 
 		for (AuctionPlayer auctionPlayer : onlinePlayers) {

@@ -112,7 +112,7 @@ public class MessageController extends FileHandler {
 		sendComponentToSender(target, message);
 	}
 
-	public void broadcastAuctionMessage(@NotNull List<AuctionPlayer> onlinePlayers, @NotNull Auction auction,
+	public void broadcastAuctionMessage(@NotNull Set<AuctionPlayer> onlinePlayers, @NotNull Auction auction,
 	                                    boolean spammy, @NotNull String key, @Nullable TagResolver... resolvers) {
 		UUID auctioneerId = auction.getAuctionData().getAuctioneer().getUniqueId();
 		String world = auction.getAuctionData().getWorld();

@@ -108,7 +108,7 @@ public class Auction implements Runnable {
 			cancelRepeatingTask();
 			messages.broadcastAuctionMessage(playerController.getOnlinePlayers(),
 					this, false, "auction.cancelled");
-			auctionData.giveItemToPlayer(auctionData.getAuctioneer(), scheduler, config, messages);
+			auctionData.giveItemToPlayer(auctionData.getAuctioneer(), playerController, scheduler, config, messages);
 
 			if (returnMoney) {
 				returnStartPriceToAuctioneer();
@@ -132,7 +132,7 @@ public class Auction implements Runnable {
 			messages.broadcastAuctionMessage(playerController.getOnlinePlayers(),
 					this, false, "auction.impounded",
 					Placeholder.unparsed("impoundingplayer", impoundingPlayerName));
-			auctionData.giveItemToPlayer(impoundingPlayer, scheduler, config, messages);
+			auctionData.giveItemToPlayer(impoundingPlayer, playerController, scheduler, config, messages);
 			returnStartPriceToAuctioneer();
 			returnBidderMoney(true);
 		}
@@ -217,7 +217,7 @@ public class Auction implements Runnable {
 	private void handleAuctionTimeCompleted() {
 		Bid winningBid = bidList.getHighestBid();
 		if (winningBid == null) {
-			auctionData.giveItemToPlayer(auctionData.getAuctioneer(), scheduler, config, messages);
+			auctionData.giveItemToPlayer(auctionData.getAuctioneer(), playerController, scheduler, config, messages);
 			messages.broadcastAuctionMessage(playerController.getOnlinePlayers(),
 					this, false, "auction.finish.no_bids");
 			messages.sendAuctionMessage(auctionData.getAuctioneer().getOnlinePlayer(), "reward.returned", this);
@@ -227,7 +227,7 @@ public class Auction implements Runnable {
 		messages.broadcastAuctionMessage(playerController.getOnlinePlayers(),
 				this, false, "auction.finish");
 
-		if (auctionData.giveItemToPlayer(winningBid.auctionPlayer(), scheduler, config, messages)) {
+		if (auctionData.giveItemToPlayer(winningBid.auctionPlayer(), playerController, scheduler, config, messages)) {
 			messages.sendAuctionMessage(winningBid.auctionPlayer().getOnlinePlayer(), "reward.received", this);
 		}
 

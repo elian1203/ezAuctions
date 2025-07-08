@@ -22,6 +22,7 @@ import java.util.function.UnaryOperator;
 @Singleton
 public class AuctionController implements Listener {
 	private final Logger logger;
+	private final AuctionPlayerController playerController;
 	private final TaskScheduler scheduler;
 	private final ConfigController config;
 	private final MessageController messages;
@@ -34,9 +35,11 @@ public class AuctionController implements Listener {
 	private long lastAuctionEndTimeMillis;
 
 	@Inject
-	public AuctionController(Plugin plugin, Logger logger, TaskScheduler scheduler, ConfigController config,
+	public AuctionController(Plugin plugin, Logger logger, AuctionPlayerController playerController,
+	                         TaskScheduler scheduler, ConfigController config,
 	                         MessageController messages, Provider<Auction> auctionProvider) {
 		this.logger = logger;
+		this.playerController = playerController;
 		this.scheduler = scheduler;
 		this.config = config;
 		this.messages = messages;
@@ -173,7 +176,7 @@ public class AuctionController implements Listener {
 
 	public void shutdown() {
 		for (AuctionData queued : auctionQueue) {
-			queued.giveItemToPlayer(queued.getAuctioneer(), scheduler, config, messages);
+			queued.giveItemToPlayer(queued.getAuctioneer(), playerController, scheduler, config, messages);
 		}
 
 		auctionQueue.clear();

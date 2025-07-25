@@ -176,14 +176,14 @@ public class AuctionController implements Listener {
 
 	public void shutdown() {
 		for (AuctionData queued : auctionQueue) {
-			queued.giveItemToPlayer(queued.getAuctioneer(), playerController, scheduler, config, messages);
+			queued.addSavedItemToPlayer(queued.getAuctioneer(), playerController, scheduler);
 		}
 
 		auctionQueue.clear();
 
 		Auction activeAuction = getActiveAuction();
 		if (activeAuction != null) {
-			activeAuction.cancelAuction(true);
+			activeAuction.cancelAuctionShutdown();
 		}
 	}
 

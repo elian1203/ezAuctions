@@ -118,6 +118,22 @@ public class Auction implements Runnable {
 		}
 	}
 
+	public void cancelAuctionShutdown() {
+		synchronized (this) {
+			if (!running)
+				return;
+
+			cancelRepeatingTask();
+			messages.broadcastAuctionMessage(playerController.getOnlinePlayers(),
+					this, false, "auction.cancelled");
+			auctionData.addSavedItemToPlayer(auctionData.getAuctioneer(), playerController, scheduler);
+
+			returnStartPriceToAuctioneer();
+
+			returnBidderMoney(true);
+		}
+	}
+
 	public void impoundAuction(@NotNull AuctionPlayer impoundingPlayer) {
 		synchronized (this) {
 			if (!running)

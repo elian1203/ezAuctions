@@ -357,7 +357,7 @@ public final class AuctionData {
 		return true;
 	}
 
-	private void addSavedItemToPlayer(AuctionPlayer auctionPlayer, AuctionPlayerController playerController,
+	public void addSavedItemToPlayer(AuctionPlayer auctionPlayer, AuctionPlayerController playerController,
 	                                  TaskScheduler scheduler) {
 		scheduler.runAsyncTask(() -> playerController.getPlayerFromDatabase(auctionPlayer.getUniqueId())
 				.thenAccept((newAuctionPlayer) -> {

@@ -372,7 +372,7 @@ public class AuctionCommand extends BaseCommand {
 					}
 
 					messages.sendMessage(player, "command.auction.remove.success");
-					queued.giveItemToPlayer(auctionPlayer, scheduler, config, messages);
+					queued.giveItemToPlayer(auctionPlayer, playerController, scheduler, config, messages);
 				} catch (ExecutionException | InterruptedException e) {
 					logger.severe("Failed to complete player command!", e);
 				}

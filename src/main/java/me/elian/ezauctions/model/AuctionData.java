@@ -1,6 +1,7 @@
 package me.elian.ezauctions.model;
 
 import me.elian.ezauctions.Logger;
+import me.elian.ezauctions.controller.AuctionPlayerController;
 import me.elian.ezauctions.controller.ConfigController;
 import me.elian.ezauctions.controller.MessageController;
 import me.elian.ezauctions.helper.ItemHelper;
@@ -325,24 +326,24 @@ public final class AuctionData {
 		return true;
 	}
 
-	public boolean giveItemToPlayer(AuctionPlayer auctionPlayer, TaskScheduler scheduler, ConfigController config,
-	                                MessageController messages) {
+	public boolean giveItemToPlayer(AuctionPlayer auctionPlayer, AuctionPlayerController playerController,
+	                                TaskScheduler scheduler, ConfigController config, MessageController messages) {
 		Player player = auctionPlayer.getOnlinePlayer();
 		if (player == null) {
-			addSavedItemToPlayer(auctionPlayer, scheduler);
+			addSavedItemToPlayer(auctionPlayer, playerController, scheduler);
 			return false;
 		}
 
 		if (config.getConfig().getBoolean("auctions.per-world-auctions")
 				&& !player.getWorld().getName().equals(world)) {
 			messages.sendMessage(player, "reward.wrong_world", Placeholder.unparsed("itemworld", world));
-			addSavedItemToPlayer(auctionPlayer, scheduler);
+			addSavedItemToPlayer(auctionPlayer, playerController, scheduler);
 			return false;
 		}
 
 		if (config.getConfig().getStringList("auctions.blocked-worlds").contains(player.getWorld().getName())) {
 			messages.sendMessage(player, "reward.blocked_world");
-			addSavedItemToPlayer(auctionPlayer, scheduler);
+			addSavedItemToPlayer(auctionPlayer, playerController, scheduler);
 			return false;
 		}
 
@@ -356,10 +357,12 @@ public final class AuctionData {
 		return true;
 	}
 
-	private void addSavedItemToPlayer(AuctionPlayer auctionPlayer, TaskScheduler scheduler) {
-		scheduler.runAsyncTask(() -> {
-			SavedItem savedItem = new SavedItem(auctionPlayer, item, amount, world);
-			auctionPlayer.getSavedItems().add(savedItem);
-		});
+	private void addSavedItemToPlayer(AuctionPlayer auctionPlayer, AuctionPlayerController playerController,
+	                                  TaskScheduler scheduler) {
+		scheduler.runAsyncTask(() -> playerController.getPlayerFromDatabase(auctionPlayer.getUniqueId())
+				.thenAccept((newAuctionPlayer) -> {
+					SavedItem savedItem = new SavedItem(newAuctionPlayer, item, amount, world);
+					newAuctionPlayer.getSavedItems().add(savedItem);
+				}));
 	}
 }

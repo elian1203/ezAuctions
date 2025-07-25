@@ -66,6 +66,15 @@ public class AuctionPlayerController implements Listener {
 		return database.getAuctionPlayer(id);
 	}
 
+	/**
+	 * For instances where a new AuctionPlayer record is required from a fresh connection to the database
+	 * @param id Player UUID
+	 * @return CompletableFuture for AuctionPlayer record
+	 */
+	public @NotNull CompletableFuture<AuctionPlayer> getPlayerFromDatabase(@NotNull UUID id) {
+		return database.getAuctionPlayer(id);
+	}
+
 	public void savePlayer(@NotNull AuctionPlayer auctionPlayer) {
 		scheduler.runAsyncTask(() -> database.saveAuctionPlayer(auctionPlayer));
 	}
@@ -105,7 +114,7 @@ public class AuctionPlayerController implements Listener {
 	public void onPlayerChangedWorld(PlayerChangedWorldEvent e) {
 		scheduler.runAsyncTask(() -> {
 			Player player = e.getPlayer();
-			getPlayer(player).thenAccept(this::returnSavedItems);
+			getPlayerFromDatabase(player.getUniqueId()).thenAccept(this::returnSavedItems);
 		});
 	}
 

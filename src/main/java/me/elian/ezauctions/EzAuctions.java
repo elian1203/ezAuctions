@@ -4,6 +4,7 @@ import co.aikar.commands.PaperCommandManager;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.util.Providers;
 import me.elian.ezauctions.command.AuctionCommand;
 import me.elian.ezauctions.command.BidCommand;
 import me.elian.ezauctions.controller.AuctionController;
@@ -143,9 +144,14 @@ public class EzAuctions extends JavaPlugin {
 			protected void configure() {
 				bind(Plugin.class).toInstance(plugin);
 				bind(Economy.class).toInstance(economy);
-				bind(Permission.class).toInstance(permission);
 				bind(PaperCommandManager.class).toInstance(commandManager);
 				bind(TaskScheduler.class).to(schedulerClass);
+
+				if (permission == null) {
+					bind(Permission.class).toProvider(Providers.of(null));
+				} else {
+					bind(Permission.class).toInstance(permission);
+				}
 			}
 		});
 	}

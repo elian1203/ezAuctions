@@ -13,8 +13,6 @@ import java.util.List;
 public abstract class TaskSchedulerBase implements TaskScheduler {
 	private final Plugin plugin;
 	private final Logger logger;
-	private final List<Player> executingCommands = new ArrayList<>();
-	private final HashMap<Player, List<Runnable>> queuedCommands = new HashMap<>();
 	private boolean shuttingDown;
 
 	protected TaskSchedulerBase(@NotNull Plugin plugin, @NotNull Logger logger) {
@@ -36,33 +34,19 @@ public abstract class TaskSchedulerBase implements TaskScheduler {
 	}
 
 	public void runAsyncPlayerCommandTask(@NotNull Player player, @NotNull Runnable runnable) {
-		Runnable wrapped = wrapRunnable(runnable);
-
 		if (shuttingDown) {
-			wrapped.run();
+			runnable.run();
 			return;
 		}
 
 		scheduleAsyncTask(plugin, () -> {
 			try {
-				synchronized (executingCommands) {
-					if (executingCommands.contains(player)) {
-						addPlayerCommandToQueue(player, runnable);
-						return;
-					}
-				}
-
-				wrapped.run();
-
-				synchronized (executingCommands) {
-					executingCommands.remove(player);
-				}
-
-				processNextCommandInQueueForPlayer(player);
-			} catch (InterruptedException e) {
-				logger.severe("Thread error occurred when attempting to process command!", e);
+				runnable.run();
+			} catch (Exception e) {
+				logger.severe("Exception occurred while processing command!", e);
 				player.sendMessage(Component.text("Errors occurred while processing your command. " +
 						"Please contact the server administrator."));
+				throw e;
 			}
 		});
 	}
@@ -115,37 +99,6 @@ public abstract class TaskSchedulerBase implements TaskScheduler {
 	protected abstract CancellableTask scheduleAsyncRepeatingTask(@NotNull Plugin plugin, @NotNull Runnable runnable,
 	                                                              long initialDelaySeconds, long intervalSeconds);
 
-	private void addPlayerCommandToQueue(Player player, Runnable runnable) throws InterruptedException {
-		synchronized (queuedCommands) {
-			List<Runnable> commands = queuedCommands.get(player);
-			if (commands == null) {
-				commands = new ArrayList<>();
-			}
-
-			commands.add(runnable);
-			queuedCommands.put(player, commands);
-		}
-	}
-
-	private void processNextCommandInQueueForPlayer(Player player) {
-		synchronized (queuedCommands) {
-			List<Runnable> commands = queuedCommands.get(player);
-
-			Runnable nextRun = null;
-
-			if (commands != null) {
-				nextRun = commands.remove(0);
-
-				if (commands.size() == 0) {
-					queuedCommands.remove(player);
-				}
-			}
-
-			if (nextRun != null) {
-				runAsyncPlayerCommandTask(player, nextRun);
-			}
-		}
-	}
 
 	private Runnable wrapRunnable(Runnable runnable) {
 		return () -> {

@@ -64,7 +64,12 @@ public class EzAuctions extends JavaPlugin {
 		auctionController = injector.getInstance(AuctionController.class);
 		messageController = injector.getInstance(MessageController.class);
 		scoreboardController = injector.getInstance(ScoreboardController.class);
-		metrics = new Metrics(this, 985);
+
+		try {
+			metrics = new Metrics(this, 985);
+		} catch (IllegalStateException ignored) {
+			// this can be safely ignored. this exception is only generated when running tests
+		}
 
 		updateController = injector.getInstance(UpdateController.class);
 		updateController.checkForUpdates();

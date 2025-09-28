@@ -37,7 +37,7 @@ public class ScoreboardController implements Listener {
 
 		try {
 			scoreboardLibrary = ScoreboardLibrary.loadScoreboardLibrary(plugin);
-		} catch (NoPacketAdapterAvailableException e) {
+		} catch (Exception e) {
 			scoreboardLibrary = new NoopScoreboardLibrary();
 		}
 

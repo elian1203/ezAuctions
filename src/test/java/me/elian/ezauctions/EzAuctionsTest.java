@@ -1,10 +1,9 @@
 package me.elian.ezauctions;
 
-import be.seeseemelk.mockbukkit.MockBukkit;
-import be.seeseemelk.mockbukkit.ServerMock;
-import be.seeseemelk.mockbukkit.UnimplementedOperationException;
 import net.milkbowl.vault.Vault;
 import net.milkbowl.vault.economy.Economy;
+import org.mockbukkit.mockbukkit.MockBukkit;
+import org.mockbukkit.mockbukkit.ServerMock;
 import org.bukkit.plugin.ServicePriority;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,11 +26,15 @@ class EzAuctionsTest {
 		try {
 			MockBukkit.unmock();
 		} catch (Exception exception) {
-			if (!(exception instanceof UnimplementedOperationException)
-					&& !(exception.getCause() instanceof UnimplementedOperationException)) {
+			if (!isUnimplementedOperationException(exception)
+					&& !isUnimplementedOperationException(exception.getCause())) {
 				throw exception;
 			}
 		}
+	}
+
+	private boolean isUnimplementedOperationException(Throwable exception) {
+		return exception != null && "UnimplementedOperationException".equals(exception.getClass().getSimpleName());
 	}
 
 	@Test

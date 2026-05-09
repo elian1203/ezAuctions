@@ -13,7 +13,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <adventure.version>4.21.0</adventure.version>
+        <adventure.version>4.24.0</adventure.version>
         <adventure-platform.version>4.4.1</adventure-platform.version>
     </properties>
 
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>org.mockbukkit.mockbukkit</groupId>
             <artifactId>mockbukkit-v1.21</artifactId>
-            <version>4.108.0</version>
+            <version>4.93.0</version>
             <scope>test</scope>
         </dependency>
         <!-- Non-MC related dependencies -->

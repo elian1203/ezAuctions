@@ -120,91 +120,71 @@ public final class ComponentHelper {
 		return parts;
 	}
 
-	// Find a character only when it appears outside nested structures and quoted text.
-	private static int findTopLevel(String value, char searched) {
-		int depth = 0;
-		char quote = 0;
-		boolean escaped = false;
-
-		for (int i = 0; i < value.length(); i++) {
-			char c = value.charAt(i);
-			if (quote != 0) {
-				if (escaped) {
-					escaped = false;
-				} else if (c == '\\') {
-					escaped = true;
-				} else if (c == quote) {
-					quote = 0;
-				}
-				continue;
-			}
-
-			if (c == '"' || c == '\'') {
-				quote = c;
-			} else if (c == '[' || c == '{' || c == '(') {
-				depth++;
-			} else if (c == ']' || c == '}' || c == ')') {
-				depth--;
-			} else if (c == searched && depth == 0) {
-				return i;
-			}
-		}
-
-		return -1;
-	}
-
 	// Convert Spigot's component-like value syntax into valid JSON for Gson.
 	private static String toJson(String value) {
 		StringBuilder json = new StringBuilder(value.length() + 16);
-		char quote = 0;
-		boolean escaped = false;
+		QuoteContext quoteContext = new QuoteContext();
 
 		for (int i = 0; i < value.length(); i++) {
 			char c = value.charAt(i);
-			if (quote != 0) {
-				if (escaped) {
-					json.append(c);
-					escaped = false;
-				} else if (c == '\\') {
-					json.append(c);
-					escaped = true;
-				} else if (c == quote) {
-					json.append('"');
-					quote = 0;
-				} else if (quote == '\'' && c == '"') {
-					json.append("\\\"");
-				} else {
-					json.append(c);
-				}
+			if (quoteContext.isInsideQuote()) {
+				appendQuotedCharacter(json, quoteContext, c);
 				continue;
 			}
 
-			if (c == '"' || c == '\'') {
+			if (isQuote(c)) {
 				json.append('"');
-				quote = c;
+				quoteContext.start(c);
 			} else if (isIdentifierStart(c)) {
-				int end = i + 1;
-				while (end < value.length() && isIdentifierPart(value.charAt(end))) {
-					end++;
-				}
-
-				String token = value.substring(i, end);
-				int next = nextNonWhitespace(value, end);
-				if (next < value.length() && value.charAt(next) == ':'
-						&& previousNonWhitespaceIs(value, i, '{', ',')) {
-					json.append('"').append(token).append('"');
-				} else if (isBareStringValue(value, i, end, token)) {
-					json.append('"').append(token).append('"');
-				} else {
-					json.append(token);
-				}
-				i = end - 1;
+				i = appendIdentifierToken(json, value, i);
 			} else {
 				json.append(c);
 			}
 		}
 
 		return json.toString();
+	}
+
+	// Preserve quoted content while normalizing quote delimiters to JSON quotes.
+	private static void appendQuotedCharacter(StringBuilder json, QuoteContext quoteContext, char c) {
+		if (quoteContext.isEscaped()) {
+			json.append(c);
+			quoteContext.clearEscape();
+		} else if (c == '\\') {
+			json.append(c);
+			quoteContext.markEscaped();
+		} else if (c == quoteContext.getQuote()) {
+			json.append('"');
+			quoteContext.end();
+		} else if (quoteContext.getQuote() == '\'' && c == '"') {
+			json.append("\\\"");
+		} else {
+			json.append(c);
+		}
+	}
+
+	// Append one identifier, quoting it if it is an object key or bare string value.
+	private static int appendIdentifierToken(StringBuilder json, String value, int start) {
+		int end = start + 1;
+		while (end < value.length() && isIdentifierPart(value.charAt(end))) {
+			end++;
+		}
+
+		String token = value.substring(start, end);
+		if (isObjectKey(value, start, end) || isBareStringValue(value, start, end, token)) {
+			json.append('"').append(token).append('"');
+		} else {
+			json.append(token);
+		}
+
+		return end - 1;
+	}
+
+	// Detect unquoted object keys so they can be quoted before JSON parsing.
+	private static boolean isObjectKey(String value, int start, int end) {
+		int next = nextNonWhitespace(value, end);
+		return next < value.length() && value.charAt(next) == ':'
+				&& previousNonWhitespaceIs(value, start, '{', ',');
 	}
 
 	// Detect unquoted scalar strings so they can be quoted before JSON parsing.
@@ -250,11 +230,52 @@ public final class ComponentHelper {
 		return value.length();
 	}
 
+	// Component values can use either single or double quotes.
+	private static boolean isQuote(char c) {
+		return c == '"' || c == '\'';
+	}
+
+	// Identifier starts include namespaced keys and unquoted string values.
 	private static boolean isIdentifierStart(char c) {
 		return Character.isLetter(c) || c == '_' || c == '-' || c == ':';
 	}
 
+	// Identifier parts allow common Minecraft key characters.
 	private static boolean isIdentifierPart(char c) {
 		return Character.isLetterOrDigit(c) || c == '_' || c == '-' || c == '.' || c == ':';
+	}
+
+	// Tracks the current quoted section while converting component values.
+	private static final class QuoteContext {
+		private char quote;
+		private boolean escaped;
+
+		private boolean isInsideQuote() {
+			return quote != 0;
+		}
+
+		private void start(char quote) {
+			this.quote = quote;
+		}
+
+		private void end() {
+			quote = 0;
+		}
+
+		private char getQuote() {
+			return quote;
+		}
+
+		private boolean isEscaped() {
+			return escaped;
+		}
+
+		private void markEscaped() {
+			escaped = true;
+		}
+
+		private void clearEscape() {
+			escaped = false;
+		}
 	}
 }

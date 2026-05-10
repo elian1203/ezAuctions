@@ -12,12 +12,16 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 // Helper to parse Spigot Item Meta
 // component string into adventure compatible
 // hover components.
 // Supports Spigot 1.21+
 public final class ComponentHelper {
+	private static final Set<String> TEXT_STYLE_BOOLEAN_KEYS = Set.of("bold", "italic", "underlined", "strikethrough",
+			"obfuscated");
+
 	private ComponentHelper() {
 	}
 
@@ -31,7 +35,10 @@ public final class ComponentHelper {
 			return Map.of();
 		}
 
-		String componentString = meta.getAsComponentString();
+		return getComponentsFromString(meta.getAsComponentString());
+	}
+
+	public static @NotNull Map<Key, DataComponentValue> getComponentsFromString(@NotNull String componentString) {
 		// Ex. [minecraft:custom_data={foo: [1, 2, 3]}, minecraft:damage=5]
 		if (!componentString.startsWith("[") || !componentString.endsWith("]") || !componentString.contains("=")) {
 			return Map.of();
@@ -135,6 +142,8 @@ public final class ComponentHelper {
 			if (isQuote(c)) {
 				json.append('"');
 				quoteContext.start(c);
+			} else if (isNumberStart(c, value, i)) {
+				i = appendNumberToken(json, value, i);
 			} else if (isIdentifierStart(c)) {
 				i = appendIdentifierToken(json, value, i);
 			} else {
@@ -180,6 +189,40 @@ public final class ComponentHelper {
 		return end - 1;
 	}
 
+	// Convert SNBT-style numeric suffixes into JSON-compatible numbers or text booleans.
+	private static int appendNumberToken(StringBuilder json, String value, int start) {
+		int end = start;
+		if (value.charAt(end) == '-') {
+			end++;
+		}
+
+		while (end < value.length() && Character.isDigit(value.charAt(end))) {
+			end++;
+		}
+
+		if (end < value.length() && value.charAt(end) == '.') {
+			end++;
+			while (end < value.length() && Character.isDigit(value.charAt(end))) {
+				end++;
+			}
+		}
+
+		if (end < value.length() && isNumericSuffix(value.charAt(end))) {
+			char suffix = Character.toLowerCase(value.charAt(end));
+			String number = value.substring(start, end);
+			if (suffix == 'b' && ("0".equals(number) || "1".equals(number))
+					&& TEXT_STYLE_BOOLEAN_KEYS.contains(previousObjectKey(value, start))) {
+				json.append("1".equals(number) ? "true" : "false");
+			} else {
+				json.append(number);
+			}
+			return end;
+		}
+
+		json.append(value, start, end);
+		return end - 1;
+	}
+
 	// Detect unquoted object keys so they can be quoted before JSON parsing.
 	private static boolean isObjectKey(String value, int start, int end) {
 		int next = nextNonWhitespace(value, end);
@@ -204,19 +247,66 @@ public final class ComponentHelper {
 
 	// Check the nearest previous non-space character against a small expected set.
 	private static boolean previousNonWhitespaceIs(String value, int index, char... expected) {
-		for (int i = index - 1; i >= 0; i--) {
-			char c = value.charAt(i);
-			if (!Character.isWhitespace(c)) {
-				for (char candidate : expected) {
-					if (c == candidate) {
-						return true;
-					}
-				}
-				return false;
+		int previous = previousNonWhitespace(value, index);
+		if (previous < 0) {
+			return false;
+		}
+
+		char c = value.charAt(previous);
+		for (char candidate : expected) {
+			if (c == candidate) {
+				return true;
 			}
 		}
 
 		return false;
+	}
+
+	private static String previousObjectKey(String value, int index) {
+		int colon = previousNonWhitespace(value, index);
+		if (colon < 0 || value.charAt(colon) != ':') {
+			return "";
+		}
+
+		int end = previousNonWhitespace(value, colon);
+		if (end < 0) {
+			return "";
+		}
+
+		char quote = value.charAt(end);
+		if (quote == '"' || quote == '\'') {
+			for (int start = end - 1; start >= 0; start--) {
+				if (value.charAt(start) == quote && !isEscaped(value, start)) {
+					return value.substring(start + 1, end);
+				}
+			}
+			return "";
+		}
+
+		int start = end;
+		while (start >= 0 && isIdentifierPart(value.charAt(start))) {
+			start--;
+		}
+		return value.substring(start + 1, end + 1);
+	}
+
+	private static int previousNonWhitespace(String value, int index) {
+		for (int i = index - 1; i >= 0; i--) {
+			if (!Character.isWhitespace(value.charAt(i))) {
+				return i;
+			}
+		}
+
+		return -1;
+	}
+
+	private static boolean isEscaped(String value, int index) {
+		int slashCount = 0;
+		for (int i = index - 1; i >= 0 && value.charAt(i) == '\\'; i--) {
+			slashCount++;
+		}
+
+		return slashCount % 2 == 1;
 	}
 
 	// Return the next non-space character index, or the string length if none exists.
@@ -233,6 +323,27 @@ public final class ComponentHelper {
 	// Component values can use either single or double quotes.
 	private static boolean isQuote(char c) {
 		return c == '"' || c == '\'';
+	}
+
+	private static boolean isNumberStart(char c, String value, int index) {
+		if (Character.isDigit(c)) {
+			return true;
+		}
+
+		return c == '-' && index + 1 < value.length() && Character.isDigit(value.charAt(index + 1));
+	}
+
+	private static boolean isNumericSuffix(char c) {
+		switch (Character.toLowerCase(c)) {
+			case 'b':
+			case 's':
+			case 'l':
+			case 'f':
+			case 'd':
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	// Identifier starts include namespaced keys and unquoted string values.

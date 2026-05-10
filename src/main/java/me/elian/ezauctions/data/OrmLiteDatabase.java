@@ -150,7 +150,7 @@ public class OrmLiteDatabase implements Database {
 					TableUtils.createTableIfNotExists(connectionSource, AuctionPlayerIgnore.class);
 					TableUtils.createTableIfNotExists(connectionSource, SavedItem.class);
 				}
-
+				connecting = false;
 				connectingMonitor.notifyAll();
 			} catch (Exception e) {
 				connecting = false;

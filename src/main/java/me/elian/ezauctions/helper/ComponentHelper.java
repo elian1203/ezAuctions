@@ -64,13 +64,18 @@ public class ComponentHelper {
 				encodeMethod = codecClass.getMethod("encode", Object.class, dynamicOpsClass, Object.class);
 
 				for (Field field : nmsCopy.getClass().getFields()) {
-					if (field.getType().equals(codecClass)) {
+					if (!field.getType().equals(codecClass)) {
+						continue;
+					}
+
+					try {
 						codecFieldInstance = field.get(null);
 						Object dataResult = encodeMethod.invoke(codecFieldInstance, nmsCopy, dynamicOps,
 								cachedEmptyMap);
 						getOrThrowMethod = dataResult.getClass().getMethod("getOrThrow");
 
 						break;
+					} catch (Exception ignored) {
 					}
 				}
 			}

@@ -2,6 +2,7 @@ package me.elian.ezauctions.helper;
 
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.nbt.api.BinaryTagHolder;
+import net.kyori.adventure.text.event.DataComponentValue;
 import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -25,6 +26,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -34,6 +36,7 @@ public class ItemHelper {
 	// the values will not change during runtime.
 	private static Optional<Boolean> hasAsHoverEvent = Optional.empty();
 	private static Optional<Boolean> hasItemMetaAsString = Optional.empty();
+	private static Optional<Boolean> hasItemMetaAsComponentString = Optional.empty();
 
 	public static byte[] serialize(@NotNull ItemStack item) throws IllegalStateException {
 		try (var outputStream = new ByteArrayOutputStream();
@@ -163,11 +166,26 @@ public class ItemHelper {
 	@Nullable
 	public static HoverEvent<HoverEvent.ShowItem> getItemHover(@NotNull ItemStack itemStack,
 	                                                           UnaryOperator<HoverEvent.ShowItem> transform) {
+		NamespacedKey typeKey = itemStack.getType().getKey();
+		Key itemKey = Key.key(typeKey.getNamespace(), typeKey.getKey());
+		HoverEvent<HoverEvent.ShowItem> simpleHover = HoverEvent.showItem(itemKey, itemStack.getAmount())
+				.asHoverEvent(transform);
+
 		// Supported by PaperMC (and forks) servers
 		if (hasAsHoverEventMethod()) {
 			return itemStack.asHoverEvent(transform);
 		}
 
+		// Supported by Spigot 1.21+
+		Map<Key, DataComponentValue> components = ComponentHelper.getComponentsFromMeta(itemStack);
+		if (!components.isEmpty()) {
+			try {
+				return HoverEvent.showItem(itemKey, itemStack.getAmount(), components)
+						.asHoverEvent(transform);
+			} catch (Exception ignored) {
+				return simpleHover;
+			}
+		}
 		// Try to get NBT
 		String itemNBT = null;
 		try {
@@ -176,14 +194,16 @@ public class ItemHelper {
 		}
 
 		if (itemNBT == null) {
-			return null;
+			return simpleHover;
 		}
 
-		NamespacedKey typeKey = itemStack.getType().getKey();
-		Key itemKey = Key.key(typeKey.getNamespace(), typeKey.getKey());
-		return HoverEvent.showItem(itemKey, itemStack.getAmount(),
-						BinaryTagHolder.binaryTagHolder(itemNBT))
-				.asHoverEvent(transform);
+		try {
+			return HoverEvent.showItem(itemKey, itemStack.getAmount(),
+							BinaryTagHolder.binaryTagHolder(itemNBT))
+					.asHoverEvent(transform);
+		} catch (Exception ignored) {
+			return simpleHover;
+		}
 	}
 
 	private static boolean hasItemMetaGetAsStringMethod() {
@@ -199,6 +219,21 @@ public class ItemHelper {
 		} catch (NoSuchMethodException ignored) {
 		}
 		hasItemMetaAsString = Optional.of(methodExists);
+		return methodExists;
+	}
+
+	private static boolean hasItemMetaGetAsComponentStringMethod() {
+		if (hasItemMetaAsComponentString.isPresent()) {
+			return hasItemMetaAsComponentString.get();
+		}
+
+		Boolean methodExists = Boolean.FALSE;
+		try {
+			ItemMeta.class.getMethod("getAsComponentString");
+			methodExists = Boolean.TRUE;
+		} catch (NoSuchMethodException ignored) {
+		}
+		hasItemMetaAsComponentString = Optional.of(methodExists);
 		return methodExists;
 	}
 

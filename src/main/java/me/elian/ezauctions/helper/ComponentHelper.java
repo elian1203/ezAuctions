@@ -1,49 +1,85 @@
 package me.elian.ezauctions.helper;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.nbt.BinaryTag;
-import net.kyori.adventure.nbt.ByteArrayBinaryTag;
-import net.kyori.adventure.nbt.ByteBinaryTag;
-import net.kyori.adventure.nbt.CompoundBinaryTag;
-import net.kyori.adventure.nbt.DoubleBinaryTag;
-import net.kyori.adventure.nbt.FloatBinaryTag;
-import net.kyori.adventure.nbt.IntArrayBinaryTag;
-import net.kyori.adventure.nbt.IntBinaryTag;
-import net.kyori.adventure.nbt.ListBinaryTag;
-import net.kyori.adventure.nbt.LongArrayBinaryTag;
-import net.kyori.adventure.nbt.LongBinaryTag;
-import net.kyori.adventure.nbt.ShortBinaryTag;
-import net.kyori.adventure.nbt.StringBinaryTag;
-import net.kyori.adventure.nbt.TagStringIO;
 import net.kyori.adventure.text.event.DataComponentValue;
 import net.kyori.adventure.text.serializer.gson.GsonDataComponentValue;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 // Helper to parse Spigot Item Meta
 // component string into adventure compatible
 // hover components.
 // Supports Spigot 1.21+
-public final class ComponentHelper {
-	private static final Set<String> TEXT_STYLE_BOOLEAN_KEYS = Set.of("bold", "italic", "underlined", "strikethrough",
-			"obfuscated");
+public class ComponentHelper {
+	private static Method asNMSCopyMethod;
+	private static Object codecFieldInstance;
+	private static Object dynamicOps;
+	private static Method encodeMethod;
+	private static Object cachedEmptyMap;
+	private static Method getOrThrowMethod;
 
-	private ComponentHelper() {
+	static {
+		try {
+			String serverPackage = Bukkit.getServer().getClass().getPackage().getName();
+
+			Class<?> craftItemStackClass = Class.forName(serverPackage + ".inventory.CraftItemStack");
+			Class<?> craftRegistryClass = Class.forName(serverPackage + ".CraftRegistry");
+
+			asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
+			Object nmsCopy = asNMSCopyMethod.invoke(null, new ItemStack(Material.DIAMOND));
+
+			Object minecraftRegistry = craftRegistryClass.getMethod("getMinecraftRegistry").invoke(null);
+			Class<?> dynamicOpsClass = Class.forName("com.mojang.serialization.DynamicOps");
+			Class<?> jsonOpsClass = Class.forName("com.mojang.serialization.JsonOps");
+			Method getContextMethod = null;
+
+			for (Method method : minecraftRegistry.getClass().getMethods()) {
+				Class<?>[] params = method.getParameterTypes();
+				if (params.length == 1
+						&& params[0].isAssignableFrom(jsonOpsClass)
+						&& dynamicOpsClass.isAssignableFrom(method.getReturnType())) {
+					getContextMethod = method;
+					break;
+				}
+			}
+
+			if (getContextMethod != null) {
+				Object jsonOpsInstance = jsonOpsClass.getField("INSTANCE").get(null);
+				dynamicOps = getContextMethod.invoke(minecraftRegistry, jsonOpsInstance);
+
+				cachedEmptyMap = dynamicOpsClass.getMethod("emptyMap").invoke(dynamicOps);
+
+				Class<?> codecClass = Class.forName("com.mojang.serialization.Codec");
+				encodeMethod = codecClass.getMethod("encode", Object.class, dynamicOpsClass, Object.class);
+
+				for (Field field : nmsCopy.getClass().getFields()) {
+					if (field.getType().equals(codecClass)) {
+						codecFieldInstance = field.get(null);
+						Object dataResult = encodeMethod.invoke(codecFieldInstance, nmsCopy, dynamicOps,
+								cachedEmptyMap);
+						getOrThrowMethod = dataResult.getClass().getMethod("getOrThrow");
+
+						break;
+					}
+				}
+			}
+		} catch (Exception ignored) {
+		}
 	}
 
 	public static @NotNull Map<Key, DataComponentValue> getComponentsFromMeta(@NotNull ItemStack itemStack) {
-		if (!itemStack.hasItemMeta()) {
+		if (!itemStack.hasItemMeta() || itemStack.getType().isAir()) {
 			return Map.of();
 		}
 
@@ -52,204 +88,48 @@ public final class ComponentHelper {
 			return Map.of();
 		}
 
-		return getComponentsFromString(meta.getAsComponentString());
-	}
-
-	public static @NotNull Map<Key, DataComponentValue> getComponentsFromString(@NotNull String componentString) {
-		// Ex. [minecraft:custom_data={foo: [1, 2, 3]}, minecraft:damage=5]
-		if (!componentString.startsWith("[") || !componentString.endsWith("]")) {
+		try {
+			JsonObject components = getItemComponentsNms(itemStack);
+			return createComponentMapFromJson(components);
+		} catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException | IllegalAccessException |
+		         InstantiationException e) {
 			return Map.of();
 		}
-
-		Map<Key, DataComponentValue> components = new LinkedHashMap<>();
-		String content = componentString.substring(1, componentString.length() - 1);
-		for (String rawComponent : splitTopLevel(content, ',')) {
-			addComponent(components, rawComponent);
-		}
-
-		return components;
 	}
 
-	private static void addComponent(Map<Key, DataComponentValue> components, String rawComponent) {
-		String component = rawComponent.trim();
-		if (component.isEmpty()) {
-			return;
-		}
-
-		if (component.charAt(0) == '!') {
-			String key = normalizeKey(component.substring(1).trim());
-			if (Key.parseable(key)) {
-				components.put(Key.key(key), DataComponentValue.removed());
-			}
-			return;
-		}
-
-		int separator = findTopLevel(component, '=');
-		if (separator <= 0) {
-			return;
-		}
-
-		String key = normalizeKey(component.substring(0, separator).trim());
-		String value = component.substring(separator + 1).trim();
-		if (!Key.parseable(key) || value.isEmpty()) {
-			return;
-		}
-
+	private static @NotNull JsonObject getItemComponentsNms(@NotNull ItemStack item) throws NoSuchMethodException,
+			InvocationTargetException, IllegalAccessException, ClassNotFoundException, InstantiationException {
 		try {
-			BinaryTag tag = TagStringIO.tagStringIO().asTag(value);
-			components.put(Key.key(key), GsonDataComponentValue.gsonDataComponentValue(toJson(tag, "")));
+			if (getOrThrowMethod == null) {
+				return new JsonObject();
+			}
+
+			Object nmsCopy = asNMSCopyMethod.invoke(null, item);
+			Object dataResult = encodeMethod.invoke(codecFieldInstance, nmsCopy, dynamicOps, cachedEmptyMap);
+
+			Object rawResult = getOrThrowMethod.invoke(dataResult);
+
+			if (rawResult instanceof JsonObject data && data.has("components")) {
+				return data.get("components").getAsJsonObject();
+			}
 		} catch (Exception ignored) {
 		}
+
+		return new JsonObject();
 	}
 
-	// Convert binary tags to JSON.
-	private static JsonElement toJson(BinaryTag tag, String parentKey) {
-		if (tag instanceof CompoundBinaryTag compound) {
-			JsonObject json = new JsonObject();
-			for (String key : compound.keySet()) {
-				json.add(key, toJson(compound.get(key), key));
-			}
-			return json;
+	private static @NotNull Map<Key, DataComponentValue> createComponentMapFromJson(JsonObject components) {
+		Map<Key, DataComponentValue> map = new HashMap<>();
+		for (Map.Entry<String, JsonElement> entry : components.entrySet()) {
+			Key key = Key.key(normalizeKey(entry.getKey()));
+			GsonDataComponentValue value = GsonDataComponentValue.gsonDataComponentValue(entry.getValue());
+			map.put(key, value);
 		}
-
-		if (tag instanceof ListBinaryTag list) {
-			JsonArray json = new JsonArray();
-			list.stream().map(entry -> toJson(entry, parentKey)).forEach(json::add);
-			return json;
-		}
-
-		if (tag instanceof ByteBinaryTag byteTag) {
-			byte value = byteTag.value();
-			if (TEXT_STYLE_BOOLEAN_KEYS.contains(parentKey) && (value == 0 || value == 1)) {
-				return new JsonPrimitive(value == 1);
-			}
-			return new JsonPrimitive(value);
-		}
-
-		if (tag instanceof ShortBinaryTag shortTag) {
-			return new JsonPrimitive(shortTag.value());
-		}
-
-		if (tag instanceof IntBinaryTag intTag) {
-			return new JsonPrimitive(intTag.value());
-		}
-
-		if (tag instanceof LongBinaryTag longTag) {
-			return new JsonPrimitive(longTag.value());
-		}
-
-		if (tag instanceof FloatBinaryTag floatTag) {
-			return new JsonPrimitive(floatTag.value());
-		}
-
-		if (tag instanceof DoubleBinaryTag doubleTag) {
-			return new JsonPrimitive(doubleTag.value());
-		}
-
-		if (tag instanceof StringBinaryTag stringTag) {
-			return new JsonPrimitive(stringTag.value());
-		}
-
-		if (tag instanceof ByteArrayBinaryTag byteArrayTag) {
-			JsonArray json = new JsonArray();
-			for (byte value : byteArrayTag.value()) {
-				json.add(value);
-			}
-			return json;
-		}
-
-		if (tag instanceof IntArrayBinaryTag intArrayTag) {
-			JsonArray json = new JsonArray();
-			for (int value : intArrayTag.value()) {
-				json.add(value);
-			}
-			return json;
-		}
-
-		if (tag instanceof LongArrayBinaryTag longArrayTag) {
-			JsonArray json = new JsonArray();
-			for (long value : longArrayTag.value()) {
-				json.add(value);
-			}
-			return json;
-		}
-
-		return JsonNull.INSTANCE;
+		return map;
 	}
 
 	// Data component keys without a namespace are vanilla Minecraft keys.
 	private static String normalizeKey(String key) {
 		return key.indexOf(':') == -1 ? "minecraft:" + key : key;
-	}
-
-	// Split separators only when they are outside nested structures and quoted
-	// text.
-	private static ArrayList<String> splitTopLevel(String value, char separator) {
-		ArrayList<String> parts = new ArrayList<>();
-		int start = 0;
-		int depth = 0;
-		char quote = 0;
-		boolean escaped = false;
-
-		for (int i = 0; i < value.length(); i++) {
-			char c = value.charAt(i);
-			if (quote != 0) {
-				if (escaped) {
-					escaped = false;
-				} else if (c == '\\') {
-					escaped = true;
-				} else if (c == quote) {
-					quote = 0;
-				}
-				continue;
-			}
-
-			if (c == '"' || c == '\'') {
-				quote = c;
-			} else if (c == '[' || c == '{' || c == '(') {
-				depth++;
-			} else if (c == ']' || c == '}' || c == ')') {
-				depth--;
-			} else if (c == separator && depth == 0) {
-				parts.add(value.substring(start, i));
-				start = i + 1;
-			}
-		}
-
-		parts.add(value.substring(start));
-		return parts;
-	}
-
-	// Find separators only when they are outside nested structures and quoted text.
-	private static int findTopLevel(String value, char target) {
-		int depth = 0;
-		char quote = 0;
-		boolean escaped = false;
-
-		for (int i = 0; i < value.length(); i++) {
-			char c = value.charAt(i);
-			if (quote != 0) {
-				if (escaped) {
-					escaped = false;
-				} else if (c == '\\') {
-					escaped = true;
-				} else if (c == quote) {
-					quote = 0;
-				}
-				continue;
-			}
-
-			if (c == '"' || c == '\'') {
-				quote = c;
-			} else if (c == '[' || c == '{' || c == '(') {
-				depth++;
-			} else if (c == ']' || c == '}' || c == ')') {
-				depth--;
-			} else if (c == target && depth == 0) {
-				return i;
-			}
-		}
-
-		return -1;
 	}
 }

@@ -9,9 +9,9 @@
     <version>${revision}</version>
 
     <properties>
-        <revision>2.4.3-SNAPSHOT</revision>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <revision>0.0.0-SNAPSHOT</revision>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <adventure.version>4.24.0</adventure.version>
         <adventure-platform.version>4.4.1</adventure-platform.version>
@@ -123,11 +123,6 @@
         <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-text-minimessage</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.kyori</groupId>
-            <artifactId>adventure-nbt</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>

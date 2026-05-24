@@ -23,13 +23,13 @@ jobs:
           cache: 'maven'
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v1.1.1
+        uses: gittools/actions/gitversion/setup@v4.5.0
         with:
           versionSpec: '6.7.0'
 
       - name: Determine Version
         id: gitversion
-        uses: gittools/actions/gitversion/execute@v1.1.1
+        uses: gittools/actions/gitversion/execute@v4.5.0
 
       - name: Build Project
         run: mvn --batch-mode --update-snapshots verify -Drevision="${{ steps.gitversion.outputs.semVer }}"

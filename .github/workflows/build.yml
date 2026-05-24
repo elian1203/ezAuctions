@@ -32,7 +32,7 @@ jobs:
         uses: gittools/actions/gitversion/execute@v4.5.0
 
       - name: Build Project
-        run: mvn --batch-mode --update-snapshots verify -Drevision="${{ steps.gitversion.outputs.semVer }}"
+        run: mvn --batch-mode --update-snapshots verify -Drevision="${{ steps.gitversion.outputs.semVer }}-SNAPSHOT"
 
       - name: Upload jar to workflow run
         uses: actions/upload-artifact@v4

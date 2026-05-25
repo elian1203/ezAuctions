@@ -1,10 +1,7 @@
 package me.elian.ezauctions.model;
 
 import com.google.inject.Inject;
-import me.elian.ezauctions.controller.AuctionPlayerController;
-import me.elian.ezauctions.controller.ConfigController;
-import me.elian.ezauctions.controller.MessageController;
-import me.elian.ezauctions.controller.ScoreboardController;
+import me.elian.ezauctions.controller.*;
 import me.elian.ezauctions.event.AuctionEndEvent;
 import me.elian.ezauctions.event.AuctionStartEvent;
 import me.elian.ezauctions.scheduler.CancellableTask;
@@ -30,6 +27,7 @@ public class Auction implements Runnable {
 	private final MessageController messages;
 	private final ScoreboardController scoreboard;
 	private final List<Integer> broadcastTimes;
+	private final TaxController taxController;
 	private AuctionData auctionData;
 	private BidList bidList;
 	private Runnable completedRunnable;
@@ -44,7 +42,7 @@ public class Auction implements Runnable {
 	@Inject
 	public Auction(Plugin plugin, TaskScheduler scheduler, Economy economy, Permission permission,
 	               AuctionPlayerController playerController, ConfigController config,
-	               MessageController messages, ScoreboardController scoreboard) {
+	               MessageController messages, ScoreboardController scoreboard, TaxController taxController) {
 		this.plugin = plugin;
 		this.scheduler = scheduler;
 		this.economy = economy;
@@ -53,6 +51,7 @@ public class Auction implements Runnable {
 		this.config = config;
 		this.messages = messages;
 		this.scoreboard = scoreboard;
+		this.taxController = taxController;
 		broadcastTimes = config.getConfig().getIntegerList("auctions.broadcast-times");
 	}
 
@@ -249,14 +248,15 @@ public class Auction implements Runnable {
 
 		OfflinePlayer offlinePlayer = auctionData.getAuctioneer().getOfflinePlayer();
 		double payout = winningBid.amount();
-		double taxPercentage = 0D;
+		double taxAmount = isTaxExempt(offlinePlayer) ? 0 : taxController.calculateTaxAmount(payout);
 
-		if (!isTaxExempt(offlinePlayer)) {
-			taxPercentage = config.getConfig().getDouble("auctions.fees.tax-percent");
+		payout -= taxAmount;
+		if (payout < 0) {
+			payout = 0;
 		}
 
-		double payoutPercentage = (100D - taxPercentage) / 100D;
-		payout *= payoutPercentage;
+		// calculate the effective tax rate for message
+		double taxPercentage = payout != 0 ? taxAmount / payout : 0;
 
 		economy.depositPlayer(offlinePlayer, payout);
 

@@ -2,6 +2,7 @@ package me.elian.ezauctions.controller;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import me.elian.ezauctions.Logger;
 import me.elian.ezauctions.model.Auction;
 import me.elian.ezauctions.model.AuctionPlayer;
 import me.elian.ezauctions.scheduler.TaskScheduler;
@@ -30,15 +31,24 @@ public class ScoreboardController implements Listener {
 
 	@Inject
 	public ScoreboardController(TaskScheduler scheduler, ConfigController config, MessageController messages,
-	                            Plugin plugin) {
+	                            Plugin plugin, Logger logger) {
 		this.scheduler = scheduler;
 		this.config = config;
 		this.messages = messages;
 
 		try {
+			// force scoreboardlib to load even when plugin not using latest library version
+			String property = "net.mega".concat("vex.scoreboardlibrary.forceModern");
+			System.setProperty(property, "true");
 			scoreboardLibrary = ScoreboardLibrary.loadScoreboardLibrary(plugin);
-		} catch (Exception e) {
+		} catch (NoPacketAdapterAvailableException e) {
 			scoreboardLibrary = new NoopScoreboardLibrary();
+			logger.severe("Scoreboard functionality will not be visible due to server version not being " +
+					"supported. If you are running the latest ezAuctions, please report this issue on GitHub.", e);
+		} catch (RuntimeException e) {
+			scoreboardLibrary = new NoopScoreboardLibrary();
+			logger.info("Scoreboard functionality will not be visible due to error with plugin build. " +
+					"This is normal when run in a test.");
 		}
 
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);

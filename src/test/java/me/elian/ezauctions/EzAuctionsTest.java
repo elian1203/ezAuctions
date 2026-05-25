@@ -1,24 +1,23 @@
 package me.elian.ezauctions;
 
-import net.milkbowl.vault.Vault;
-import net.milkbowl.vault.economy.Economy;
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
-import be.seeseemelk.mockbukkit.UnimplementedOperationException;
+import net.milkbowl.vault.Vault;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.ServicePriority;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EzAuctionsTest {
-	private ServerMock server;
 	private EzAuctions plugin;
 
 	@BeforeEach
 	public void setup() {
-		server = MockBukkit.mock();
+		ServerMock server = MockBukkit.mock();
 		Vault vaultPlugin = MockBukkit.load(Vault.class);
-		server.getServicesManager().register(Economy.class, new InMemoryEconomy(), vaultPlugin, ServicePriority.Normal);
+		server.getServicesManager().register(Economy.class, new InMemoryEconomy(), vaultPlugin,
+				ServicePriority.Normal);
 		plugin = MockBukkit.load(EzAuctions.class);
 	}
 

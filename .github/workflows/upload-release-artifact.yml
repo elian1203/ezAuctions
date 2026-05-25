@@ -11,10 +11,9 @@ jobs:
 
     steps:
       # We need to checkout the main branch with all tags for the version to be calculated correctly
-      - name: Checkout main with all tags
+      - name: Checkout with all tags
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name }}
           fetch-depth: 0
 
       - name: Setup JDK 17
@@ -24,10 +23,17 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.5.0
+        with:
+          versionSpec: '6.7.0'
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.5.0
+
       - name: Build Project
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: mvn --batch-mode --update-snapshots verify -Drevision="${RELEASE_TAG#v}"
+        run: mvn --batch-mode --update-snapshots verify -Drevision="${{ steps.gitversion.outputs.semVer }}"
 
       - name: Upload Release Asset
         env:

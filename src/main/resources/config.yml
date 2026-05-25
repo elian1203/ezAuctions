@@ -72,9 +72,32 @@ auctions:
   fees:
     # The price it costs to start an auction (set to 0 for no price)
     start-price: 10
-    # The amount of money that is removed from the final bid
+    # valid options are "flat" and "marginal"
+    tax-mode: flat
+    # The amount of money that is removed from the final bid. This is only valid for flat tax mode
     # Ex: Final bid is $500, tax is 20%; the auction starter only receives $400 (set to 0 for no tax)
     tax-percent: 2.5
+    # The marginal tax brackets. This is only valid for marginal tax mode
+    # It is a mapping of minimum amount to tax percent.
+    # It is marginal. If an auction lands in the highest bracket, the entire amount will not be taxed at the rate;
+    # only the amount over the start of that new bracket will be taxed at that rate.
+    # for example with the default brackets below:
+    #   final auction bid is $27000.
+    #   first $5000 is taxed at 0.5% (0 to 5000) total taxes is $25, remaining taxable income is $22000
+    #   $20000 taxed at 1% (5000 to 25000), total taxes is $225, remaining taxable income is $2000
+    #   $2000 taxed at 1.25% (25000 to 50000), total taxes is $250, which leaves an effective tax rate of 0.926%
+    tax-brackets:
+      # anything above $0 but less than $5000 will be taxed at 0.5%
+      0: 0.5
+      # anything above $5000 but less than $25000 will be taxed at 1%
+      5000: 1
+      25000: 1.25
+      50000: 2
+      # anything above $100000 will be taxed at 3%
+      100000: 3
+      # you can also reduce taxes or set them to zero after a certain amount
+      #1000000: 0
+
 
   # Should only have "true" or false"
   toggles:

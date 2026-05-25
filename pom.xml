@@ -59,9 +59,9 @@
     <dependencies>
         <!-- Test dependencies that provide Bukkit API classes must appear before the server API dependency. -->
         <dependency>
-            <groupId>org.mockbukkit.mockbukkit</groupId>
-            <artifactId>mockbukkit-v1.21</artifactId>
-            <version>4.93.0</version>
+            <groupId>com.github.seeseemelk</groupId>
+            <artifactId>MockBukkit-v1.20</artifactId>
+            <version>3.31.0</version>
             <scope>test</scope>
         </dependency>
         <!-- Non-MC related dependencies -->
